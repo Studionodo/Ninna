@@ -10,7 +10,7 @@ import { loadStore, saveStore, exportCSV, exportJSON, importJSON } from "./conte
 const TYPE_ICONS = { nap:"☁️", night:"🌙", breast:"🤱", bottle:"🍼", solid:"🥣", diaper:"🧷", nightwake:"🌩", pump:"⚗️" };
 const INSTANT = ["breast", "bottle", "solid", "diaper", "nightwake", "pump"];
 const KOFI = "https://ko-fi.com/istantelabs/tip";
-const APP_VERSION = "1.1.2";
+const APP_VERSION = "1.1.3";
 const CUP = `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4.5 9h11v5.5a4 4 0 0 1-4 4h-3a4 4 0 0 1-4-4V9z"/><path d="M15.5 10h1.6a2.4 2.4 0 0 1 0 4.8h-1.6"/><path d="M8 4.5c0 .9.9 1.1.9 2M11.5 4c0 .9.9 1.1.9 2"/></svg>`;
 
 /* ---------- stato ---------- */
@@ -145,10 +145,15 @@ window.NINNA = {
   openSettings() { renderSettings(); },
   closeSettings() { $modal.innerHTML = ""; },
   openReport() {
-    const win = window.open("", "_blank");
-    if (!win) return toast(t("report_print"));
-    win.document.write(buildReportHTML(14));
-    win.document.close();
+    const blob = new Blob([buildReportHTML(14)], { type: "text/html" });
+    const url = URL.createObjectURL(blob);
+    const win = window.open(url, "_blank");
+    if (!win) {
+      // popup bloccato dal browser: scarica il file, l'utente lo apre da solo
+      downloadBlob(blob, "ninna-riepilogo.html");
+      toast(t("report_print"));
+    }
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
   },
   exportCSVFile() {
     const labels = Object.fromEntries(["nap","night","breast","bottle","solid","diaper","nightwake","pump"].map((k) => [k, typeLabel(k)]));

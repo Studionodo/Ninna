@@ -3,6 +3,15 @@
 Versionamento semantico (MAJOR.MINOR.PATCH). Ogni release da qui in avanti
 viene registrata qui, in ordine cronologico, più recente in cima.
 
+## v1.1.3 — 26/08/2026
+- Fix: "Riepilogo per il pediatra" apriva una scheda vuota ("about:blank") su
+  alcuni browser mobile, in particolare da app installata. Causa: si
+  scriveva il contenuto in una finestra vuota dopo averla aperta, un metodo
+  che molti browser bloccano silenziosamente. Ora la pagina viene generata
+  come file autonomo e aperta direttamente; se il browser blocca comunque la
+  nuova scheda, il file viene scaricato come ripiego invece di fallire senza
+  spiegazione.
+
 ## v1.1.2 — 25/08/2026
 - La luna nella schermata iniziale non è più un carattere unicode generico
   (☾): è il logo vero, luna e stella isolate dal file sorgente su sfondo
