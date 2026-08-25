@@ -107,8 +107,8 @@
   min-width: 44px; min-height: 44px; margin: -12px -12px -12px 0; }
 
 /* tab bar a isola flottante (punto d'incontro M3E / iOS 27) */
-.tabbar { position: fixed; left: 50%; transform: translateX(-50%);
-  bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+.tabbar { position: fixed; left: 50%; transform: translate(-50%, 0) translateZ(0);
+  bottom: calc(14px + env(safe-area-inset-bottom, 0px)); will-change: transform;
   width: min(432px, calc(100% - 24px));
   display: flex; justify-content: space-between; gap: 4px; padding: 8px;
   background: rgba(13,19,26,.6);
@@ -121,7 +121,7 @@
 .tab:active { transform: scale(.94); }
 .tab.active { color: var(--mint-ink); background: var(--mint); font-weight: 600; }
 
-.toast { position: fixed; bottom: 92px; left: 50%; transform: translateX(-50%);
+.toast { position: fixed; bottom: 92px; left: 50%; transform: translate(-50%, 0) translateZ(0);
   background: var(--text); color: #101815; padding: 9px 18px; border-radius: 999px;
   font-size: 13.5px; font-weight: 600; box-shadow: 0 8px 30px rgba(0,0,0,.4); z-index: 60; }
 
@@ -181,9 +181,10 @@ button:focus-visible, input:focus-visible, select:focus-visible, label:focus-vis
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
 
 * { box-sizing: border-box; }
-html, body { margin: 0; }
+html, body { margin: 0; height: 100%; overscroll-behavior-y: none; }
 body {
   min-height: 100vh;
+  min-height: 100dvh; /* corregge il rimbalzo layout quando la barra indirizzi mobile si nasconde/appare */
   background:
     radial-gradient(1100px 560px at 82% -8%, rgba(143,230,201,.13) 0%, transparent 58%),
     radial-gradient(900px 520px at -12% 108%, rgba(240,160,182,.11) 0%, transparent 55%),

@@ -10,6 +10,7 @@ import { loadStore, saveStore, exportCSV, exportJSON, importJSON } from "./conte
 const TYPE_ICONS = { nap:"☁️", night:"🌙", breast:"🤱", bottle:"🍼", solid:"🥣", diaper:"🧷", nightwake:"🌩", pump:"⚗️" };
 const INSTANT = ["breast", "bottle", "solid", "diaper", "nightwake", "pump"];
 const KOFI = "https://ko-fi.com/istantelabs/tip";
+const APP_VERSION = "1.0.1";
 const CUP = `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4.5 9h11v5.5a4 4 0 0 1-4 4h-3a4 4 0 0 1-4-4V9z"/><path d="M15.5 10h1.6a2.4 2.4 0 0 1 0 4.8h-1.6"/><path d="M8 4.5c0 .9.9 1.1.9 2M11.5 4c0 .9.9 1.1.9 2"/></svg>`;
 
 /* ---------- stato ---------- */
@@ -387,6 +388,7 @@ function renderSettings() {
   $modal.innerHTML = `<div class="modal-wrap" onclick="NINNA.closeSettings()">
     <div class="modal" onclick="event.stopPropagation()">
       <div class="card-title">${t("settings")}</div>
+      <div class="dim small" style="opacity:.6">Ninna v${APP_VERSION}</div>
       <div class="dim small">${t("profile_line", { name: esc(b.name), date: new Date(b.birth + "T00:00:00").toLocaleDateString(LOCALE()), w: Math.floor(ageWeeks(b.birth)) })}</div>
       <div class="langrow inmodal">
         <span class="langlabel">${t("language").toUpperCase()}</span>
