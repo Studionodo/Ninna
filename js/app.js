@@ -10,12 +10,13 @@ import { loadStore, saveStore, exportCSV, exportJSON, importJSON } from "./conte
 const TYPE_ICONS = { nap:"☁️", night:"🌙", breast:"🤱", bottle:"🍼", solid:"🥣", diaper:"🧷", nightwake:"🌩", pump:"⚗️" };
 const INSTANT = ["breast", "bottle", "solid", "diaper", "nightwake", "pump"];
 const KOFI = "https://ko-fi.com/istantelabs/tip";
-const APP_VERSION = "1.0.1";
+const APP_VERSION = "1.1.2";
 const CUP = `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4.5 9h11v5.5a4 4 0 0 1-4 4h-3a4 4 0 0 1-4-4V9z"/><path d="M15.5 10h1.6a2.4 2.4 0 0 1 0 4.8h-1.6"/><path d="M8 4.5c0 .9.9 1.1.9 2M11.5 4c0 .9.9 1.1.9 2"/></svg>`;
 
 /* ---------- stato ---------- */
 let store = loadStore();
 let lang = store.prefs.lang === "en" ? "en" : "it";
+let logOnly = store.prefs.logOnly === true;
 let view = "oggi";
 let showWhy = false, showManual = false;
 let sound = new SoundEngine();
@@ -88,6 +89,15 @@ function scheduleNotifications(plan) {
 window.NINNA = {
   setView(v) { view = v; render(); },
   setLang(l) { lang = l === "en" ? "en" : "it"; store.prefs.lang = lang; persist(); render(); if ($modal.innerHTML) renderSettings(); },
+  toggleLogOnly() {
+    logOnly = !logOnly;
+    store.prefs.logOnly = logOnly;
+    persist();
+    if (logOnly && (view === "stat")) view = "oggi";   // la vista nascosta non resta aperta
+    toast(logOnly ? t("logonly_on") : t("logonly_off"));
+    render();
+    if ($modal.innerHTML) renderSettings();
+  },
   startSleep(kind) {
     store.events.push({ id: uid(), type: kind, start: Date.now(), end: null });
     persist(); toast(typeLabel(kind) + " — " + t("started")); render();
@@ -134,6 +144,12 @@ window.NINNA = {
   toggleArticle(id) { const el = document.getElementById("art-" + id); if (el) el.hidden = !el.hidden; },
   openSettings() { renderSettings(); },
   closeSettings() { $modal.innerHTML = ""; },
+  openReport() {
+    const win = window.open("", "_blank");
+    if (!win) return toast(t("report_print"));
+    win.document.write(buildReportHTML(14));
+    win.document.close();
+  },
   exportCSVFile() {
     const labels = Object.fromEntries(["nap","night","breast","bottle","solid","diaper","nightwake","pump"].map((k) => [k, typeLabel(k)]));
     const header = [t("csv_type"), t("csv_start"), t("csv_end"), t("csv_dur")];
@@ -151,6 +167,7 @@ window.NINNA = {
       try {
         store = importJSON(r.result);
         lang = store.prefs.lang === "en" ? "en" : "it";
+        logOnly = store.prefs.logOnly === true;
         persist(); NINNA.closeSettings(); toast(t("import_done")); render();
       } catch { toast(t("import_bad")); }
     };
@@ -163,7 +180,7 @@ window.NINNA = {
   },
   wipe() {
     if (!confirm(t("wipe_confirm"))) return;
-    store = { version: 1, baby: null, events: [], prefs: { volume: 0.4, lang } };
+    store = { version: 1, baby: null, events: [], prefs: { volume: 0.4, lang, logOnly } };
     persist(); NINNA.closeSettings(); render();
   },
   saveBaby() {
@@ -228,6 +245,11 @@ function renderOggi(f) {
         <div class="hero-big">${fmtDur(Date.now() - active.start)}</div>
         <button class="primary" onclick="NINNA.endSleep('${active.id}')">${t("btn_awake")}</button>
       </div>`;
+  } else if (logOnly) {
+    hero = `<div class="hero-text">
+      <div class="hero-label">${t("today")}</div>
+      <div class="hero-sub">${t("logonly_hint")}</div>
+    </div>`;
   } else if (f.lastWake) {
     const s = f.sweetSpot;
     const isNight = f.next.kind === "night";
@@ -259,14 +281,14 @@ function renderOggi(f) {
     .sort((a, b2) => (b2.start || b2.at) - (a.start || a.at));
 
   return `
-    ${f.transition.detected ? `<div class="banner">${t("transition", { avg: f.transition.avgNaps, lo: f.transition.expected[0], hi: f.transition.expected[1] })}</div>` : ""}
+    ${!logOnly && f.transition.detected ? `<div class="banner">${t("transition", { avg: f.transition.avgNaps, lo: f.transition.expected[0], hi: f.transition.expected[1] })}</div>` : ""}
     <div class="card hero">${hero}</div>
     ${!active ? (() => {
-      const k = f.next.kind;
+      const k = logOnly ? null : f.next.kind;
       const btn = (kind, icon, label) => `<button class="bigbtn ${k === kind ? "" : "alt"}" onclick="NINNA.startSleep('${kind}')">${icon} ${label}${k === kind ? `<span class="rec">${t("recommended")}</span>` : ""}</button>`;
       return `<div class="row2">${btn("nap", "☁️", t("btn_nap"))}${btn("night", "🌙", t("btn_night"))}</div>`;
     })() : ""}
-    ${!active && f.lastWake && f.next.kind === "nap" ? `<div class="card slim">
+    ${!active && !logOnly && f.lastWake && f.next.kind === "nap" ? `<div class="card slim">
       <div class="hero-sub">🌙 ${t("bed_card")} <b class="lit">${fmtHM(f.bedtime.at)}</b>
       ${f.bedtime.earlier ? `<br><span class="amber">${t("bed_earlier")}</span>` : ""}</div>
     </div>` : ""}
@@ -311,7 +333,6 @@ function renderStat(f) {
   }
   const maxH = Math.max(1, ...days.map((d) => d.total));
   const st = f.stats, pr = f.profile;
-  const balance = st.vsTotal === "in-range" ? t("stat_inrange") : st.vsTotal === "sotto" ? t("stat_under") : t("stat_over");
   const row = (k, v) => `<div class="logrow"><span class="loglabel">${k}</span><span class="logtime">${v}</span></div>`;
   return `
     <div class="card">
@@ -326,12 +347,12 @@ function renderStat(f) {
     </div>
     <div class="card">
       <div class="card-title">${t("stat_today")}</div>
-      ${row(t("stat_day"), t("stat_targetfmt", { v: Math.round(st.napMinutes / 6) / 10, lo: pr.day[0], hi: pr.day[1] }))}
-      ${row(t("stat_night"), t("stat_targetfmt", { v: Math.round(st.nightMinutes / 6) / 10, lo: pr.night[0], hi: pr.night[1] }))}
+      ${row(t("stat_day"), t("stat_rangefmt", { v: Math.round(st.napMinutes / 6) / 10, lo: pr.day[0], hi: pr.day[1] }))}
+      ${row(t("stat_night"), t("stat_rangefmt", { v: Math.round(st.nightMinutes / 6) / 10, lo: pr.night[0], hi: pr.night[1] }))}
       ${row(t("stat_feeds"), `${st.feeds}${st.avgFeedGapMin ? " · " + t("stat_every", { h: Math.round(st.avgFeedGapMin / 6) / 10 }) : ""}`)}
       ${row(t("stat_diapers"), st.diapers)}
       ${row(t("stat_wakes"), st.nightWakes)}
-      ${row(t("stat_balance"), balance)}
+      <div class="dim small">${t("stat_variability")}</div>
     </div>
     <button class="secondary block" onclick="NINNA.exportCSVFile()">${t("export_csv")}</button>`;
 }
@@ -372,7 +393,7 @@ function renderGuida() {
 
 function renderOnboarding() {
   return `<div class="onboard">
-    <div class="brandmark">☾</div>
+    <img class="brandmark" src="icons/brandmark.png" alt="Ninna">
     <h1>Ninna</h1>
     <p class="dim">${t("ob_title_sub")}<br>${t("ob_sub2")}</p>
     <label class="field"><span>${t("ob_name")}</span>
@@ -381,6 +402,71 @@ function renderOnboarding() {
       <input id="ob-birth" type="date"></label>
     <button class="primary block" onclick="NINNA.saveBaby()">${t("ob_start")}</button>
   </div>` + footerHTML("onboarding");
+}
+
+
+/* ---------- riepilogo stampabile per il pediatra ----------
+   Nessuna libreria PDF: si apre una pagina formattata e si usa la
+   stampa di sistema, che su Android e desktop offre "Salva come PDF". */
+function buildReportHTML(days = 14) {
+  const b = store.baby;
+  const rows = [];
+  let sumDay = 0, sumNight = 0, sumNaps = 0, sumWakes = 0, sumFeeds = 0, sumDiapers = 0, counted = 0;
+  for (let i = days - 1; i >= 0; i--) {
+    const ts = Date.now() - i * 86400000;
+    const st = dailyStats(store.events, ts, profileFor(b.birth, ts));
+    if (st.totalMinutes === 0 && st.feeds === 0 && st.diapers === 0) continue;
+    counted++;
+    sumDay += st.napMinutes; sumNight += st.nightMinutes; sumNaps += st.naps;
+    sumWakes += st.nightWakes; sumFeeds += st.feeds; sumDiapers += st.diapers;
+    const hm = (m) => `${Math.floor(m / 60)}h ${String(Math.round(m % 60)).padStart(2, "0")}m`;
+    rows.push(`<tr>
+      <td>${new Date(ts).toLocaleDateString(LOCALE(), { day: "2-digit", month: "2-digit" })}</td>
+      <td>${hm(st.napMinutes)}</td><td>${hm(st.nightMinutes)}</td><td><b>${hm(st.totalMinutes)}</b></td>
+      <td>${st.naps}</td><td>${st.nightWakes}</td><td>${st.feeds}</td><td>${st.diapers}</td>
+    </tr>`);
+  }
+  const n = Math.max(1, counted);
+  const hm = (m) => `${Math.floor(m / 60)}h ${String(Math.round(m % 60)).padStart(2, "0")}m`;
+  const pr = profileFor(b.birth);
+  const w = Math.floor(ageWeeks(b.birth));
+  return `<!DOCTYPE html><html lang="${lang}"><head><meta charset="utf-8">
+<title>${t("report_title")} — ${esc(b.name)}</title>
+<style>
+  body { font-family: -apple-system, system-ui, sans-serif; color: #111; max-width: 760px; margin: 24px auto; padding: 0 16px; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  .meta { color: #555; font-size: 13px; margin-bottom: 18px; line-height: 1.6; }
+  table { border-collapse: collapse; width: 100%; font-size: 13px; }
+  th, td { border: 1px solid #ccc; padding: 6px 8px; text-align: center; }
+  th { background: #f2f2f2; font-weight: 600; }
+  td:first-child, th:first-child { text-align: left; }
+  tfoot td { background: #fafafa; font-weight: 600; }
+  .note { margin-top: 18px; font-size: 11.5px; color: #666; line-height: 1.5; }
+  .btn { margin: 18px 0; padding: 10px 18px; font-size: 14px; cursor: pointer; }
+  @media print { .btn { display: none; } body { margin: 0; } }
+</style></head><body>
+<h1>${t("report_title")}</h1>
+<div class="meta">
+  <b>${t("report_child")}:</b> ${esc(b.name)} · <b>${t("report_age")}:</b> ${w} ${t("u_weeks")}<br>
+  <b>${t("report_period")}:</b> ${counted} ${t("u_days")} · <b>${t("report_generated")}:</b> ${new Date().toLocaleString(LOCALE())}<br>
+  ${t("stat_target", { lo: pr.total[0], hi: pr.total[1], nlo: pr.naps[0], nhi: pr.naps[1] })}
+</div>
+<button class="btn" onclick="window.print()">${t("report_print")}</button>
+<table>
+  <thead><tr>
+    <th>${t("report_day")}</th><th>${t("report_daysleep")}</th><th>${t("report_nightsleep")}</th>
+    <th>${t("report_tot")}</th><th>${t("report_naps")}</th><th>${t("report_wakes")}</th>
+    <th>${t("report_feeds")}</th><th>${t("report_diapers")}</th>
+  </tr></thead>
+  <tbody>${rows.join("")}</tbody>
+  <tfoot><tr>
+    <td>${t("report_avg")}</td><td>${hm(sumDay / n)}</td><td>${hm(sumNight / n)}</td>
+    <td>${hm((sumDay + sumNight) / n)}</td><td>${(sumNaps / n).toFixed(1)}</td>
+    <td>${(sumWakes / n).toFixed(1)}</td><td>${(sumFeeds / n).toFixed(1)}</td><td>${(sumDiapers / n).toFixed(1)}</td>
+  </tr></tfoot>
+</table>
+<div class="note">${t("report_note")}<br>${t("stat_variability")}</div>
+</body></html>`;
 }
 
 function renderSettings() {
@@ -402,6 +488,11 @@ function renderSettings() {
         <input type="file" accept="application/json" hidden onchange="NINNA.importJSONFile(this)">
       </label>
       <button class="secondary block" onclick="NINNA.exportCSVFile()">${t("export_csv")}</button>
+      ${logOnly ? "" : `<button class="secondary block" onclick="NINNA.openReport()">${t("report")}</button>`}
+      <div class="logonly-row">
+        <button class="secondary block" style="margin:0" onclick="NINNA.toggleLogOnly()">${logOnly ? "◉ " : "○ "}${t("logonly")}</button>
+        <div class="dim small">${t("logonly_desc")}</div>
+      </div>
       <button class="danger block" onclick="NINNA.wipe()">${t("wipe")}</button>
       <button class="link block" onclick="NINNA.closeSettings()">${t("close")}</button>
     </div>
@@ -422,6 +513,7 @@ function render() {
   const w = ageWeeks(store.baby.birth);
   const ageLabel = w < 5 ? `${Math.round(w * 7)} ${t("u_days")}` : `${Math.floor(w / 4.345)} ${t("u_months")}`;
 
+  if (logOnly && view === "stat") view = "oggi";
   let body = "";
   if (view === "oggi") body = renderOggi(f);
   if (view === "stat") body = renderStat(f);
@@ -439,11 +531,28 @@ function render() {
     ${body}
     ${view === "guida" ? footerHTML("full") : ""}`;
 
-  $tabbar.innerHTML = [["oggi", t("tab_oggi")], ["stat", t("tab_stat")], ["suoni", t("tab_suoni")], ["guida", t("tab_guida")]]
+  const tabs = logOnly
+    ? [["oggi", t("tab_oggi")], ["suoni", t("tab_suoni")], ["guida", t("tab_guida")]]
+    : [["oggi", t("tab_oggi")], ["stat", t("tab_stat")], ["suoni", t("tab_suoni")], ["guida", t("tab_guida")]];
+  $tabbar.innerHTML = tabs
     .map(([id, label]) => `<button class="tab ${view === id ? "active" : ""}" onclick="NINNA.setView('${id}')">${label}</button>`)
     .join("");
 }
 
+/* ---------- scorciatoie da long-press sull'icona ---------- */
+function handleShortcut() {
+  const azione = new URLSearchParams(location.search).get("azione");
+  if (!azione) return;
+  // ripulisce subito l'URL: un refresh non deve registrare un secondo sonno
+  history.replaceState(null, "", location.pathname);
+  if (!store.baby) return;                       // profilo non ancora creato
+  const active = store.events.find((e) => (e.type === "nap" || e.type === "night") && !e.end);
+  if (active) return toast(typeLabel(active.type) + " — " + t("in_progress"));
+  const kind = azione === "nanna" ? "night" : azione === "pisolino" ? "nap" : null;
+  if (kind) NINNA.startSleep(kind);
+}
+
+handleShortcut();
 render();
 setInterval(() => {
   const tag = document.activeElement && document.activeElement.tagName;

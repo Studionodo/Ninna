@@ -138,7 +138,8 @@
 
 .onboard { padding-top: 8vh; text-align: center; display: flex; flex-direction: column; }
 .onboard h1 { font-size: 46px; margin: 6px 0 4px; }
-.brandmark { font-size: 42px; color: var(--mint); }
+.brandmark { width: 96px; height: auto; margin: 0 auto; display: block;
+  filter: drop-shadow(0 8px 24px rgba(143,230,201,.35)); }
 .center { text-align: center; }
 .center-dim { color: var(--sub); text-align: center; padding-top: 40vh; }
 .dim { color: var(--sub); font-size: 14px; }
@@ -216,3 +217,7 @@ button { font-family: inherit; }
 .coffee span { border-bottom: 1px solid rgba(143,230,201,.55); padding-bottom: 2px; }
 .hairline { height: 1px; background: rgba(255,255,255,.09); margin: 0 0 16px; }
 .finelines { text-align: center; color: var(--sub); font-size: 13px; line-height: 1.8; padding-bottom: 4px; }
+
+/* interruttore modalità solo diario */
+.logonly-row { margin: 14px 0 4px; }
+.logonly-row .dim { margin-top: 8px; line-height: 1.5; }

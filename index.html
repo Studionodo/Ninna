@@ -15,6 +15,20 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
+  <script>
+    /* imposta la lingua del documento prima del primo render, per i lettori di schermo */
+    try {
+      var p = JSON.parse(localStorage.getItem("ninna_v1") || "{}");
+      if (p && p.prefs && p.prefs.lang) document.documentElement.lang = p.prefs.lang;
+    } catch (e) {}
+  </script>
+  <noscript>
+    <div style="max-width:460px;margin:20vh auto;padding:0 24px;text-align:center;color:#EAF2EE;font-family:system-ui,sans-serif">
+      <p style="font-size:20px;margin-bottom:10px">Ninna</p>
+      <p style="color:#A6B7B0;line-height:1.6">Per funzionare, Ninna ha bisogno di JavaScript attivo nel browser.<br>
+      <span style="font-size:13px">Ninna needs JavaScript enabled in your browser.</span></p>
+    </div>
+  </noscript>
   <div class="frame">
     <div id="app"></div>
   </div>

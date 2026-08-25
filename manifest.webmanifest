@@ -1,7 +1,7 @@
 {
   "name": "Ninna — diario del sonno neonatale",
   "short_name": "Ninna",
-  "description": "Prevede pisolini e nanna con un metodo trasparente. Gratuita, senza account, dati solo sul tuo dispositivo. Un progetto StudioNodo.",
+  "description": "Prevede pisolini e nanna con un metodo trasparente. Gratuita, senza account, dati solo sul tuo dispositivo. Un progetto Studionodo.",
   "lang": "it",
   "start_url": "./",
   "scope": "./",
@@ -12,5 +12,21 @@
     { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
     { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
     { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Inizia pisolino",
+      "short_name": "Pisolino",
+      "description": "Registra subito l'inizio di un pisolino",
+      "url": "./?azione=pisolino",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Inizia nanna",
+      "short_name": "Nanna",
+      "description": "Registra subito l'inizio della nanna notturna",
+      "url": "./?azione=nanna",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
+    }
   ]
 }
