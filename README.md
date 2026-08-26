@@ -6,7 +6,7 @@ Prevede pisolini e nanna, e spiega perché.
 
 ## Cos'è
 
-Ninna è una web app (PWA) per genitori di neonati e bambini piccoli che vogliono capire i ritmi del sonno del proprio figlio invece di indovinarli. Calcola quando arriverà il prossimo pisolino o l'ora della nanna, e mostra sempre il perché: nessuna previsione a scatola chiusa. Funziona interamente offline, non ha server, non ha account: tutti i dati restano sul telefono di chi la usa.
+Ninna è una web app (PWA) per genitori di neonati e bambini piccoli che vogliono capire i ritmi del sonno del proprio figlio invece di indovinarli. Calcola quando arriverà il prossimo pisolino o l'ora della nanna, e mostra sempre il perché: nessuna previsione a scatola chiusa. Funziona interamente offline dopo il primo caricamento, non ha server propri, non ha account: tutti i dati restano sul telefono di chi la usa.
 
 ## Cosa fa
 
@@ -22,9 +22,13 @@ Ninna è una web app (PWA) per genitori di neonati e bambini piccoli che voglion
 - **Backup ed esportazione**: i dati si esportano in JSON (per un backup completo o per passarli a un altro genitore) o in CSV (per un'analisi personale o da mostrare al pediatra).
 - **Bilingue**: italiano e inglese, con cambio lingua immediato dal footer o dalle impostazioni.
 
-## Perché non ha un account
+## Come tratta i dati
 
-Ninna non manda nulla altrove: niente registrazione, niente cloud, niente terze parti che vedono quando dorme un bambino. Il prezzo di questa scelta è che oggi non esiste ancora una condivisione automatica dei dati tra due genitori: l'unico modo è esportare un file e passarlo manualmente.
+Nessun dato del bambino lascia mai il dispositivo: niente registrazione, niente cloud, niente sincronizzazione. Tutto resta in memoria locale, esportabile quando vuoi in JSON o CSV.
+
+Nessuna terza parte riceve richieste dall'app: caratteri tipografici, icone e codice sono serviti dall'app stessa, non da reti di distribuzione esterne. Le uniche connessioni possibili sono quelle verso l'hosting da cui l'app viene scaricata e aggiornata, come per qualunque sito, e il collegamento a Ko-fi, che si apre solo se scegli tu di toccarlo.
+
+Il prezzo di questa scelta è che oggi non esiste ancora una condivisione automatica dei dati tra due genitori: l'unico modo è esportare un file e passarlo manualmente.
 
 ## Ninna non è un dispositivo medico
 

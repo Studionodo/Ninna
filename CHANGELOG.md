@@ -3,6 +3,27 @@
 Versionamento semantico (MAJOR.MINOR.PATCH). Ogni release da qui in avanti
 viene registrata qui, in ordine cronologico, più recente in cima.
 
+## v1.3.0 · 26/08/2026
+Correzione di un difetto di privacy emerso da un audit esterno. L'app
+dichiarava di non connettersi ad alcun server, ma caricava i caratteri
+tipografici dai server di Google a ogni avvio, trasmettendo indirizzo IP,
+User-Agent e URL di provenienza. La dichiarazione era quindi inesatta.
+- Fraunces e Albert Sans ora sono inclusi nell'app, ridotti ai soli pesi e
+  caratteri effettivamente usati: 71 KB in tutto, contro una dipendenza
+  esterna a ogni caricamento. Licenze SIL OFL incluse in fonts/.
+- Rimossi tutti e tre i punti di innesco: i preconnect e il foglio di stile
+  remoto in index.html, l'@import in styles.css, il ramo dedicato ai domini
+  Google nel service worker.
+- Aggiunta una Content-Security-Policy restrittiva in vercel.json: da ora il
+  browser blocca qualunque richiesta esterna non prevista, cosi lo stesso
+  errore non puo ripetersi in silenzio. Aggiunti anche Referrer-Policy
+  no-referrer e Permissions-Policy restrittiva.
+- Service worker passato da network-first a cache-first, con cache agganciata
+  al numero di versione: ogni apertura non genera piu una richiesta di rete.
+- README e schermata "Cos'e Ninna" riscritti con una formulazione verificabile,
+  che distingue i due piani: nessun dato del bambino lascia il dispositivo, e
+  nessuna terza parte riceve richieste dall'app.
+
 ## v1.2.0 · 26/08/2026
 - Aggiunta la schermata "Cos'e Ninna", ispirata a quella gia presente in
   Posa: un link discreto in alto a sinistra nella schermata Oggi apre una

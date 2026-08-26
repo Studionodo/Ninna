@@ -99,7 +99,7 @@ export const I18N = {
     ],
     about: [
       "Ninna \u00e8 il diario del sonno di chi non riesce pi\u00f9 a fidarsi dell'orologio. Registra pisolini, nanna, poppate e risvegli, e da quei dati calcola la prossima finestra di sonno del tuo bambino: non un orario secco, ma un intervallo, insieme al ragionamento che lo ha prodotto. Decide da sola se il prossimo sonno sar\u00e0 un pisolino o la nanna serale, cos\u00ec non devi indovinarlo tu ogni volta.",
-      "Funziona interamente offline. Non ha account, non raccoglie dati, non si connette a nessun server se non per il proprio aggiornamento. Ogni informazione resta sul dispositivo su cui viene scritta, esportabile in qualsiasi momento in JSON o CSV.",
+      "Funziona interamente offline. Non ha account, non raccoglie dati, e non contatta nessuna terza parte: caratteri, icone e codice sono serviti dall'app stessa. Le uniche connessioni possibili sono quelle verso l'hosting da cui viene scaricata e aggiornata. Ogni informazione resta sul dispositivo su cui viene scritta, esportabile in qualsiasi momento in JSON o CSV.",
       "Ninna non insegue una notte perfetta. Le statistiche mostrano intervalli tipici per l'et\u00e0, non obiettivi da centrare, e una modalit\u00e0 dedicata permette di nascondere previsioni e confronti quando guardare i numeri smette di aiutare.",
       "\u00c8 pensata per chi vuole capire i ritmi del proprio bambino, non per chi vuole essere giudicato da un'app mentre ci prova.",
     ],
@@ -214,7 +214,7 @@ export const I18N = {
     ],
     about: [
       "Ninna is the sleep diary for anyone who can't quite trust the clock anymore. It logs naps, night sleep, feeds and wakings, and from that data works out your baby's next sleep window: not a fixed time, but a range, together with the reasoning behind it. It decides on its own whether the next sleep will be a nap or bedtime, so you don't have to guess every time.",
-      "It works entirely offline. No account, no data collection, no connection to any server except for its own updates. Everything stays on the device it was written on, exportable at any time as JSON or CSV.",
+      "It works entirely offline. No account, no data collection, and no contact with any third party: typefaces, icons and code are all served by the app itself. The only possible connections are to the hosting it is downloaded and updated from. Everything stays on the device it was written on, exportable at any time as JSON or CSV.",
       "Ninna doesn't chase a perfect night. The statistics show typical ranges for the age, not targets to hit, and a dedicated mode lets you hide predictions and comparisons whenever looking at the numbers stops helping.",
       "It's built for parents who want to understand their child's rhythms, not to be judged by an app while they try.",
     ],

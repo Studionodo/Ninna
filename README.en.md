@@ -6,7 +6,7 @@ Predicts naps and bedtime, and explains why.
 
 ## What it is
 
-Ninna is a web app (PWA) for parents of newborns and young children who want to understand their child's sleep rhythms instead of guessing them. It predicts when the next nap or bedtime will come, and always shows the reasoning behind it: no black-box predictions. It works entirely offline, has no server, and no account: all data stays on the phone of whoever uses it.
+Ninna is a web app (PWA) for parents of newborns and young children who want to understand their child's sleep rhythms instead of guessing them. It predicts when the next nap or bedtime will come, and always shows the reasoning behind it: no black-box predictions. It works entirely offline after the first load, has no servers of its own, and no account: all data stays on the phone of whoever uses it.
 
 ## What it does
 
@@ -22,9 +22,13 @@ Ninna is a web app (PWA) for parents of newborns and young children who want to 
 - **Backup and export**: data can be exported as JSON (for a full backup or to hand off to another parent) or as CSV (for personal analysis or to show a paediatrician).
 - **Bilingual**: Italian and English, with instant language switching from the footer or settings.
 
-## Why there's no account
+## How it handles data
 
-Ninna doesn't send anything elsewhere: no sign-up, no cloud, no third party seeing when a baby sleeps. The price of that choice is that there's no automatic data sharing between two parents yet: the only way today is exporting a file and passing it along manually.
+No data about your child ever leaves the device: no sign-up, no cloud, no sync. Everything stays in local storage, exportable whenever you want as JSON or CSV.
+
+No third party receives requests from the app: typefaces, icons and code are all served by the app itself, not by external delivery networks. The only possible connections are to the hosting the app is downloaded and updated from, as with any website, and the Ko-fi link, which opens only if you choose to tap it.
+
+The price of that choice is that there's no automatic data sharing between two parents yet: the only way today is exporting a file and passing it along manually.
 
 ## Ninna is not a medical device
 
