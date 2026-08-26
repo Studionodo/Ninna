@@ -1,6 +1,6 @@
 /* ============================================================
    /* ============================================================
-   NINNA STORE — persistenza locale per la PWA
+   NINNA STORE · persistenza locale per la PWA
    localStorage con versioning, export/import JSON e export CSV.
    (Nella PWA vera si può migrare a IndexedDB se i dati crescono;
    per eventi testuali localStorage regge anni di utilizzo.)

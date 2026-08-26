@@ -1,5 +1,5 @@
 /* ============================================================
-   NINNA SOUNDS — motore audio interamente sintetizzato
+   NINNA SOUNDS · motore audio interamente sintetizzato
    Zero file audio, zero licenze, zero banda: tutto generato
    con Web Audio API. ES module senza dipendenze.
 

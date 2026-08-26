@@ -11,7 +11,7 @@ Ninna è una web app (PWA) per genitori di neonati e bambini piccoli che voglion
 ## Cosa fa
 
 - **Prevede il prossimo sonno** in base alla finestra di veglia tipica dell'età del bambino, corretta giorno dopo giorno con i ritmi reali osservati.
-- **Distingue da sola pisolino e nanna**: decide quale dei due proporre in base ai pisolini già fatti, all'orario e alla vicinanza alla routine serale — il genitore non deve scegliere a occhio.
+- **Distingue da sola pisolino e nanna**: decide quale dei due proporre in base ai pisolini già fatti, all'orario e alla vicinanza alla routine serale: il genitore non deve scegliere a occhio.
 - **Spiega ogni previsione**: un tasto dedicato mostra il calcolo per esteso, non solo il risultato.
 - **Registra le attività**: pisolini, nanna notturna, allattamento, biberon, pappa, pannolino, tiralatte, risvegli notturni.
 - **Mostra le statistiche**: sonno totale degli ultimi 7 giorni, bilancio rispetto ai valori attesi per l'età, poppate, pannolini, risvegli.
@@ -24,7 +24,7 @@ Ninna è una web app (PWA) per genitori di neonati e bambini piccoli che voglion
 
 ## Perché non ha un account
 
-Ninna non manda nulla altrove: niente registrazione, niente cloud, niente terze parti che vedono quando dorme un bambino. Il prezzo di questa scelta è che oggi non esiste ancora una condivisione automatica dei dati tra due genitori — l'unico modo è esportare un file e passarlo manualmente.
+Ninna non manda nulla altrove: niente registrazione, niente cloud, niente terze parti che vedono quando dorme un bambino. Il prezzo di questa scelta è che oggi non esiste ancora una condivisione automatica dei dati tra due genitori: l'unico modo è esportare un file e passarlo manualmente.
 
 ## Ninna non è un dispositivo medico
 

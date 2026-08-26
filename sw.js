@@ -1,7 +1,7 @@
-/* NINNA service worker v3 — network-first sull'app shell (gli aggiornamenti
+/* NINNA service worker v3: network-first sull'app shell (gli aggiornamenti
    arrivano senza dover versionare a mano), cache come fallback offline,
    font in cache al primo uso, mai risposte fallite in cache. */
-const CACHE = "ninna-v1.1.6";
+const CACHE = "ninna-v1.1.7";
 const SHELL = [
   "./", "index.html", "styles.css", "manifest.webmanifest",
   "js/app.js", "js/i18n.js", "js/engine.js", "js/sounds.js", "js/content-store.js",

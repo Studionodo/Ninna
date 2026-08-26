@@ -11,7 +11,7 @@ Ninna is a web app (PWA) for parents of newborns and young children who want to 
 ## What it does
 
 - **Predicts the next sleep** based on the typical wake window for the child's age, refined day by day with the real rhythms observed.
-- **Tells naps and bedtime apart on its own**: it decides which one to suggest based on the naps already taken, the time of day, and how close it is to the evening routine — the parent doesn't have to guess.
+- **Tells naps and bedtime apart on its own**: it decides which one to suggest based on the naps already taken, the time of day, and how close it is to the evening routine: the parent doesn't have to guess.
 - **Explains every prediction**: a dedicated button shows the full calculation, not just the result.
 - **Logs activities**: naps, night sleep, nursing, bottle, solids, diapers, pumping, night wakings.
 - **Shows statistics**: total sleep over the last 7 days, balance against the values expected for the child's age, feeds, diapers, wakings.
@@ -24,7 +24,7 @@ Ninna is a web app (PWA) for parents of newborns and young children who want to 
 
 ## Why there's no account
 
-Ninna doesn't send anything elsewhere: no sign-up, no cloud, no third party seeing when a baby sleeps. The price of that choice is that there's no automatic data sharing between two parents yet — the only way today is exporting a file and passing it along manually.
+Ninna doesn't send anything elsewhere: no sign-up, no cloud, no third party seeing when a baby sleeps. The price of that choice is that there's no automatic data sharing between two parents yet: the only way today is exporting a file and passing it along manually.
 
 ## Ninna is not a medical device
 

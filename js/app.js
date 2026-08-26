@@ -1,5 +1,5 @@
 /* ============================================================
-   NINNA — app.js v3 (UI vanilla + i18n IT/EN)
+   NINNA · app.js v3 (UI vanilla + i18n IT/EN)
    Il motore parla per codici; l'i18n traduce; la UI compone.
    ============================================================ */
 import { forecast, dailyStats, profileFor, ageWeeks } from "./engine.js";
@@ -10,7 +10,7 @@ import { loadStore, saveStore, exportCSV, exportJSON, importJSON } from "./conte
 const TYPE_ICONS = { nap:"☁️", night:"🌙", breast:"🤱", bottle:"🍼", solid:"🥣", diaper:"🧷", nightwake:"🌩", pump:"⚗️" };
 const INSTANT = ["breast", "bottle", "solid", "diaper", "nightwake", "pump"];
 const KOFI = "https://ko-fi.com/istantelabs/tip";
-const APP_VERSION = "1.1.6";
+const APP_VERSION = "1.1.7";
 const CUP = `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4.5 9h11v5.5a4 4 0 0 1-4 4h-3a4 4 0 0 1-4-4V9z"/><path d="M15.5 10h1.6a2.4 2.4 0 0 1 0 4.8h-1.6"/><path d="M8 4.5c0 .9.9 1.1.9 2M11.5 4c0 .9.9 1.1.9 2"/></svg>`;
 
 /* ---------- stato ---------- */
@@ -100,7 +100,7 @@ window.NINNA = {
   },
   startSleep(kind) {
     store.events.push({ id: uid(), type: kind, start: Date.now(), end: null });
-    persist(); toast(typeLabel(kind) + " — " + t("started")); render();
+    persist(); toast(typeLabel(kind) + " · " + t("started")); render();
   },
   endSleep(id) {
     const e = store.events.find((x) => x.id === id);
@@ -132,6 +132,8 @@ window.NINNA = {
   setVolume(v) {
     const f = parseFloat(v);
     sound.setVolume(f);
+    const lbl = document.getElementById("vol-val");
+    if (lbl) lbl.textContent = Math.round(f * 100) + "%";
     clearTimeout(this._volT);
     this._volT = setTimeout(() => { store.prefs.volume = f; persist(); }, 400);
   },
@@ -344,7 +346,7 @@ function renderStat(f) {
       <div class="card-title">${t("stat_title")}</div>
       <div class="bars">${days.map((d) => `
         <div class="barcol">
-          <div class="barval">${d.total ? d.total.toFixed(1) + "h" : "—"}</div>
+          <div class="barval">${d.total ? d.total.toFixed(1) + "h" : "·"}</div>
           <div class="bar" style="height:${(d.total / maxH) * 100}%"></div>
           <div class="barlabel">${d.label}</div>
         </div>`).join("")}</div>
@@ -378,15 +380,21 @@ function renderSuoni() {
         <span class="soundstate ${on ? "stop" : "play"}">${icon}</span>
       </button>`;
       }).join("")}
-      <label class="field"><span>${t("volume")}</span>
-        <input type="range" min="0" max="1" step="0.01" value="${vol}" oninput="NINNA.setVolume(this.value)">
-      </label>
-      <label class="field"><span>${t("sleep_timer")}</span>
-        <select onchange="NINNA.setSleepTimer(this.value)">
-          <option value="0"${timerMin === 0 ? " selected" : ""}>${t("never")}</option>
-          ${[15, 30, 45, 60].map((n) => `<option value="${n}"${timerMin === n ? " selected" : ""}>${t("timer_min", { n })}</option>`).join("")}
-        </select>
-      </label>
+      <div class="soundctl">
+        <div class="ctl-row">
+          <span class="ctl-label">${t("volume")}</span>
+          <span class="ctl-value" id="vol-val">${Math.round(vol * 100)}%</span>
+        </div>
+        <input class="ctl-range" type="range" min="0" max="1" step="0.01" value="${vol}"
+          oninput="NINNA.setVolume(this.value)">
+        <div class="ctl-row ctl-timer">
+          <span class="ctl-label">${t("sleep_timer")}</span>
+          <select class="ctl-select" onchange="NINNA.setSleepTimer(this.value)">
+            <option value="0"${timerMin === 0 ? " selected" : ""}>${t("never")}</option>
+            ${[15, 30, 45, 60].map((n) => `<option value="${n}"${timerMin === n ? " selected" : ""}>${t("timer_min", { n })}</option>`).join("")}
+          </select>
+        </div>
+      </div>
     </div>`;
 }
 
@@ -445,7 +453,7 @@ function buildReportHTML(days = 14) {
   const pr = profileFor(b.birth);
   const w = Math.floor(ageWeeks(b.birth));
   return `<!DOCTYPE html><html lang="${lang}"><head><meta charset="utf-8">
-<title>${t("report_title")} — ${esc(b.name)}</title>
+<title>${t("report_title")} · ${esc(b.name)}</title>
 <style>
   body { font-family: -apple-system, system-ui, sans-serif; color: #111; max-width: 760px; margin: 24px auto; padding: 0 16px; }
   h1 { font-size: 20px; margin: 0 0 4px; }
@@ -561,7 +569,7 @@ function handleShortcut() {
   history.replaceState(null, "", location.pathname);
   if (!store.baby) return;                       // profilo non ancora creato
   const active = store.events.find((e) => (e.type === "nap" || e.type === "night") && !e.end);
-  if (active) return toast(typeLabel(active.type) + " — " + t("in_progress"));
+  if (active) return toast(typeLabel(active.type) + " · " + t("in_progress"));
   const kind = azione === "nanna" ? "night" : azione === "pisolino" ? "nap" : null;
   if (kind) NINNA.startSleep(kind);
 }

@@ -1,38 +1,51 @@
-# Changelog — Ninna
+# Changelog: Ninna
 
 Versionamento semantico (MAJOR.MINOR.PATCH). Ogni release da qui in avanti
 viene registrata qui, in ordine cronologico, più recente in cima.
 
-## v1.1.6 — 26/08/2026
+## v1.1.7 · 26/08/2026
+- Suoni: volume e spegnimento automatico erano resi come campi di modulo,
+  impilati sotto la lista senza stacco, come se appartenessero a un form di
+  inserimento. Ora sono un pannello di controllo distinto, separato da una
+  linea, con il valore del volume mostrato in percentuale e aggiornato dal
+  vivo mentre si trascina, e il menu dello spegnimento su una riga propria
+  con area di tocco adeguata.
+- Impostazioni: "Riepilogo per il pediatra" ora dichiara il formato (PDF),
+  come gia facevano gli altri due export.
+- Rimosse tutte le lineette lunghe da ogni file del progetto, sostituite con
+  punteggiatura italiana (due punti, virgole) negli incisi e con il punto
+  mediano nei separatori, coerente con l'uso gia diffuso nell'app.
+
+## v1.1.6 · 26/08/2026
 - Fix: con la tab bar resa più trasparente (v1.0.2), il contenuto che
-  scorreva sotto restava visibile a bordi netti attraverso il vetro —
+  scorreva sotto restava visibile a bordi netti attraverso il vetro:
   un effetto di sovrapposizione poco elegante. Aggiunto un velo di
   dissolvenza fisso appena sopra la tab bar (puro CSS, nessuna logica):
   il contenuto ora sfuma verso il colore di fondo prima di raggiungerla,
   invece di intravedersi. Nessun impatto su scroll o interazioni.
 
-## v1.1.5 — 26/08/2026
+## v1.1.5 · 26/08/2026
 - Audit della Guida: il badge "X min" non veniva mai allineato a destra del
-  titolo perché il markup non applicava mai la classe CSS che lo prevedeva —
+  titolo perché il markup non applicava mai la classe CSS che lo prevedeva:
   regola morta dalla prima versione, ora rimossa (era duplicata anche nel
   file di anteprima).
 - Titolo e corpo degli articoli avevano solo una differenza di luminosità
   (bianco vs grigio chiarissimo), non un vero contrasto cromatico. Il
   titolo di ogni articolo è ora in menta, leggermente più grande (18,5px),
   con una linea sottile di distacco prima del corpo del testo quando si apre
-  — gerarchia più chiara, resa solo negli articoli della Guida, senza
+ : gerarchia più chiara, resa solo negli articoli della Guida, senza
   toccare le intestazioni condivise dal resto dell'app.
 
-## v1.1.4 — 26/08/2026
+## v1.1.4 · 26/08/2026
 - Audit della schermata Suoni: l'indicatore play/stop era testo puro
   (▶/◼) a dimensione ereditata, senza distinzione visiva tra i due stati.
   Sostituito con un vero bottone circolare da 44px (soglia minima di
   accessibilità per il tocco), icone vettoriali al posto dei caratteri
-  unicode, e colori di stato opposti: menta per play, rosa pieno per stop —
+  unicode, e colori di stato opposti: menta per play, rosa pieno per stop:
   ora lo stato dell'audio si riconosce a colpo d'occhio, non solo leggendo
   il simbolo.
 
-## v1.1.3 — 26/08/2026
+## v1.1.3 · 26/08/2026
 - Fix: "Riepilogo per il pediatra" apriva una scheda vuota ("about:blank") su
   alcuni browser mobile, in particolare da app installata. Causa: si
   scriveva il contenuto in una finestra vuota dopo averla aperta, un metodo
@@ -41,13 +54,13 @@ viene registrata qui, in ordine cronologico, più recente in cima.
   nuova scheda, il file viene scaricato come ripiego invece di fallire senza
   spiegazione.
 
-## v1.1.2 — 25/08/2026
+## v1.1.2 · 25/08/2026
 - La luna nella schermata iniziale non è più un carattere unicode generico
   (☾): è il logo vero, luna e stella isolate dal file sorgente su sfondo
   trasparente. Prima dell'onboarding e le icone dell'app mostravano due
   simboli diversi; ora sono lo stesso identico glifo.
 
-## v1.1.1 — 25/08/2026
+## v1.1.1 · 25/08/2026
 Interventi emersi da un audit completo del codice:
 - Il riepilogo per il pediatra non compare più in modalità solo diario: era
   incoerente offrire una tabella di numeri proprio dove li stiamo nascondendo.
@@ -59,7 +72,7 @@ Interventi emersi da un audit completo del codice:
 - Aggiunto un messaggio bilingue per chi ha JavaScript disattivato, al posto
   di una pagina vuota.
 
-## v1.1.0 — 25/08/2026
+## v1.1.0 · 25/08/2026
 - **Modalità solo diario**: interruttore nelle impostazioni che nasconde
   previsioni, confronti, statistiche e il tab Statistiche, lasciando solo il
   registro di quello che è successo. Pensata per chi si accorge che guardare
@@ -70,7 +83,7 @@ Interventi emersi da un audit completo del codice:
   sistema (nessuna libreria PDF aggiunta). Include la nota sulla variabilità
   individuale e la precisazione che i dati sono auto-registrati dai genitori.
 
-## v1.0.3 — 25/08/2026
+## v1.0.3 · 25/08/2026
 - Scorciatoie rapide: tenendo premuta l'icona di Ninna in schermata Home
   compaiono "Inizia pisolino" e "Inizia nanna", che registrano il sonno
   all'apertura senza altri tocchi. Protetto contro doppie registrazioni
@@ -80,11 +93,11 @@ Interventi emersi da un audit completo del codice:
   all'intervallo tipico per l'età, con una nota esplicita sulla variabilità
   individuale. I dati restano gli stessi, sparisce il tono da pagella.
 
-## v1.0.2 — 25/08/2026
+## v1.0.2 · 25/08/2026
 - Tab bar flottante resa più trasparente (opacità 0.38, blur 34px): il
   contenuto che scorre sotto è ora visibile attraverso il vetro.
 
-## v1.0.1 — 25/08/2026
+## v1.0.1 · 25/08/2026
 - Fix: la tab bar e i toast potevano sembrare "muoversi" durante lo scroll su
   mobile, per via del ricalcolo di `100vh` allo sparire/apparire della barra
   indirizzi del browser. Corretto con `100dvh`, `overscroll-behavior` e
@@ -92,7 +105,7 @@ Interventi emersi da un audit completo del codice:
 - Aggiunta numerazione di versione (visibile in Impostazioni), cache del
   service worker allineata alla versione.
 
-## v1.0.0 — 25/08/2026
+## v1.0.0 · 25/08/2026
 Prima versione stabile pubblicata (Studionodo/Ninna su Vercel). Comprende:
 - Motore di previsione (finestre di veglia adattive, sweet spot, nanna serale,
   decisione automatica pisolino/nanna, rilevamento transizioni).

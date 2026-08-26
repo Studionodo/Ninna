@@ -1,5 +1,5 @@
 /* ============================================================
-   NINNA ENGINE — modelli di calcolo del sonno neonatale
+   NINNA ENGINE · modelli di calcolo del sonno neonatale
    ES module puro, zero dipendenze, testabile in isolamento.
    Tutte le durate interne sono in MINUTI, i tempi in ms epoch.
    ============================================================ */
@@ -99,7 +99,7 @@ export function effectiveWindow(profile, intervals, position = "mid") {
 }
 
 /* ------------------------------------------------------------
-   3. SWEET SPOT — la previsione è un intervallo, non un minuto.
+   3. SWEET SPOT: la previsione è un intervallo, non un minuto.
    [-15, +10] min attorno alla finestra effettiva: mettere giù il
    bambino dentro questo intervallo massimizza le probabilità di
    addormentamento sereno.
