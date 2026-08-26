@@ -7,10 +7,23 @@ import { SoundEngine, SOUNDS } from "./sounds.js";
 import { I18N } from "./i18n.js";
 import { loadStore, saveStore, exportCSV, exportJSON, importJSON } from "./content-store.js";
 
-const TYPE_ICONS = { nap:"☁️", night:"🌙", breast:"🤱", bottle:"🍼", solid:"🥣", diaper:"🧷", nightwake:"🌩", pump:"⚗️" };
+const TYPE_ICONS = {
+  nap: "<svg viewBox=\"0 0 24 24\" width=\"1em\" height=\"1em\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"ico\"><path d=\"M6.5 17.2h10.2a3 3 0 0 0 .3-6 4.6 4.6 0 0 0-8.7-1.5A3.4 3.4 0 0 0 6.5 17.2z\"/></svg>",
+  night: "<svg viewBox=\"0 0 24 24\" width=\"1em\" height=\"1em\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"ico\"><path d=\"M17.2 13.8A7 7 0 1 1 10.2 3.3a5.6 5.6 0 0 0 7 10.5z\"/></svg>",
+  breast: "<svg viewBox=\"0 0 24 24\" width=\"1em\" height=\"1em\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"ico\"><path d=\"M12 20s-7.2-4.4-9.4-8.8A5 5 0 0 1 12 6.3a5 5 0 0 1 9.4 4.9C19.2 15.6 12 20 12 20z\"/></svg>",
+  bottle: "<svg viewBox=\"0 0 24 24\" width=\"1em\" height=\"1em\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"ico\"><path d=\"M10.2 3.5h3.6M10.7 3.5v2c0 .6-.4 1-.9 1.3-.9.5-1.5 1.4-1.5 2.4V19a1.3 1.3 0 0 0 1.3 1.3h5a1.3 1.3 0 0 0 1.3-1.3V9.2c0-1-.6-1.9-1.5-2.4-.5-.3-.9-.7-.9-1.3v-2M8.4 13.5h7.2M8.4 16.5h7.2\"/></svg>",
+  solid: "<svg viewBox=\"0 0 24 24\" width=\"1em\" height=\"1em\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"ico\"><ellipse cx=\"12\" cy=\"10.5\" rx=\"7.3\" ry=\"1.7\"/><path d=\"M4.7 10.5c0 4 2.9 7.2 7.3 7.2s7.3-3.2 7.3-7.2\"/><path d=\"M8.4 10.3h7.2\"/><path d=\"M16.3 6.8 18.7 4.4M17.5 5.6a1.15 1.15 0 1 0 1.6-1.6\"/></svg>",
+  diaper: "<svg viewBox=\"0 0 24 24\" width=\"1em\" height=\"1em\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"ico\"><circle cx=\"7\" cy=\"16\" r=\"2.1\"/><path d=\"M8.6 14.4 15.5 7.5a2.3 2.3 0 0 1 3.2 3.2l-2.2 2.2\"/><path d=\"M17.8 11.8a1.9 1.9 0 1 1-2.7-2.7\"/></svg>",
+  nightwake: "<svg viewBox=\"0 0 24 24\" width=\"1em\" height=\"1em\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"ico\"><path d=\"M2.5 12S6 6.3 12 6.3 21.5 12 21.5 12 18 17.7 12 17.7 2.5 12 2.5 12z\"/><circle cx=\"12\" cy=\"12\" r=\"2.1\"/></svg>",
+  pump: "<svg viewBox=\"0 0 24 24\" width=\"1em\" height=\"1em\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"ico\"><path d=\"M10.3 3.8h3.4M9 3.8v3.6c0 .5-.2.9-.5 1.3-1 1.1-1.5 3-1.5 4.9 0 3.5 2 6.6 5 6.6s5-3.1 5-6.6c0-1.9-.5-3.8-1.5-4.9-.3-.4-.5-.8-.5-1.3V3.8\"/><path d=\"M7.6 13.2h8.8\"/></svg>",
+  vitamins: "<svg viewBox=\"0 0 24 24\" width=\"1em\" height=\"1em\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"ico\"><path d=\"M12 3.2c3.2 4.6 6.2 8.6 6.2 12A6.2 6.2 0 1 1 5.8 15.2c0-3.4 3-7.4 6.2-12z\"/></svg>",
+  med: "<svg viewBox=\"0 0 24 24\" width=\"1em\" height=\"1em\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"ico\"><rect x=\"3.2\" y=\"9.3\" width=\"17.6\" height=\"5.4\" rx=\"2.7\" transform=\"rotate(-40 12 12)\"/><path d=\"M9.8 8.6 14.2 15.4\" transform=\"rotate(-40 12 12)\"/></svg>"
+};
+const EDIT_ICON = "<svg viewBox=\"0 0 24 24\" width=\"1em\" height=\"1em\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"ico ico-edit\"><path d=\"M4 20l.9-3.6L15.5 6a1.7 1.7 0 0 1 2.4 0l.1.1a1.7 1.7 0 0 1 0 2.4L7.6 19.1 4 20z\"/><path d=\"M13.8 7.7l2.5 2.5\"/></svg>";
 const INSTANT = ["breast", "bottle", "solid", "diaper", "nightwake", "pump"];
+const HEALTH = ["vitamins", "med"];
 const KOFI = "https://ko-fi.com/istantelabs/tip";
-const APP_VERSION = "1.3.0";
+const APP_VERSION = "1.5.0";
 const CUP = `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4.5 9h11v5.5a4 4 0 0 1-4 4h-3a4 4 0 0 1-4-4V9z"/><path d="M15.5 10h1.6a2.4 2.4 0 0 1 0 4.8h-1.6"/><path d="M8 4.5c0 .9.9 1.1.9 2M11.5 4c0 .9.9 1.1.9 2"/></svg>`;
 
 /* ---------- stato ---------- */
@@ -18,6 +31,7 @@ let store = loadStore();
 let lang = store.prefs.lang === "en" ? "en" : "it";
 let logOnly = store.prefs.logOnly === true;
 let showAbout = false;
+let theme = store.prefs.theme || "auto";
 let view = "oggi";
 let showWhy = false, showManual = false;
 let sound = new SoundEngine();
@@ -90,6 +104,13 @@ function scheduleNotifications(plan) {
 window.NINNA = {
   setView(v) { view = v; render(); },
   setLang(l) { lang = l === "en" ? "en" : "it"; store.prefs.lang = lang; persist(); render(); if (showAbout) renderAbout(); else if ($modal.innerHTML) renderSettings(); },
+  setTheme(v) {
+    theme = v;
+    store.prefs.theme = v;
+    persist();
+    applyTheme();
+    if ($modal.innerHTML) renderSettings();
+  },
   toggleLogOnly() {
     logOnly = !logOnly;
     store.prefs.logOnly = logOnly;
@@ -113,6 +134,50 @@ window.NINNA = {
     persist(); toast(t("logged_type", { label: typeLabel(type) })); render();
   },
   removeEvent(id) { store.events = store.events.filter((e) => e.id !== id); persist(); render(); },
+  openEdit(id) {
+    const e = store.events.find((x) => x.id === id);
+    if (!e) return;
+    const hm = (ts) => { const d = new Date(ts); return String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0"); };
+    const dur = e.start != null;
+    $modal.innerHTML = `<div class="modal-wrap" onclick="NINNA.closeSettings()">
+      <div class="modal" onclick="event.stopPropagation()">
+        <div class="card-title">${t("edit_title")}</div>
+        <div class="dim small">${TYPE_ICONS[e.type]} ${typeLabel(e.type)}</div>
+        ${dur ? `<div class="row2">
+            <label class="field"><span>${t("manual_start")}</span><input type="time" id="e-start" value="${hm(e.start)}"></label>
+            ${e.end ? `<label class="field"><span>${t("manual_end")}</span><input type="time" id="e-end" value="${hm(e.end)}"></label>` : ""}
+          </div>` : `<label class="field"><span>${t("edit_time")}</span><input type="time" id="e-at" value="${hm(e.at)}"></label>`}
+        <button class="secondary block" onclick="NINNA.saveEdit('${e.id}')">${t("save")}</button>
+        <button class="link block" onclick="NINNA.closeSettings()">${t("close")}</button>
+      </div>
+    </div>`;
+  },
+  saveEdit(id) {
+    const e = store.events.find((x) => x.id === id);
+    if (!e) return;
+    const anchor = (ts, hmStr) => {
+      const [h, m] = hmStr.split(":").map(Number);
+      const d = new Date(ts); d.setHours(h, m, 0, 0); return d.getTime();
+    };
+    if (e.start != null) {
+      const sv = document.getElementById("e-start");
+      if (!sv || !sv.value) return toast(t("invalid_times"));
+      const ns = anchor(e.start, sv.value);
+      let ne = e.end;
+      if (e.end) {
+        const ev = document.getElementById("e-end");
+        if (!ev || !ev.value) return toast(t("invalid_times"));
+        ne = anchor(e.start, ev.value);
+        if (ne <= ns) ne += 86400000;   // fine oltre mezzanotte, stessa regola dell'inserimento manuale
+      }
+      e.start = ns; e.end = ne;
+    } else {
+      const av = document.getElementById("e-at");
+      if (!av || !av.value) return toast(t("invalid_times"));
+      e.at = anchor(e.at, av.value);
+    }
+    persist(); NINNA.closeSettings(); toast(t("edit_done")); render();
+  },
   toggleWhy() { showWhy = !showWhy; render(); },
   toggleManual() { showManual = !showManual; render(); },
   addManual() {
@@ -178,6 +243,8 @@ window.NINNA = {
         store = importJSON(r.result);
         lang = store.prefs.lang === "en" ? "en" : "it";
         logOnly = store.prefs.logOnly === true;
+        theme = store.prefs.theme || "auto";
+        applyTheme();
         persist(); NINNA.closeSettings(); toast(t("import_done")); render();
       } catch { toast(t("import_bad")); }
     };
@@ -190,7 +257,7 @@ window.NINNA = {
   },
   wipe() {
     if (!confirm(t("wipe_confirm"))) return;
-    store = { version: 1, baby: null, events: [], prefs: { volume: 0.4, lang, logOnly } };
+    store = { version: 1, baby: null, events: [], prefs: { volume: 0.4, lang, logOnly, theme } };
     persist(); NINNA.closeSettings(); render();
   },
   saveBaby() {
@@ -210,16 +277,36 @@ function downloadBlob(blob, filename) {
 /* ---------- viste ---------- */
 function ringSVG(pct, sleeping) {
   const R = 52, C = 2 * Math.PI * R, filled = C * Math.min(1, pct);
-  const color = sleeping ? "#8B7BFF" : pct < 0.75 ? "#8FE6C9" : "#F0A0B6";
+  const color = sleeping ? "var(--sleeping)" : pct < 0.75 ? "var(--mint)" : "var(--rose)";
   const label = sleeping ? "zZ" : Math.round(pct * 100) + "%";
   const sub = sleeping ? (lang === "it" ? "sta dormendo" : "sleeping") : (lang === "it" ? "pressione del sonno" : "sleep pressure");
   return `<svg width="120" height="120" viewBox="0 0 128 128" class="ring">
-    <circle cx="64" cy="64" r="${R}" stroke="rgba(255,255,255,.08)" stroke-width="10" fill="none"/>
+    <circle cx="64" cy="64" r="${R}" stroke="var(--stroke)" stroke-width="10" fill="none"/>
     <circle cx="64" cy="64" r="${R}" fill="none" stroke-width="10" stroke-linecap="round"
       stroke="${color}" stroke-dasharray="${filled} ${C}" transform="rotate(-90 64 64)"/>
-    <text x="64" y="60" text-anchor="middle" fill="#EAF2EE" font-size="26">${label}</text>
-    <text x="64" y="80" text-anchor="middle" fill="#A6B7B0" font-size="10">${sub}</text>
+    <text x="64" y="60" text-anchor="middle" fill="var(--text)" font-size="26">${label}</text>
+    <text x="64" y="80" text-anchor="middle" fill="var(--sub)" font-size="10">${sub}</text>
   </svg>`;
+}
+
+
+/* ---------- tema chiaro/scuro/automatico ---------- */
+function applyTheme() {
+  const root = document.documentElement;
+  root.classList.remove("theme-light", "theme-dark");
+  if (theme === "light") root.classList.add("theme-light");
+  else if (theme === "dark") root.classList.add("theme-dark");
+  // "auto": nessuna classe, decide la media query prefers-color-scheme in styles.css
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) {
+    const bg = getComputedStyle(root).getPropertyValue("--bg").trim();
+    if (bg) meta.setAttribute("content", bg);
+  }
+}
+if (window.matchMedia) {
+  window.matchMedia("(prefers-color-scheme: light)").addEventListener("change", () => {
+    if (theme === "auto") applyTheme();   // il sistema cambia mentre siamo in automatico
+  });
 }
 
 function footerHTML(kind) {
@@ -295,11 +382,11 @@ function renderOggi(f) {
     <div class="card hero">${hero}</div>
     ${!active ? (() => {
       const k = logOnly ? null : f.next.kind;
-      const btn = (kind, icon, label) => `<button class="bigbtn ${k === kind ? "" : "alt"}" onclick="NINNA.startSleep('${kind}')">${icon} ${label}${k === kind ? `<span class="rec">${t("recommended")}</span>` : ""}</button>`;
-      return `<div class="row2">${btn("nap", "☁️", t("btn_nap"))}${btn("night", "🌙", t("btn_night"))}</div>`;
+      const btn = (kind, label) => `<button class="bigbtn ${k === kind ? "" : "alt"}" onclick="NINNA.startSleep('${kind}')">${TYPE_ICONS[kind]} ${label}${k === kind ? `<span class="rec">${t("recommended")}</span>` : ""}</button>`;
+      return `<div class="row2">${btn("nap", t("btn_nap"))}${btn("night", t("btn_night"))}</div>`;
     })() : ""}
     ${!active && !logOnly && f.lastWake && f.next.kind === "nap" ? `<div class="card slim">
-      <div class="hero-sub">🌙 ${t("bed_card")} <b class="lit">${fmtHM(f.bedtime.at)}</b>
+      <div class="hero-sub">${TYPE_ICONS.night} ${t("bed_card")} <b class="lit">${fmtHM(f.bedtime.at)}</b>
       ${f.bedtime.earlier ? `<br><span class="amber">${t("bed_earlier")}</span>` : ""}</div>
     </div>` : ""}
     <div class="grid3">
@@ -307,10 +394,16 @@ function renderOggi(f) {
         <span class="tile-icon">${TYPE_ICONS[ty]}</span><span>${typeLabel(ty)}</span>
       </button>`).join("")}
     </div>
+    <div class="catlabel salutelabel">${t("salute")}</div>
+    <div class="grid3 salute">
+      ${HEALTH.map((ty) => `<button class="tile" onclick="NINNA.logInstant('${ty}')">
+        <span class="tile-icon">${TYPE_ICONS[ty]}</span><span>${typeLabel(ty)}</span>
+      </button>`).join("")}
+    </div>
     <button class="link block" onclick="NINNA.toggleManual()">${showManual ? t("manual_close") : t("manual_open")}</button>
     ${showManual ? `<div class="card">
       <label class="field"><span>${t("manual_type")}</span>
-        <select id="m-kind"><option value="nap">☁️ ${typeLabel("nap")}</option><option value="night">🌙 ${typeLabel("night")}</option></select>
+        <select id="m-kind"><option value="nap">${typeLabel("nap")}</option><option value="night">${typeLabel("night")}</option></select>
       </label>
       <div class="row2">
         <label class="field"><span>${t("manual_start")}</span><input type="time" id="m-start" value="13:00"></label>
@@ -321,13 +414,14 @@ function renderOggi(f) {
     <div class="card">
       <div class="card-title">${t("today")}</div>
       ${todayEvents.length === 0 ? `<div class="dim">${t("today_empty")}</div>` : ""}
-      ${todayEvents.map((e) => `<div class="logrow">
+      ${todayEvents.map((e) => `<div class="logrow tap" onclick="NINNA.openEdit('${e.id}')">
         <span class="logicon">${TYPE_ICONS[e.type]}</span>
         <span class="loglabel">${typeLabel(e.type)}</span>
         <span class="logtime">${e.at
           ? fmtHM(e.at)
           : fmtHM(e.start) + (e.end ? "–" + fmtHM(e.end) + " · " + fmtDur(e.end - e.start) : " · " + t("in_progress"))}</span>
-        <button class="del" onclick="NINNA.removeEvent('${e.id}')">✕</button>
+        <span class="edithint">${EDIT_ICON}</span>
+        <button class="del" onclick="event.stopPropagation(); NINNA.removeEvent('${e.id}')">✕</button>
       </div>`).join("")}
     </div>
     ${hasNotif() && Notification.permission === "default"
@@ -490,6 +584,12 @@ function buildReportHTML(days = 14) {
     <td>${(sumWakes / n).toFixed(1)}</td><td>${(sumFeeds / n).toFixed(1)}</td><td>${(sumDiapers / n).toFixed(1)}</td>
   </tr></tfoot>
 </table>
+${(() => {
+  const cutoff = Date.now() - days * 86400000;
+  const vit = store.events.filter((e) => e.type === "vitamins" && e.at >= cutoff).length;
+  const med = store.events.filter((e) => e.type === "med" && e.at >= cutoff).length;
+  return vit + med > 0 ? `<div class="meta" style="margin-top:12px"><b>${t("report_health")}:</b> ${typeLabel("vitamins")} ${vit} · ${typeLabel("med")} ${med}</div>` : "";
+})()}
 <div class="note">${t("report_note")}<br>${t("stat_variability")}</div>
 </body></html>`;
 }
@@ -518,6 +618,14 @@ function renderSettings() {
       <div class="card-title">${t("settings")}</div>
       <div class="dim small" style="opacity:.6">Ninna v${APP_VERSION}</div>
       <div class="dim small">${t("profile_line", { name: esc(b.name), date: new Date(b.birth + "T00:00:00").toLocaleDateString(LOCALE()), w: Math.floor(ageWeeks(b.birth)) })}</div>
+      <div class="langrow inmodal">
+        <span class="langlabel">${t("appearance").toUpperCase()}</span>
+        <div class="langpill theme3">
+          <button class="langopt ${theme === "light" ? "on" : ""}" onclick="NINNA.setTheme('light')">${t("theme_light")}</button>
+          <button class="langopt ${theme === "dark" ? "on" : ""}" onclick="NINNA.setTheme('dark')">${t("theme_dark")}</button>
+          <button class="langopt ${theme === "auto" ? "on" : ""}" onclick="NINNA.setTheme('auto')">${t("theme_auto")}</button>
+        </div>
+      </div>
       <div class="langrow inmodal">
         <span class="langlabel">${t("language").toUpperCase()}</span>
         <div class="langpill">
@@ -595,6 +703,7 @@ function handleShortcut() {
   if (kind) NINNA.startSleep(kind);
 }
 
+applyTheme();
 handleShortcut();
 render();
 setInterval(() => {

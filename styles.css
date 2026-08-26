@@ -12,12 +12,16 @@
   font-weight: 400; font-style: italic; font-display: swap; }
 
 
+/* Tema scuro: predefinito, e valore di fallback per browser senza
+   supporto a prefers-color-scheme. Sovrascritto da .theme-light e, in
+   modalita' automatica, dalla media query piu' sotto. */
 :root {
   --bg: #0B1118;
   --glass: rgba(255,255,255,.055);
   --glass-strong: rgba(255,255,255,.08);
   --stroke: rgba(255,255,255,.12);
   --specular: inset 0 1px 0 rgba(255,255,255,.16);
+  --shadow: 0 12px 32px rgba(0,0,0,.35);
   --text: #EAF2EE;
   --sub: #A6B7B0;
   --mint: #8FE6C9;
@@ -26,10 +30,64 @@
   --cta: #6F5BFF;
   --cta-press: #5B48E6;
   --cta-text: #F4F2FF;
+  --sleeping: #8B7BFF;
+  --mint-tint: rgba(143,230,201,.08);
+  --rose-tint-bg: rgba(240,160,182,.1);
+  --rose-tint-border: rgba(240,160,182,.4);
   --r-out: 24px;
   --r-in: 14px;
   --spring: cubic-bezier(.34,1.56,.64,1);
 }
+
+/* Tema chiaro: stessa identita' (menta/rosa/indaco), toni approfonditi per
+   restare leggibili su fondo chiaro invece che invertiti meccanicamente. */
+.theme-light {
+  --bg: #F6F4EF;
+  --glass: rgba(11,17,24,.045);
+  --glass-strong: rgba(11,17,24,.07);
+  --stroke: rgba(11,17,24,.12);
+  --specular: inset 0 1px 0 rgba(255,255,255,.6);
+  --shadow: 0 10px 26px rgba(30,26,20,.10);
+  --text: #1C2420;
+  --sub: #5B685F;
+  --mint: #1E9C74;
+  --mint-ink: #EAFBF4;
+  --rose: #C14A6E;
+  --cta: #6F5BFF;
+  --cta-press: #5B48E6;
+  --cta-text: #F4F2FF;
+  --sleeping: #5847D1;
+  --mint-tint: rgba(30,156,116,.08);
+  --rose-tint-bg: rgba(193,74,110,.09);
+  --rose-tint-border: rgba(193,74,110,.35);
+}
+
+/* Modalita' automatica (nessuna preferenza esplicita salvata): segue il
+   sistema. Attiva solo quando ne' .theme-light ne' .theme-dark sono
+   impostate a mano sull'elemento radice. */
+@media (prefers-color-scheme: light) {
+  html:not(.theme-dark):not(.theme-light) {
+    --bg: #F6F4EF;
+    --glass: rgba(11,17,24,.045);
+    --glass-strong: rgba(11,17,24,.07);
+    --stroke: rgba(11,17,24,.12);
+    --specular: inset 0 1px 0 rgba(255,255,255,.6);
+    --shadow: 0 10px 26px rgba(30,26,20,.10);
+    --text: #1C2420;
+    --sub: #5B685F;
+    --mint: #1E9C74;
+    --mint-ink: #EAFBF4;
+    --rose: #C14A6E;
+    --sleeping: #5847D1;
+    --mint-tint: rgba(30,156,116,.08);
+    --rose-tint-bg: rgba(193,74,110,.09);
+    --rose-tint-border: rgba(193,74,110,.35);
+  }
+}
+
+/* marcatore vuoto: la sua presenza blocca la media query sopra quando
+   l'utente sceglie lo scuro a mano mentre il sistema e' su chiaro */
+.theme-dark {}
 
 .display, h1, h2 { font-family: 'Fraunces', serif; font-weight: 600; }
 .eyebrow { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--sub); }
@@ -55,13 +113,13 @@
   line-height: 1.35; color: var(--mint); }
 .art-min { font-size: 11.5px; color: var(--sub); white-space: nowrap; flex-shrink: 0;
   padding-top: 3px; }
-.artbody { color: #C6D2CC; font-size: 14px; line-height: 1.6; margin: 14px 0 0;
+.artbody { color: var(--sub); font-size: 14px; line-height: 1.6; margin: 14px 0 0;
   padding-top: 14px; border-top: 1px solid rgba(255,255,255,.08); }
 .catlabel { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--sub); margin: 18px 4px 8px; }
 
 /* attenzione = rosa complementare */
-.banner { background: rgba(240,160,182,.1); border: 1px solid rgba(240,160,182,.4);
-  border-radius: var(--r-out); padding: 12px 14px; font-size: 13.5px; margin-bottom: 12px; color: #F6C3D0;
+.banner { background: var(--rose-tint-bg); border: 1px solid var(--rose-tint-border);
+  border-radius: var(--r-out); padding: 12px 14px; font-size: 13.5px; margin-bottom: 12px; color: var(--rose);
   -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); box-shadow: var(--specular); }
 
 .hero { display: flex; gap: 16px; align-items: center; }
@@ -70,7 +128,7 @@
 .hero-big { font-family: 'Fraunces', serif; font-size: 32px; line-height: 1.1; margin: 2px 0 4px; letter-spacing: -.015em; }
 .hero-sub { font-size: 13px; color: var(--sub); }
 .lit { color: var(--text); } .amber { color: var(--rose); }
-.why { margin-top: 8px; font-size: 12.5px; color: #C6D2CC; background: rgba(143,230,201,.08);
+.why { margin-top: 8px; font-size: 12.5px; color: var(--sub); background: var(--mint-tint);
   border: 1px solid rgba(143,230,201,.3); border-radius: var(--r-in); padding: 10px; line-height: 1.5; }
 
 .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
@@ -120,7 +178,7 @@
 .logicon { width: 24px; text-align: center; }
 .loglabel { flex: 1; }
 .logtime { color: var(--sub); font-size: 13px; }
-.del { background: none; border: none; color: #75837D; cursor: pointer; font-size: 14px;
+.del { background: none; border: none; color: var(--sub); cursor: pointer; font-size: 14px;
   min-width: 44px; min-height: 44px; margin: -12px -12px -12px 0; }
 
 /* velo di dissolvenza: il contenuto sfuma prima di raggiungere la tab bar,
@@ -145,8 +203,8 @@
 .tab.active { color: var(--mint-ink); background: var(--mint); font-weight: 600; }
 
 .toast { position: fixed; bottom: 92px; left: 50%; transform: translate(-50%, 0) translateZ(0);
-  background: var(--text); color: #101815; padding: 9px 18px; border-radius: 999px;
-  font-size: 13.5px; font-weight: 600; box-shadow: 0 8px 30px rgba(0,0,0,.4); z-index: 60; }
+  background: var(--mint); color: var(--mint-ink); padding: 9px 18px; border-radius: 999px;
+  font-size: 13.5px; font-weight: 600; box-shadow: 0 8px 30px rgba(0,0,0,.3); z-index: 60; }
 
 .field { display: flex; flex-direction: column; gap: 6px; margin: 10px 0; font-size: 13px; color: var(--sub); }
 .field input, .field select { background: var(--glass); border: 1px solid var(--stroke);
@@ -203,7 +261,6 @@
   border: 1px solid var(--stroke); box-shadow: var(--specular);
   border-radius: 28px 28px 0 0; padding: 20px 18px 30px; width: 100%; max-width: 460px; }
 
-.footer { text-align: center; color: #6A7770; font-size: 11.5px; padding: 16px 0 0; }
 .ring { flex-shrink: 0; }
 
 button:focus-visible, input:focus-visible, select:focus-visible, label:focus-visible {
@@ -279,4 +336,27 @@ button { font-family: inherit; }
 .about-tagline { font-style: italic; color: var(--sub); font-size: 15px; margin: 6px 0 22px; }
 .about-langpill { margin: 0 0 26px; width: fit-content; }
 .about-langpill .langopt { letter-spacing: .1em; }
-.about-p { color: #C6D2CC; font-size: 14.5px; line-height: 1.7; margin: 0 0 18px; }
+.about-p { color: var(--sub); font-size: 14.5px; line-height: 1.7; margin: 0 0 18px; }
+
+/* righe del diario toccabili per la modifica */
+.logrow.tap { cursor: pointer; }
+.logrow.tap:active { background: rgba(255,255,255,.03); }
+
+/* riga Salute: due piastrelle, stessa lingua visiva della griglia */
+.salutelabel { margin-top: 4px; }
+.grid3.salute { grid-template-columns: repeat(2, 1fr); }
+
+/* nuovo set di icone SVG: linea sottile, currentColor, coerenti ovunque */
+.ico { display: inline-block; vertical-align: -0.15em; flex-shrink: 0; }
+.ico-edit { color: var(--sub); }
+
+/* segnale che la riga del diario si puo' modificare: matita discreta prima della X */
+.edithint { display: inline-flex; opacity: .5; font-size: 13px; }
+.logrow.tap:active .edithint { opacity: .9; }
+
+/* selettore a tre vie (chiaro/scuro/automatico): stesso linguaggio del
+   pill lingua, adattato a tre opzioni invece di due */
+.theme3 { width: 100%; }
+.theme3 .langopt { flex: 1; padding: 9px 8px; font-size: 12px; letter-spacing: .04em; }
+.theme3 .langopt:first-child { border-right: 1px solid var(--stroke); }
+.theme3 .langopt:not(:first-child):not(:last-child) { border-right: 1px solid var(--stroke); }

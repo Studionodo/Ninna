@@ -34,7 +34,7 @@ export function exportJSON(data) {
   return JSON.stringify({ ...data, exportedAt: new Date().toISOString() }, null, 2);
 }
 
-const KNOWN_TYPES = ["nap", "night", "breast", "bottle", "solid", "diaper", "nightwake", "pump"];
+const KNOWN_TYPES = ["nap", "night", "breast", "bottle", "solid", "diaper", "nightwake", "pump", "vitamins", "med"];
 
 export function importJSON(text) {
   const data = JSON.parse(text);

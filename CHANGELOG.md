@@ -3,6 +3,64 @@
 Versionamento semantico (MAJOR.MINOR.PATCH). Ogni release da qui in avanti
 viene registrata qui, in ordine cronologico, più recente in cima.
 
+## v1.5.0 · 26/08/2026
+Tema Chiaro/Scuro/Automatico, in Impostazioni accanto alla lingua.
+- Automatico segue l'impostazione del sistema (prefers-color-scheme) e si
+  aggiorna da solo se cambia mentre l'app e' aperta. Chiaro e Scuro
+  restano fissi indipendentemente dal sistema.
+- Meccanismo interamente locale: nessuna chiamata di rete, nessun permesso,
+  coerente con la CSP e con quanto dichiarato su privacy e dati.
+- Limite architetturale onesto: lo splash screen di Android all'avvio
+  dell'app installata resta fisso al colore dichiarato nel manifest
+  (statico, letto una sola volta all'installazione). Solo l'interfaccia
+  dell'app cambia aspetto dal vivo.
+- Audit del codice: diversi colori erano scritti a mano invece di usare le
+  variabili del tema (anello del sonno, riquadro "perche' quest'orario",
+  banner delle transizioni, testo della Guida e di "Cos'e Ninna", tasto
+  elimina). Corretti tutti. Trovato anche un bug reale che il tema chiaro
+  avrebbe reso visibile: il toast usava testo quasi nero su uno sfondo che
+  in chiaro sarebbe diventato scuro, rendendolo illeggibile. Ora usa
+  l'abbinamento menta/testo-su-menta gia' corretto per costruzione.
+  Rimossa anche una regola CSS (.footer) mai piu' usata dalla v1.1.
+
+## v1.4.1 · 26/08/2026
+Audit completo delle icone: l'app usava emoji di sistema (rese diversamente
+da ogni produttore) mescolate a icone disegnate a mano per player e caffe,
+due linguaggi visivi diversi nella stessa interfaccia.
+- Dieci icone nuove, disegnate come linea sottile coerente (stesso spessore,
+  stessi angoli arrotondati del resto dell'app): nuvola, luna, cuore,
+  biberon, ciotola, spilla, occhio, boccetta, goccia, capsula. Sostituiscono
+  ogni emoji nei tile, nelle righe del diario, nei pulsanti e nella card
+  della nanna serale. Ogni icona verificata singolarmente e in insieme prima
+  dell'implementazione.
+- Le due opzioni del menu a tendina nell'inserimento manuale restano solo
+  testo: e' un limite dei controlli nativi del browser, non si puo' mettere
+  un'icona dentro un <option>.
+- Aggiunta una matita discreta accanto all'orario di ogni voce del diario,
+  segnale visivo che la riga si puo' toccare per correggerla.
+- Verificato con un test funzionale reale (jsdom): l'app vera caricata,
+  renderizzata con dati reali, controllato che le icone appaiano nel DOM e
+  che il tocco su una voce apra davvero la modifica.
+
+## v1.4.0 · 26/08/2026
+Tre funzioni insieme, su moduli separati. Lo schema multi-bambino e' rinviato
+di proposito a una release dedicata.
+- Modifica degli orari: toccando una voce del diario si apre la correzione
+  dell'orario (inizio e fine per i sonni, orario singolo per le altre voci).
+  La data resta ancorata al giorno originale e le notti a cavallo di
+  mezzanotte mantengono la regola dell'inserimento manuale. La X di
+  eliminazione resta indipendente dal tocco di modifica.
+- Suoni riscritti da zero: ogni suono e' ora un campione sintetizzato con una
+  firma propria invece di rumore filtrato. Il battito e' un vero doppio
+  impulso a 64 bpm, le onde si gonfiano e si ritirano con due respiri
+  sfasati, la pioggia ha goccioline discrete sopra il letto sonoro, lo shhh
+  segue un ritmo di respiro. Verificati con test su ampiezze, impulsi e
+  distinzione spettrale.
+- Sezione Salute: due nuove voci a un tocco, Vitamine e Farmaco, in una riga
+  dedicata sotto le attivita. Compaiono nel diario, si correggono e si
+  eliminano come le altre, e il riepilogo per il pediatra riporta i totali
+  del periodo.
+
 ## v1.3.0 · 26/08/2026
 Correzione di un difetto di privacy emerso da un audit esterno. L'app
 dichiarava di non connettersi ad alcun server, ma caricava i caratteri
