@@ -3,6 +3,14 @@
 Versionamento semantico (MAJOR.MINOR.PATCH). Ogni release da qui in avanti
 viene registrata qui, in ordine cronologico, più recente in cima.
 
+## v1.2.0 · 26/08/2026
+- Aggiunta la schermata "Cos'e Ninna", ispirata a quella gia presente in
+  Posa: un link discreto in alto a sinistra nella schermata Oggi apre una
+  pagina dedicata con il nome dell'app, la sua frase guida, un selettore di
+  lingua e una spiegazione discorsiva di cosa fa l'app, come tratta i dati e
+  per chi e pensata. Il testo riprende, in forma narrativa, i contenuti gia
+  scritti per i README italiano e inglese del repository.
+
 ## v1.1.7 · 26/08/2026
 - Suoni: volume e spegnimento automatico erano resi come campi di modulo,
   impilati sotto la lista senza stacco, come se appartenessero a un form di

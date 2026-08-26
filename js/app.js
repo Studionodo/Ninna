@@ -10,13 +10,14 @@ import { loadStore, saveStore, exportCSV, exportJSON, importJSON } from "./conte
 const TYPE_ICONS = { nap:"☁️", night:"🌙", breast:"🤱", bottle:"🍼", solid:"🥣", diaper:"🧷", nightwake:"🌩", pump:"⚗️" };
 const INSTANT = ["breast", "bottle", "solid", "diaper", "nightwake", "pump"];
 const KOFI = "https://ko-fi.com/istantelabs/tip";
-const APP_VERSION = "1.1.7";
+const APP_VERSION = "1.2.0";
 const CUP = `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4.5 9h11v5.5a4 4 0 0 1-4 4h-3a4 4 0 0 1-4-4V9z"/><path d="M15.5 10h1.6a2.4 2.4 0 0 1 0 4.8h-1.6"/><path d="M8 4.5c0 .9.9 1.1.9 2M11.5 4c0 .9.9 1.1.9 2"/></svg>`;
 
 /* ---------- stato ---------- */
 let store = loadStore();
 let lang = store.prefs.lang === "en" ? "en" : "it";
 let logOnly = store.prefs.logOnly === true;
+let showAbout = false;
 let view = "oggi";
 let showWhy = false, showManual = false;
 let sound = new SoundEngine();
@@ -88,7 +89,7 @@ function scheduleNotifications(plan) {
 /* ---------- azioni ---------- */
 window.NINNA = {
   setView(v) { view = v; render(); },
-  setLang(l) { lang = l === "en" ? "en" : "it"; store.prefs.lang = lang; persist(); render(); if ($modal.innerHTML) renderSettings(); },
+  setLang(l) { lang = l === "en" ? "en" : "it"; store.prefs.lang = lang; persist(); render(); if (showAbout) renderAbout(); else if ($modal.innerHTML) renderSettings(); },
   toggleLogOnly() {
     logOnly = !logOnly;
     store.prefs.logOnly = logOnly;
@@ -145,6 +146,8 @@ window.NINNA = {
   },
   toggleArticle(id) { const el = document.getElementById("art-" + id); if (el) el.hidden = !el.hidden; },
   openSettings() { renderSettings(); },
+  openAbout() { showAbout = true; renderAbout(); },
+  closeAbout() { showAbout = false; $modal.innerHTML = ""; },
   closeSettings() { $modal.innerHTML = ""; },
   openReport() {
     const blob = new Blob([buildReportHTML(14)], { type: "text/html" });
@@ -491,6 +494,23 @@ function buildReportHTML(days = 14) {
 </body></html>`;
 }
 
+function renderAbout() {
+  $modal.innerHTML = `<div class="about-overlay">
+    <button class="ghost about-back" onclick="NINNA.closeAbout()">←</button>
+    <div class="about-scroll">
+      <div class="about-title">Ninna<span class="about-dot">.</span></div>
+      <p class="about-tagline">${t("ob_title_sub")}</p>
+      <div class="langpill about-langpill">
+        <button class="langopt ${lang === "it" ? "on" : ""}" onclick="NINNA.setLang('it')">ITALIANO</button>
+        <button class="langopt ${lang === "en" ? "on" : ""}" onclick="NINNA.setLang('en')">ENGLISH</button>
+      </div>
+      ${I18N[lang].about.map((p) => `<p class="about-p">${p}</p>`).join("")}
+      <div class="hairline"></div>
+      <div class="finelines">${t("footer2")}</div>
+    </div>
+  </div>`;
+}
+
 function renderSettings() {
   const b = store.baby;
   $modal.innerHTML = `<div class="modal-wrap" onclick="NINNA.closeSettings()">
@@ -546,6 +566,7 @@ function render() {
     <header class="topbar">
       <div>
         <div class="eyebrow">Ninna</div>
+        ${view === "oggi" ? `<button class="about-link" onclick="NINNA.openAbout()">${t("about_link")}</button>` : ""}
         <div class="babyname">${esc(store.baby.name)}<span class="agechip">${ageLabel}</span></div>
       </div>
       <button class="ghost" onclick="NINNA.openSettings()">⋯</button>

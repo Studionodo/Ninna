@@ -86,6 +86,8 @@ export const I18N = {
       report_diapers: "Pannolini", report_avg: "Media",
       report_note: "Dati registrati manualmente dai genitori tramite l'app Ninna. Strumento di organizzazione familiare, non dispositivo medico.",
       report_print: "Stampa o salva in PDF",
+      about_link: "Cos'è Ninna",
+      about_close: "Chiudi",
       language: "Lingua", coffee: "Offrimi un caffè",
       footer1: "Offline · Nessun account · Nessun dato raccolto",
       footer2: "© 2026 Studionodo · Tutti i diritti riservati",
@@ -94,6 +96,12 @@ export const I18N = {
     cats: [
       { id: "basi", label: "Le basi" }, { id: "routine", label: "Routine e ambiente" },
       { id: "problemi", label: "Notti difficili" }, { id: "app", label: "Usare Ninna" },
+    ],
+    about: [
+      "Ninna \u00e8 il diario del sonno di chi non riesce pi\u00f9 a fidarsi dell'orologio. Registra pisolini, nanna, poppate e risvegli, e da quei dati calcola la prossima finestra di sonno del tuo bambino: non un orario secco, ma un intervallo, insieme al ragionamento che lo ha prodotto. Decide da sola se il prossimo sonno sar\u00e0 un pisolino o la nanna serale, cos\u00ec non devi indovinarlo tu ogni volta.",
+      "Funziona interamente offline. Non ha account, non raccoglie dati, non si connette a nessun server se non per il proprio aggiornamento. Ogni informazione resta sul dispositivo su cui viene scritta, esportabile in qualsiasi momento in JSON o CSV.",
+      "Ninna non insegue una notte perfetta. Le statistiche mostrano intervalli tipici per l'et\u00e0, non obiettivi da centrare, e una modalit\u00e0 dedicata permette di nascondere previsioni e confronti quando guardare i numeri smette di aiutare.",
+      "\u00c8 pensata per chi vuole capire i ritmi del proprio bambino, non per chi vuole essere giudicato da un'app mentre ci prova.",
     ],
     articles: [
       { id:"finestre", cat:"basi", min:2, t:"Le finestre di veglia", b:"Un neonato non regge molte ore da sveglio: tra un sonno e l'altro c'è una \"finestra\" che cresce con l'età: dai 45–60 minuti del primo mese alle 3–4 ore dopo l'anno. Metterlo a dormire dentro la finestra, prima che diventi sovrastanco, è la singola cosa che più facilita l'addormentamento. Ninna calcola la finestra per l'età e la corregge, giorno dopo giorno, con i ritmi reali che registri." },
@@ -193,6 +201,8 @@ export const I18N = {
       report_diapers: "Diapers", report_avg: "Average",
       report_note: "Data logged manually by the parents using the Ninna app. A family organisation tool, not a medical device.",
       report_print: "Print or save as PDF",
+      about_link: "About Ninna",
+      about_close: "Close",
       language: "Language", coffee: "Buy me a coffee",
       footer1: "Offline · No account · No data collected",
       footer2: "© 2026 Studionodo · All rights reserved",
@@ -201,6 +211,12 @@ export const I18N = {
     cats: [
       { id: "basi", label: "The basics" }, { id: "routine", label: "Routine & environment" },
       { id: "problemi", label: "Difficult nights" }, { id: "app", label: "Using Ninna" },
+    ],
+    about: [
+      "Ninna is the sleep diary for anyone who can't quite trust the clock anymore. It logs naps, night sleep, feeds and wakings, and from that data works out your baby's next sleep window: not a fixed time, but a range, together with the reasoning behind it. It decides on its own whether the next sleep will be a nap or bedtime, so you don't have to guess every time.",
+      "It works entirely offline. No account, no data collection, no connection to any server except for its own updates. Everything stays on the device it was written on, exportable at any time as JSON or CSV.",
+      "Ninna doesn't chase a perfect night. The statistics show typical ranges for the age, not targets to hit, and a dedicated mode lets you hide predictions and comparisons whenever looking at the numbers stops helping.",
+      "It's built for parents who want to understand their child's rhythms, not to be judged by an app while they try.",
     ],
     articles: [
       { id:"finestre", cat:"basi", min:2, t:"Wake windows", b:"A newborn can't stay awake for long: between one sleep and the next there is a \"window\" that grows with age: from 45–60 minutes in the first month to 3–4 hours after the first year. Putting your baby down inside the window, before overtiredness sets in, is the single thing that most helps them fall asleep. Ninna computes the window for their age and corrects it, day after day, with the real rhythms you log." },
