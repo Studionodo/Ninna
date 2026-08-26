@@ -3,6 +3,35 @@
 Versionamento semantico (MAJOR.MINOR.PATCH). Ogni release da qui in avanti
 viene registrata qui, in ordine cronologico, più recente in cima.
 
+## v1.1.6 — 26/08/2026
+- Fix: con la tab bar resa più trasparente (v1.0.2), il contenuto che
+  scorreva sotto restava visibile a bordi netti attraverso il vetro —
+  un effetto di sovrapposizione poco elegante. Aggiunto un velo di
+  dissolvenza fisso appena sopra la tab bar (puro CSS, nessuna logica):
+  il contenuto ora sfuma verso il colore di fondo prima di raggiungerla,
+  invece di intravedersi. Nessun impatto su scroll o interazioni.
+
+## v1.1.5 — 26/08/2026
+- Audit della Guida: il badge "X min" non veniva mai allineato a destra del
+  titolo perché il markup non applicava mai la classe CSS che lo prevedeva —
+  regola morta dalla prima versione, ora rimossa (era duplicata anche nel
+  file di anteprima).
+- Titolo e corpo degli articoli avevano solo una differenza di luminosità
+  (bianco vs grigio chiarissimo), non un vero contrasto cromatico. Il
+  titolo di ogni articolo è ora in menta, leggermente più grande (18,5px),
+  con una linea sottile di distacco prima del corpo del testo quando si apre
+  — gerarchia più chiara, resa solo negli articoli della Guida, senza
+  toccare le intestazioni condivise dal resto dell'app.
+
+## v1.1.4 — 26/08/2026
+- Audit della schermata Suoni: l'indicatore play/stop era testo puro
+  (▶/◼) a dimensione ereditata, senza distinzione visiva tra i due stati.
+  Sostituito con un vero bottone circolare da 44px (soglia minima di
+  accessibilità per il tocco), icone vettoriali al posto dei caratteri
+  unicode, e colori di stato opposti: menta per play, rosa pieno per stop —
+  ora lo stato dell'audio si riconosce a colpo d'occhio, non solo leggendo
+  il simbolo.
+
 ## v1.1.3 — 26/08/2026
 - Fix: "Riepilogo per il pediatra" apriva una scheda vuota ("about:blank") su
   alcuni browser mobile, in particolare da app installata. Causa: si
