@@ -23,7 +23,7 @@ const EDIT_ICON = "<svg viewBox=\"0 0 24 24\" width=\"1em\" height=\"1em\" fill=
 const INSTANT = ["breast", "bottle", "solid", "diaper", "nightwake", "pump"];
 const HEALTH = ["vitamins", "med"];
 const KOFI = "https://ko-fi.com/istantelabs/tip";
-const APP_VERSION = "1.7.0";
+const APP_VERSION = "1.8.0";
 const CUP = `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4.5 9h11v5.5a4 4 0 0 1-4 4h-3a4 4 0 0 1-4-4V9z"/><path d="M15.5 10h1.6a2.4 2.4 0 0 1 0 4.8h-1.6"/><path d="M8 4.5c0 .9.9 1.1.9 2M11.5 4c0 .9.9 1.1.9 2"/></svg>`;
 
 /* ---------- stato ---------- */
@@ -34,7 +34,7 @@ let showAbout = false;
 let nightMode = false;
 let theme = store.prefs.theme || "auto";
 let view = "oggi";
-let showWhy = false, showManual = false;
+let showWhy = false, showManual = false, showHealth = false;
 let sound = new SoundEngine();
 let timerMin = 0;
 let notifTimeouts = [];
@@ -143,6 +143,7 @@ window.NINNA = {
   },
   logInstant(type) {
     store.events.push({ id: uid(), type, at: Date.now() });
+    if (HEALTH.includes(type)) showHealth = false;
     persist(); toast(t("logged_type", { label: typeLabel(type) })); render();
   },
   removeEvent(id) { store.events = store.events.filter((e) => e.id !== id); persist(); render(); },
@@ -192,6 +193,7 @@ window.NINNA = {
   },
   toggleWhy() { showWhy = !showWhy; render(); },
   toggleManual() { showManual = !showManual; render(); },
+  toggleHealth() { showHealth = !showHealth; render(); },
   addManual() {
     const kind = document.getElementById("m-kind").value;
     const s = document.getElementById("m-start").value;
@@ -206,7 +208,12 @@ window.NINNA = {
     store.events.push({ id: uid(), type: kind, start: sMs, end: eMs });
     persist(); showManual = false; toast(t("added")); render();
   },
-  playSound(id) { sound.setVolume(store.prefs.volume ?? 0.4); sound.play(id); render(); },
+  playSound(id) {
+    sound.setVolume(store.prefs.volume ?? 0.4);
+    sound.play(id);
+    if (sound.playing === id) sound.setNowPlayingLabel(t("sound_" + id));
+    render();
+  },
   setVolume(v) {
     const f = parseFloat(v);
     sound.setVolume(f);
@@ -423,7 +430,7 @@ function renderOggi(f) {
 
   return `
     ${!logOnly && f.transition.detected ? `<div class="banner">${t("transition", { avg: f.transition.avgNaps, lo: f.transition.expected[0], hi: f.transition.expected[1] })}</div>` : ""}
-    ${timelineHTML(store.events, Date.now())}
+    ${todayEvents.length > 0 ? timelineHTML(store.events, Date.now()) : ""}
     <div class="card hero">${hero}</div>
     ${!active ? (() => {
       const k = logOnly ? null : f.next.kind;
@@ -439,12 +446,12 @@ function renderOggi(f) {
         <span class="tile-icon">${TYPE_ICONS[ty]}</span><span>${typeLabel(ty)}</span>
       </button>`).join("")}
     </div>
-    <div class="catlabel salutelabel">${t("salute")}</div>
-    <div class="grid3 salute">
+    <button class="link block" onclick="NINNA.toggleHealth()">${showHealth ? "− " + t("salute") : "+ " + t("salute")}</button>
+    ${showHealth ? `<div class="grid3 salute">
       ${HEALTH.map((ty) => `<button class="tile" onclick="NINNA.logInstant('${ty}')">
         <span class="tile-icon">${TYPE_ICONS[ty]}</span><span>${typeLabel(ty)}</span>
       </button>`).join("")}
-    </div>
+    </div>` : ""}
     <button class="link block" onclick="NINNA.toggleManual()">${showManual ? t("manual_close") : t("manual_open")}</button>
     ${showManual ? `<div class="card">
       <label class="field"><span>${t("manual_type")}</span>

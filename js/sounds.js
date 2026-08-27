@@ -151,7 +151,7 @@ export function _gen(id, sr = 44100) { return GENERATORS[id](sr); } // per i tes
 /* ---------- motore ---------- */
 export class SoundEngine {
   constructor() {
-    this.ctx = null; this.master = null; this.source = null;
+    this.ctx = null; this.master = null; this.source = null; this.anchor = null;
     this.playing = null; this.volume = 0.4;
     this._buffers = {}; this._nodes = []; this._timer = null;
   }
@@ -160,9 +160,51 @@ export class SoundEngine {
       this.ctx = new (window.AudioContext || window.webkitAudioContext)();
       this.master = this.ctx.createGain();
       this.master.gain.value = 0;
-      this.master.connect(this.ctx.destination);
+      this._setupOutput();
     }
     if (this.ctx.state === "suspended") this.ctx.resume();
+    if (this.anchor && this.anchor.paused) this.anchor.play().catch(() => {});
+  }
+  /* L'uscita passa da un <audio> nascosto invece che direttamente sugli
+     altoparlanti: e' l'unico modo per cui Android/iOS/desktop riconoscano
+     una sessione multimediale attiva e mostrino i controlli di sistema
+     (notifica, schermata di blocco). Il Web Audio puro non basta: i sistemi
+     operativi guardano se c'e' un vero elemento <audio> in riproduzione.
+     Effetto collaterale utile: le pagine con una sessione audio riconosciuta
+     vengono congelate meno aggressivamente in background dal sistema. Se il
+     browser non supporta questo percorso, si torna all'uscita diretta. */
+  _setupOutput() {
+    try {
+      if (this.ctx.createMediaStreamDestination && typeof Audio !== "undefined") {
+        const dest = this.ctx.createMediaStreamDestination();
+        this.master.connect(dest);
+        this.anchor = new Audio();
+        this.anchor.srcObject = dest.stream;
+        this.anchor.loop = true;
+        this.anchor.play().catch(() => {});
+        this._setupMediaSession();
+        return;
+      }
+    } catch (e) { /* ricade sull'uscita diretta sotto */ }
+    this.master.connect(this.ctx.destination);
+  }
+  _setupMediaSession() {
+    if (!("mediaSession" in navigator)) return;
+    navigator.mediaSession.setActionHandler("play", () => {
+      if (!this.playing) return;
+      this.anchor && this.anchor.play().catch(() => {});
+      this.ctx.resume();
+      navigator.mediaSession.playbackState = "playing";
+    });
+    navigator.mediaSession.setActionHandler("pause", () => this.stop());
+    navigator.mediaSession.setActionHandler("stop", () => this.stop());
+  }
+  setNowPlayingLabel(title) {
+    if (!("mediaSession" in navigator) || typeof MediaMetadata === "undefined") return;
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title, artist: "Ninna",
+      artwork: [{ src: "icons/icon-192.png", sizes: "192x192", type: "image/png" }],
+    });
   }
   _buffer(id) {
     if (!this._buffers[id]) {
@@ -201,6 +243,7 @@ export class SoundEngine {
     this.master.gain.cancelScheduledValues(t);
     this.master.gain.setValueAtTime(0.0001, t);
     this.master.gain.exponentialRampToValueAtTime(Math.max(0.001, this.volume), t + FADE_S);
+    if ("mediaSession" in navigator) navigator.mediaSession.playbackState = "playing";
   }
   stop() {
     if (!this.ctx || !this.playing) return;
@@ -211,6 +254,10 @@ export class SoundEngine {
     setTimeout(() => { try { src && src.stop(); } catch (e) {} nodes.forEach((n) => { try { n.disconnect(); } catch (e) {} }); }, FADE_S * 1000);
     this.source = null; this._nodes = []; this.playing = null;
     clearTimeout(this._timer); this._timer = null;
+    if ("mediaSession" in navigator) navigator.mediaSession.playbackState = "paused";
+    // ferma anche l'ancora: la notifica di sistema deve sparire quando
+    // l'utente ferma il suono, non restare appesa a riprodurre silenzio
+    if (this.anchor) { try { this.anchor.pause(); } catch (e) {} }
   }
   _teardown() {
     try { this.source && this.source.stop(); } catch (e) {}

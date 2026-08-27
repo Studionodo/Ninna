@@ -94,7 +94,10 @@
 .topbar { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 14px; }
 .babyname { font-family: 'Fraunces', serif; font-size: 26px; font-weight: 600; letter-spacing: -.01em; }
 .agechip { font-family: 'Albert Sans'; font-size: 12px; color: var(--mint); margin-left: 10px;
-  border: 1px solid rgba(143,230,201,.4); border-radius: 999px; padding: 2px 9px; vertical-align: middle; }
+  border: 1px solid rgba(143,230,201,.4); border-radius: 999px; padding: 2px 9px; vertical-align: middle;
+  display: inline-block; white-space: nowrap; }
+.topbar > div:first-child { min-width: 0; }
+.babyname { display: flex; flex-wrap: wrap; align-items: baseline; row-gap: 4px; }
 
 /* superfici in vetro (Liquid Glass): blur reale + bordo speculare superiore */
 .card {

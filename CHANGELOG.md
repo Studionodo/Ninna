@@ -3,6 +3,32 @@
 Versionamento semantico (MAJOR.MINOR.PATCH). Ogni release da qui in avanti
 viene registrata qui, in ordine cronologico, più recente in cima.
 
+## v1.8.0 · 26/08/2026
+- Fix visivo: il badge dell'eta ("3 giorni") poteva spezzarsi su due righe
+  con il bordo arrotondato duplicato, per un `white-space` mancante.
+- La timeline compare solo se oggi c'e' almeno un evento registrato: niente
+  piu' barra vuota a costo pieno nei primi giorni.
+- La sezione Salute non e' piu' sempre aperta: un link "+ Salute" la rivela
+  solo quando serve, stesso trattamento gia' usato per "Aggiungi sonno
+  passato". Le vitamine non hanno bisogno della stessa prominenza permanente
+  di un pannolino.
+- Controlli di sistema per i suoni: play/pausa/stop ora compaiono nella
+  notifica Android, nella schermata di blocco e nel pannello multimediale
+  del sistema, con nome del suono e icona di Ninna. Tecnicamente, l'audio
+  passa ora attraverso un elemento `<audio>` nascosto invece che
+  direttamente sugli altoparlanti: e' l'unico modo per cui il sistema
+  operativo riconosca una sessione multimediale attiva, ed e' anche il modo
+  in cui il browser tratta con piu' clemenza le pagine web quando lo
+  schermo si spegne. Ricade sul comportamento precedente su browser che non
+  supportano questa API.
+
+Verificato con un ambiente Web Audio simulato (jsdom non implementa questa
+API, nessun browser reale era installabile in questo contesto): confermato
+che l'audio esce da un solo percorso (mai duplicato sugli altoparlanti E
+sull'ancora insieme), che i tre gestori di sistema sono registrati, che il
+tasto "pausa" del sistema ferma davvero l'audio e non solo l'icona, e che
+il ripiego su browser senza questa API continua a funzionare come prima.
+
 ## v1.7.0 · 26/08/2026
 Modalita' notte: schermo nero con un solo tasto grande, pensato per
 allattare o gestire un risveglio senza accendere la luce.
