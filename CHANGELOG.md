@@ -3,6 +3,34 @@
 Versionamento semantico (MAJOR.MINOR.PATCH). Ogni release da qui in avanti
 viene registrata qui, in ordine cronologico, più recente in cima.
 
+## v2.5.0 · 27/08/2026
+- **Onde e pioggia rifatti.** Le onde cambiavano solo di volume, come una
+  manopola su un rumore fisso: ora sono due strati distinti, una massa grave
+  costante e una schiuma acuta filtrata che sale solo sulla cresta, cosi'
+  l'onda cambia colore mentre si rompe. La variazione di timbro misurata
+  passa dal 31% al 54%. Le gocce di pioggia erano impulsi di rumore bianco,
+  cioe' un "tic": ora sono risonanze smorgate a frequenze diverse, che danno
+  il "ploc", e l'intensita' respira invece di restare piatta (variazione dal
+  16% al 33%).
+- **Trovato e corretto un clic nel loop della pioggia**: le gocce che
+  partivano troppo vicino alla fine restavano tagliate a meta', producendo
+  uno scatto a ogni ripetizione, ogni 16 secondi. Verificato ora su tutti e
+  sette i suoni: nessuna giuntura percepibile.
+- **Il messaggio di conferma in modalita' notte** era una pillola menta
+  accesa su schermo nero. Ora usa la stessa sobrieta' del resto di quella
+  schermata, che esiste proprio per non fare luce.
+- **Il link "Offrimi un caffe" era di fatto invisibile**: esisteva solo in
+  fondo alla scheda Guida. Aggiunto anche in "Cos'e Ninna", subito dopo i
+  paragrafi che spiegano che l'app e' gratuita e senza tracciamento e prima
+  del copyright: e' il punto in cui la richiesta ha senso, senza diventare
+  un banner.
+
+Nota di metodo: i suoni non sono scaricati dal web, sono generati nel
+telefono. Il limite resta che chi scrive il codice non puo' ascoltarli: i
+miglioramenti qui sopra sono misurati (variazione di timbro, respiro
+dell'intensita', continuita' del loop), non giudicati a orecchio. Il
+giudizio finale sulla piacevolezza resta all'ascolto reale.
+
 ## v2.4.1 · 27/08/2026
 Allineamento della documentazione al lavoro delle ultime dieci versioni.
 - **README italiano e inglese riscritti** nella sezione delle funzioni, ora

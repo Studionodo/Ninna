@@ -240,6 +240,8 @@
 .toast { position: fixed; bottom: 92px; left: 50%; transform: translate(-50%, 0) translateZ(0);
   background: var(--mint); color: var(--mint-ink); padding: 9px 18px; border-radius: 999px;
   font-size: 13.5px; font-weight: 600; box-shadow: 0 8px 30px rgba(0,0,0,.3); z-index: 95; }
+.toast.night { background: rgba(255,255,255,.1); color: rgba(255,255,255,.78);
+  border: 1px solid rgba(255,255,255,.16); box-shadow: none; font-weight: 500; }
 
 .field { display: flex; flex-direction: column; gap: 6px; margin: 10px 0; font-size: 13px; color: var(--sub); }
 .field input, .field select { background: var(--glass); border: 1px solid var(--stroke);
@@ -562,3 +564,7 @@ button { font-family: inherit; }
 .ringtap:active { transform: scale(.96); }
 @keyframes ring-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .55; } }
 .ring.over circle:nth-child(2) { animation: ring-pulse 1.8s ease-in-out infinite; }
+
+/* caffe' in "Cos'e Ninna": subito dopo il paragrafo che spiega che l'app e'
+   gratuita e senza tracciamento, prima del copyright. Discreto, non un banner */
+.about-coffee { margin: 16px 0 4px; }

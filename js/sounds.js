@@ -58,39 +58,61 @@ function genBrown(sr) {
 }
 
 function genOcean(sr) {
-  // rumore scuro che si gonfia e si ritira: due respiri lenti sfasati
+  /* Due strati con timbro diverso, non un solo rumore alzato e abbassato:
+     un rumore grave costante (la massa d'acqua) e una schiuma acuta filtrata
+     che sale solo sulla cresta. Cosi' l'onda cambia colore mentre si rompe,
+     come accade davvero, invece di essere una manopola del volume. */
   const DUR = 24, d = new Float32Array(sr * DUR);
-  let last = 0;
+  let deep = 0, foamLp = 0, foamHp = 0, prevFoam = 0;
+  const aFoam = 1 - Math.exp(-2 * Math.PI * 3200 / sr);   // passa-basso sulla schiuma
   for (let i = 0; i < d.length; i++) {
     const t = i / sr;
     const w = Math.random() * 2 - 1;
-    last = (last + 0.03 * w) / 1.03;
+    deep = (deep + 0.03 * w) / 1.03;                       // massa grave
+
     const swell = 0.55
-      + 0.3 * Math.sin(2 * Math.PI * (2 / DUR) * t)          // 2 cicli interi: loop pulito
-      + 0.15 * Math.sin(2 * Math.PI * (5 / DUR) * t + 1.3);  // 5 cicli: irregolarita'
-    const foam = w * 0.06 * Math.max(0, swell - 0.6);        // schiuma solo sulla cresta
-    d[i] = last * 3 * swell + foam;
+      + 0.3 * Math.sin(2 * Math.PI * (2 / DUR) * t)
+      + 0.15 * Math.sin(2 * Math.PI * (5 / DUR) * t + 1.3);
+
+    const w2 = Math.random() * 2 - 1;
+    foamLp += aFoam * (w2 - foamLp);                       // toglie il metallico
+    foamHp = 0.97 * (foamHp + foamLp - prevFoam);          // toglie il rimbombo
+    prevFoam = foamLp;
+
+    const crest = Math.max(0, swell - 0.62) * 2.6;         // 0 fuori dalla cresta
+    d[i] = deep * 3 * swell + foamHp * 0.5 * crest * crest;
   }
   crossfadeLoop(d, sr * 0.5); normalize(d); return d;
 }
 
 function genRain(sr) {
-  // letto di pioggia + goccioline discrete sopra
+  /* Le gocce non sono impulsi di rumore bianco (che suonano come un "tic")
+     ma sinusoidi smorzate a frequenze diverse: e' la risonanza che da' il
+     "ploc". In piu' l'intensita' respira lentamente, perche' la pioggia
+     vera non e' mai perfettamente costante. */
   const DUR = 16, d = new Float32Array(sr * DUR);
   let lp = 0;
   const alpha = 1 - Math.exp(-2 * Math.PI * 1400 / sr);
   for (let i = 0; i < d.length; i++) {
+    const t = i / sr;
     const w = Math.random() * 2 - 1;
     lp += alpha * (w - lp);
-    d[i] = lp * 0.7;
+    // respiro: 3 cicli interi nella durata, cosi' il loop resta pulito
+    const breath = 0.82 + 0.18 * Math.sin(2 * Math.PI * (3 / DUR) * t);
+    d[i] = lp * 0.7 * breath;
   }
-  const drops = Math.floor(DUR * 26);            // ~26 gocce al secondo
+  const drops = Math.floor(DUR * 42);
   for (let k = 0; k < drops; k++) {
-    const start = Math.floor(Math.random() * (d.length - sr * 0.01));
-    const len = Math.floor(sr * (0.002 + Math.random() * 0.006));
-    const amp = 0.25 + Math.random() * 0.5;
-    for (let j = 0; j < len; j++) {
-      d[start + j] += (Math.random() * 2 - 1) * amp * Math.exp(-j / (sr * 0.0018));
+    // le gocce non devono iniziare cosi' vicino alla fine da restare tagliate
+    // a meta': un decadimento troncato produce un clic a ogni ripetizione
+    const maxDecay = sr * 0.0055, tail = Math.ceil(maxDecay * 5);
+    const start = Math.floor(Math.random() * (d.length - tail));
+    const freq = 900 + Math.random() * 2600;               // gocce di dimensioni diverse
+    const decay = sr * (0.0015 + Math.random() * 0.004);
+    const amp = 0.12 + Math.random() * 0.3;
+    const len = Math.floor(decay * 5);
+    for (let j = 0; j < len && start + j < d.length; j++) {
+      d[start + j] += Math.sin(2 * Math.PI * freq * (j / sr)) * amp * Math.exp(-j / decay);
     }
   }
   crossfadeLoop(d, sr * 0.4); normalize(d); return d;

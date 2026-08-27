@@ -26,7 +26,7 @@ const KOFI = "https://ko-fi.com/istantelabs/tip";
 const STOP_ICON = '<svg viewBox="0 0 24 24" width="14" height="14"><rect x="5" y="5" width="14" height="14" rx="2" fill="currentColor"/></svg>';
 const PLAY_ICON = '<svg viewBox="0 0 24 24" width="14" height="14"><path d="M7 5v14l12-7z" fill="currentColor"/></svg>';
 const PAUSE_ICON = '<svg viewBox="0 0 24 24" width="14" height="14"><rect x="6" y="5" width="4" height="14" rx="1.5" fill="currentColor"/><rect x="14" y="5" width="4" height="14" rx="1.5" fill="currentColor"/></svg>';
-const APP_VERSION = "2.4.1";
+const APP_VERSION = "2.5.0";
 const CUP = `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4.5 9h11v5.5a4 4 0 0 1-4 4h-3a4 4 0 0 1-4-4V9z"/><path d="M15.5 10h1.6a2.4 2.4 0 0 1 0 4.8h-1.6"/><path d="M8 4.5c0 .9.9 1.1.9 2M11.5 4c0 .9.9 1.1.9 2"/></svg>`;
 
 /* ---------- stato ---------- */
@@ -75,6 +75,9 @@ const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&l
 function persist() { saveStore(store); }
 function toast(msg) {
   $toast.textContent = msg; $toast.hidden = false;
+  // in modalita' notte la pillola menta accesa e' fuori luogo: stessa
+  // sobrieta' del resto di quella schermata, che esiste per non fare luce
+  $toast.classList.toggle("night", nightMode);
   clearTimeout(toast._t); toast._t = setTimeout(() => ($toast.hidden = true), 2200);
 }
 
@@ -895,6 +898,7 @@ function renderAbout() {
       </div>
       ${I18N[lang].about.map((p) => `<p class="about-p">${p}</p>`).join("")}
       <div class="hairline"></div>
+      <a class="coffee about-coffee" href="${KOFI}" target="_blank" rel="noopener">${CUP}<span>${t("coffee")}</span></a>
       <div class="finelines">${t("footer2")}</div>
     </div>
   </div>`;
