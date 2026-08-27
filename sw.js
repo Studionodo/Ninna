@@ -1,12 +1,12 @@
 /* NINNA service worker: cache-first sull'app shell, cache versionata su
    APP_VERSION (ogni rilascio la rinnova). Nessuna risorsa esterna: font,
    icone e codice sono tutti serviti dall'origine dell'app. */
-const CACHE = "ninna-v1.9.2";
+const CACHE = "ninna-v2.0.0";
 const SHELL = [
   "./", "index.html", "styles.css", "manifest.webmanifest",
   "js/app.js", "js/i18n.js", "js/engine.js", "js/sounds.js", "js/content-store.js",
   "icons/icon-192.png", "icons/icon-512.png", "icons/maskable-512.png", "icons/brandmark.png",
-  "fonts/fraunces-600.woff2", "fonts/albertsans-400.woff2", "fonts/albertsans-500.woff2",
+  "fonts/ninna-wordmark.woff2", "fonts/fraunces-600.woff2", "fonts/albertsans-400.woff2", "fonts/albertsans-500.woff2",
   "fonts/albertsans-600.woff2", "fonts/albertsans-400-italic.woff2",
 ];
 

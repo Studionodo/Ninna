@@ -23,7 +23,7 @@ const EDIT_ICON = "<svg viewBox=\"0 0 24 24\" width=\"1em\" height=\"1em\" fill=
 const INSTANT = ["breast", "bottle", "solid", "diaper", "nightwake", "pump"];
 const HEALTH = ["vitamins", "med"];
 const KOFI = "https://ko-fi.com/istantelabs/tip";
-const APP_VERSION = "1.9.2";
+const APP_VERSION = "2.0.0";
 const CUP = `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4.5 9h11v5.5a4 4 0 0 1-4 4h-3a4 4 0 0 1-4-4V9z"/><path d="M15.5 10h1.6a2.4 2.4 0 0 1 0 4.8h-1.6"/><path d="M8 4.5c0 .9.9 1.1.9 2M11.5 4c0 .9.9 1.1.9 2"/></svg>`;
 
 /* ---------- stato ---------- */
@@ -143,9 +143,40 @@ window.NINNA = {
     render();
   },
   logInstant(type) {
+    if (HEALTH.includes(type)) return this.askHealthName(type);
     store.events.push({ id: uid(), type, at: Date.now() });
-    if (HEALTH.includes(type)) showHealth = false;
     persist(); toast(t("logged_type", { label: typeLabel(type) })); render();
+  },
+  /* i farmaci e gli integratori hanno bisogno di un nome: "Farmaco" e basta
+     non dice nulla se il bambino ne prende piu' di uno. I nomi gia' usati
+     compaiono come scorciatoie, cosi' il caso frequente resta a due tocchi. */
+  askHealthName(type) {
+    const recent = [...new Set(store.events.filter((e) => e.type === type && e.note)
+      .sort((a, b) => b.at - a.at).map((e) => e.note))].slice(0, 4);
+    $modal.innerHTML = `<div class="modal-wrap" onclick="NINNA.closeSettings()">
+      <div class="modal" onclick="event.stopPropagation()">
+        <div class="card-title">${TYPE_ICONS[type]} ${typeLabel(type)}</div>
+        ${recent.length ? `<div class="dim small">${t("health_recent")}</div>
+        <div class="chiprow">${recent.map((r) => `<button class="chip" onclick="NINNA.saveHealth('${type}', ${JSON.stringify(r)})">${esc(r)}</button>`).join("")}</div>` : ""}
+        <label class="field"><span>${t("health_which")}</span>
+          <input id="h-name" placeholder="${t("health_ph_" + type)}" autocomplete="off"></label>
+        <button class="secondary block" onclick="NINNA.saveHealth('${type}')">${t("save")}</button>
+        <button class="link block" onclick="NINNA.saveHealth('${type}', '')">${t("health_skip")}</button>
+      </div>
+    </div>`;
+    const el = document.getElementById("h-name");
+    if (el) el.focus();
+  },
+  saveHealth(type, preset) {
+    const el = document.getElementById("h-name");
+    const note = (preset !== undefined ? preset : (el ? el.value : "")).trim();
+    const ev = { id: uid(), type, at: Date.now() };
+    if (note) ev.note = note;
+    store.events.push(ev);
+    showHealth = false;
+    persist(); this.closeSettings();
+    toast(note ? note : t("logged_type", { label: typeLabel(type) }));
+    render();
   },
   removeEvent(id) { store.events = store.events.filter((e) => e.id !== id); persist(); render(); },
   openEdit(id) {
@@ -161,6 +192,8 @@ window.NINNA = {
             <label class="field"><span>${t("manual_start")}</span><input type="time" id="e-start" value="${hm(e.start)}"></label>
             ${e.end ? `<label class="field"><span>${t("manual_end")}</span><input type="time" id="e-end" value="${hm(e.end)}"></label>` : ""}
           </div>` : `<label class="field"><span>${t("edit_time")}</span><input type="time" id="e-at" value="${hm(e.at)}"></label>`}
+        ${HEALTH.includes(e.type) ? `<label class="field"><span>${t("health_which")}</span>
+          <input id="e-note" value="${esc(e.note || "")}" placeholder="${t("health_ph_" + e.type)}" autocomplete="off"></label>` : ""}
         <button class="secondary block" onclick="NINNA.saveEdit('${e.id}')">${t("save")}</button>
         <button class="link block" onclick="NINNA.closeSettings()">${t("close")}</button>
       </div>
@@ -190,7 +223,9 @@ window.NINNA = {
       if (!av || !av.value) return toast(t("invalid_times"));
       e.at = anchor(e.at, av.value);
     }
-    persist(); NINNA.closeSettings(); toast(t("edit_done")); render();
+    const nv = document.getElementById("e-note");
+    if (nv) { const n = nv.value.trim(); if (n) e.note = n; else delete e.note; }
+    persist(); this.closeSettings(); toast(t("edit_done")); render();
   },
   toggleWhy() { showWhy = !showWhy; render(); },
   toggleManual() { showManual = !showManual; render(); },
@@ -241,7 +276,7 @@ window.NINNA = {
   closeReport() { showReport = false; $modal.innerHTML = ""; },
   exportCSVFile() {
     const labels = Object.fromEntries(["nap","night","breast","bottle","solid","diaper","nightwake","pump"].map((k) => [k, typeLabel(k)]));
-    const header = [t("csv_type"), t("csv_start"), t("csv_end"), t("csv_dur")];
+    const header = [t("csv_type"), t("csv_start"), t("csv_end"), t("csv_dur"), t("health_which")];
     const blob = new Blob([exportCSV(store.events, labels, header)], { type: "text/csv" });
     downloadBlob(blob, "ninna-data.csv"); toast(t("csv_done"));
   },
@@ -469,7 +504,7 @@ function renderOggi(f) {
       ${todayEvents.length === 0 ? `<div class="dim">${t("today_empty")}</div>` : ""}
       ${todayEvents.map((e) => `<div class="logrow tap" onclick="NINNA.openEdit('${e.id}')">
         <span class="logicon">${TYPE_ICONS[e.type]}</span>
-        <span class="loglabel">${typeLabel(e.type)}</span>
+        <span class="loglabel">${typeLabel(e.type)}${e.note ? ` <span class="lognote">${esc(e.note)}</span>` : ""}</span>
         <span class="logtime">${e.at
           ? fmtHM(e.at)
           : fmtHM(e.start) + (e.end ? "–" + fmtHM(e.end) + " · " + fmtDur(e.end - e.start) : " · " + t("in_progress"))}</span>
@@ -632,6 +667,14 @@ function reportContentHTML(days = 14) {
   const pr = profileFor(b.birth);
   const w = Math.floor(ageWeeks(b.birth));
   const cutoff = Date.now() - days * 86400000;
+  const healthList = (ty) => {
+    const evs = store.events.filter((e) => e.type === ty && e.at >= cutoff);
+    if (!evs.length) return null;
+    const byName = {};
+    evs.forEach((e) => { const k = e.note || "-"; byName[k] = (byName[k] || 0) + 1; });
+    return Object.entries(byName).map(([k, n]) => `${esc(k)} (${n})`).join(", ");
+  };
+  const vitL = healthList("vitamins"), medL = healthList("med");
   const vit = store.events.filter((e) => e.type === "vitamins" && e.at >= cutoff).length;
   const med = store.events.filter((e) => e.type === "med" && e.at >= cutoff).length;
   return `
@@ -654,7 +697,8 @@ function reportContentHTML(days = 14) {
         <td>${(sumWakes / n).toFixed(1)}</td><td>${(sumFeeds / n).toFixed(1)}</td><td>${(sumDiapers / n).toFixed(1)}</td>
       </tr></tfoot>
     </table>
-    ${vit + med > 0 ? `<div class="report-meta" style="margin-top:12px"><b>${t("report_health")}:</b> ${typeLabel("vitamins")} ${vit} · ${typeLabel("med")} ${med}</div>` : ""}
+    ${vit + med > 0 ? `<div class="report-meta" style="margin-top:12px"><b>${t("report_health")}</b><br>
+      ${vitL ? `${typeLabel("vitamins")}: ${vitL}<br>` : ""}${medL ? `${typeLabel("med")}: ${medL}` : ""}</div>` : ""}
     <p class="about-p" style="margin-top:16px">${t("report_note")}<br>${t("stat_variability")}</p>`;
 }
 
@@ -750,7 +794,7 @@ function render() {
   $app.innerHTML = `
     <header class="topbar">
       <div>
-        <div class="eyebrow">Ninna</div>
+        <div class="wordmark">Ninna<span class="wm-dot">.</span></div>
         ${view === "oggi" ? `<button class="about-link" onclick="NINNA.openAbout()">${t("about_link")}</button>` : ""}
         <div class="babyname">${esc(store.baby.name)}<span class="agechip">${ageLabel}</span></div>
       </div>

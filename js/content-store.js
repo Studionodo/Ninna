@@ -42,26 +42,30 @@ export function importJSON(text) {
   const events = data.events.filter((e) =>
     e && KNOWN_TYPES.includes(e.type) &&
     ((typeof e.start === "number" && (e.end == null || typeof e.end === "number")) ||
-     typeof e.at === "number"));
+     typeof e.at === "number"))
+    .map((e) => (typeof e.note === "string" && e.note.trim() ? e : (({ note, ...rest }) => rest)(e)));
   return { version: data.version || 1, baby: data.baby || null, events, prefs: data.prefs || {} };
 }
 
-export function exportCSV(events, labels, header = ["tipo", "inizio", "fine", "durata_min"]) {
+export function exportCSV(events, labels, header = ["tipo", "inizio", "fine", "durata_min", "nome"]) {
+  const q = (v) => (String(v).includes(";") ? `"${String(v).replace(/"/g, '""')}"` : v);
   const rows = [header];
   [...events]
     .sort((a, b) => (a.start || a.at) - (b.start || b.at))
     .forEach((e) => {
       const label = labels[e.type] || e.type;
+      const note = e.note || "";
       if (e.start) {
         rows.push([
           label,
           new Date(e.start).toISOString(),
           e.end ? new Date(e.end).toISOString() : "",
           e.end ? Math.round((e.end - e.start) / 60000) : "",
+          note,
         ]);
       } else {
-        rows.push([label, new Date(e.at).toISOString(), "", ""]);
+        rows.push([label, new Date(e.at).toISOString(), "", "", note]);
       }
     });
-  return rows.map((r) => r.join(";")).join("\n");
+  return rows.map((r) => r.map(q).join(";")).join("\n");
 }

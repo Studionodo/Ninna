@@ -3,6 +3,21 @@
 Versionamento semantico (MAJOR.MINOR.PATCH). Ogni release da qui in avanti
 viene registrata qui, in ordine cronologico, più recente in cima.
 
+## v2.0.0 · 27/08/2026
+- **Farmaci e integratori ora hanno un nome.** Registrare "Farmaco" e basta
+  non dice nulla se il bambino ne prende piu' di uno: toccando Vitamine o
+  Farmaco l'app chiede quale, e i nomi gia' usati compaiono come scorciatoie,
+  cosi' il caso ricorrente (la vitamina D di ogni giorno) resta a due tocchi.
+  Registrare senza nome resta possibile. Il nome compare nel diario, si
+  corregge dalla modifica, finisce nel CSV in una colonna dedicata e nel
+  riepilogo per il pediatra come elenco per nome invece che come conteggio.
+- **Logotipo dedicato.** "Ninna." usa ora un taglio proprio di Fraunces con
+  terminali piu' morbidi (asse SOFT del carattere variabile), visibilmente
+  diverso dal Fraunces del resto dell'interfaccia, con il punto in menta.
+  Il file contiene solo i glifi di "Ninna.": 1,3 KB.
+- L'esportazione CSV protegge i valori che contengono il separatore, cosi'
+  un nome come "Vitamina D; gocce" non spezza piu' le colonne.
+
 ## v1.9.2 · 27/08/2026
 Intervento sul contrasto del tema chiaro, misurato invece che stimato.
 - **Il tema chiaro non era leggibile all'aperto.** Contrasti verificati
