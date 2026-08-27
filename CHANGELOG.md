@@ -3,6 +3,25 @@
 Versionamento semantico (MAJOR.MINOR.PATCH). Ogni release da qui in avanti
 viene registrata qui, in ordine cronologico, più recente in cima.
 
+## v2.3.2 · 27/08/2026
+Due difetti nello switcher dei suoni della modalita' notte, entrambi
+segnalati con uno screenshot reale.
+- **La lista dei sei suoni alternativi non aveva un'altezza massima**: con
+  tutti e sei visibili, si estendeva abbastanza da sovrapporsi al testo
+  "sveglio da X min" al centro dello schermo. Ora l'altezza e' limitata con
+  scorrimento interno, e si apre con una piccola animazione invece di
+  comparire di scatto.
+- **Fermare un suono lo faceva sparire del tutto**: per riaverlo bisognava
+  riaprire l'elenco e ripescarlo. Ora il controllo ricorda l'ultimo suono
+  scelto anche dopo lo stop: l'icona diventa un tasto "riprendi" (triangolo
+  verde) che riavvia lo stesso suono con un tocco, senza dover scegliere di
+  nuovo dalla lista. Il controllo sparisce solo uscendo dalla modalita'
+  notte.
+
+Verificato su Chrome reale: nessuna sovrapposizione fra lista e testo di
+stato, il controllo resta visibile dopo lo stop, la ripresa funziona con un
+tocco. Zero errori JavaScript.
+
 ## v2.3.1 · 27/08/2026
 Prima sessione di collaudo su Chrome reale, con l'app servita su HTTP e
 pilotata come la userebbe una persona. Trenta passaggi d'uso completi piu'

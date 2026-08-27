@@ -25,7 +25,7 @@ const HEALTH = ["vitamins", "med"];
 const KOFI = "https://ko-fi.com/istantelabs/tip";
 const STOP_ICON = '<svg viewBox="0 0 24 24" width="14" height="14"><rect x="5" y="5" width="14" height="14" rx="2" fill="currentColor"/></svg>';
 const PLAY_ICON = '<svg viewBox="0 0 24 24" width="14" height="14"><path d="M7 5v14l12-7z" fill="currentColor"/></svg>';
-const APP_VERSION = "2.3.1";
+const APP_VERSION = "2.3.2";
 const CUP = `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4.5 9h11v5.5a4 4 0 0 1-4 4h-3a4 4 0 0 1-4-4V9z"/><path d="M15.5 10h1.6a2.4 2.4 0 0 1 0 4.8h-1.6"/><path d="M8 4.5c0 .9.9 1.1.9 2M11.5 4c0 .9.9 1.1.9 2"/></svg>`;
 
 /* ---------- stato ---------- */
@@ -38,6 +38,7 @@ let showReport = false;
 let showGrowth = false, showGrowthForm = false;
 let nightMode = false;
 let nightSoundListOpen = false;
+let nightLastSound = null;
 let theme = store.prefs.theme || "auto";
 let view = "oggi";
 let showWhy = false, showManual = false, showHealth = false, showPressureInfo = false;
@@ -286,7 +287,8 @@ window.NINNA = {
   toggleArticle(id) { const el = document.getElementById("art-" + id); if (el) el.hidden = !el.hidden; },
   openSettings() { renderSettings(); },
   openAbout() { showAbout = true; renderAbout(); },
-  toggleNightMode() { nightMode = !nightMode; if (!nightMode) nightSoundListOpen = false; render(); },
+  toggleNightMode() { nightMode = !nightMode; if (!nightMode) { nightSoundListOpen = false; nightLastSound = null; } render(); },
+  resumeNightSound() { if (nightLastSound) NINNA.playSound(nightLastSound); },
   toggleNightSoundList() { nightSoundListOpen = !nightSoundListOpen; render(); },
   acceptNightPrompt() { nightMode = true; this.closeSettings(); render(); },
   dismissNightPrompt() { this.closeSettings(); },
@@ -678,6 +680,7 @@ function renderGuida() {
 }
 
 function renderNightMode(f) {
+  if (sound.playing) nightLastSound = sound.playing;  // memoria: sopravvive allo stop, per il tasto "riprendi"
   const active = store.events.find((e) => (e.type === "nap" || e.type === "night") && !e.end);
   let status, big;
   if (active) {
@@ -694,12 +697,12 @@ function renderNightMode(f) {
       <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
       <span>${t("night_exit")}</span>
     </button>
-    ${sound.playing ? `<div class="night-sound">
-      <button class="ns-name" onclick="NINNA.toggleNightSoundList()">${t("sound_" + sound.playing)}</button>
-      <button class="ns-stop" onclick="NINNA.stopSound()" aria-label="${t("mp_stop")}">${STOP_ICON}</button>
+    ${nightLastSound ? `<div class="night-sound">
+      <button class="ns-name" onclick="NINNA.toggleNightSoundList()">${t("sound_" + nightLastSound)}</button>
+      <button class="ns-stop ${sound.playing ? "" : "paused"}" onclick="${sound.playing ? "NINNA.stopSound()" : "NINNA.resumeNightSound()"}" aria-label="${sound.playing ? t("mp_stop") : t("night_resume")}">${sound.playing ? STOP_ICON : PLAY_ICON}</button>
     </div>
     ${nightSoundListOpen ? `<div class="night-sound-list">
-      ${SOUNDS.filter((s) => s.id !== sound.playing).map((s) => `<button onclick="NINNA.playSound('${s.id}')">${PLAY_ICON}${t("sound_" + s.id)}</button>`).join("")}
+      ${SOUNDS.filter((s) => s.id !== nightLastSound).map((s) => `<button onclick="NINNA.playSound('${s.id}')">${PLAY_ICON}${t("sound_" + s.id)}</button>`).join("")}
     </div>` : ""}` : ""}
     <div class="night-status">${status}</div>
     ${active ? `<div class="night-timer">${fmtDur(Date.now() - active.start)}</div>` : ""}
