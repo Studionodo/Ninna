@@ -1,7 +1,7 @@
 /* NINNA service worker: cache-first sull'app shell, cache versionata su
    APP_VERSION (ogni rilascio la rinnova). Nessuna risorsa esterna: font,
    icone e codice sono tutti serviti dall'origine dell'app. */
-const CACHE = "ninna-v1.9.1";
+const CACHE = "ninna-v1.9.2";
 const SHELL = [
   "./", "index.html", "styles.css", "manifest.webmanifest",
   "js/app.js", "js/i18n.js", "js/engine.js", "js/sounds.js", "js/content-store.js",

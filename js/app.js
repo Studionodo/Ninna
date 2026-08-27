@@ -23,7 +23,7 @@ const EDIT_ICON = "<svg viewBox=\"0 0 24 24\" width=\"1em\" height=\"1em\" fill=
 const INSTANT = ["breast", "bottle", "solid", "diaper", "nightwake", "pump"];
 const HEALTH = ["vitamins", "med"];
 const KOFI = "https://ko-fi.com/istantelabs/tip";
-const APP_VERSION = "1.9.1";
+const APP_VERSION = "1.9.2";
 const CUP = `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4.5 9h11v5.5a4 4 0 0 1-4 4h-3a4 4 0 0 1-4-4V9z"/><path d="M15.5 10h1.6a2.4 2.4 0 0 1 0 4.8h-1.6"/><path d="M8 4.5c0 .9.9 1.1.9 2M11.5 4c0 .9.9 1.1.9 2"/></svg>`;
 
 /* ---------- stato ---------- */
@@ -414,11 +414,15 @@ function renderOggi(f) {
             : t("why_default", { min: f.window.minutes })}
           ${t("why_bed", { time: fmtHM(f.bedtime.at) })}</div>` : ""}
       </div>`;
-  } else {
+  } else if (store.events.length === 0) {
+    // il riquadro introduttivo sparisce dopo la prima registrazione: da li'
+    // in poi la timeline e il diario dicono gia' cosa sta succedendo
     hero = `<div class="hero-text">
       <div class="hero-label">${t("hero_start")}</div>
       <div class="hero-sub">${t("hero_start_sub", { name: esc(b.name) })}</div>
     </div>`;
+  } else {
+    hero = null;
   }
 
   const todayEvents = [...store.events]
@@ -428,7 +432,7 @@ function renderOggi(f) {
   return `
     ${!logOnly && f.transition.detected ? `<div class="banner">${t("transition", { avg: f.transition.avgNaps, lo: f.transition.expected[0], hi: f.transition.expected[1] })}</div>` : ""}
     ${todayEvents.length > 0 ? timelineHTML(store.events, Date.now()) : ""}
-    <div class="card hero">${hero}</div>
+    ${hero ? `<div class="card hero">${hero}</div>` : ""}
     ${!active ? (() => {
       const k = logOnly ? null : f.next.kind;
       const btn = (kind, label) => `<button class="bigbtn ${k === kind ? "" : "alt"}" onclick="NINNA.startSleep('${kind}')">${TYPE_ICONS[kind]} ${label}${k === kind ? `<span class="rec">${t("recommended")}</span>` : ""}</button>`;

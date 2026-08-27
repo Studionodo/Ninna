@@ -3,6 +3,30 @@
 Versionamento semantico (MAJOR.MINOR.PATCH). Ogni release da qui in avanti
 viene registrata qui, in ordine cronologico, più recente in cima.
 
+## v1.9.2 · 27/08/2026
+Intervento sul contrasto del tema chiaro, misurato invece che stimato.
+- **Il tema chiaro non era leggibile all'aperto.** Contrasti verificati
+  col criterio WCAG AA (4.5:1): il menta, colore di tutte le etichette dei
+  pulsanti e dei link, stava a 3.15:1; il testo bianco sul pulsante indaco a
+  4.11:1; il testo sulla pillola della scheda attiva a 3.23:1. Tutti e tre
+  sotto soglia. Colori corretti mantenendo la stessa tinta: ora il valore
+  peggiore dell'intera interfaccia chiara e' 4.64:1, tutto conforme.
+- **La schermata Impostazioni restava scura in tema chiaro.** Causa: fondo
+  della finestra scritto a mano invece che legato al tema. Trovati e
+  corretti tutti i 15 punti con colori fissi (finestre, velo di sfondo,
+  barra delle schede, sfumature dei pulsanti, riquadri): ora ogni tinta
+  deriva dal colore del tema attivo.
+- Riquadro introduttivo "Iniziamo" ora sparisce dopo la prima registrazione,
+  non solo dopo il primo sonno: da li' in poi timeline e diario dicono gia'
+  cosa sta succedendo.
+- Pulsante "Notte" in alto a destra reso piu' riconoscibile: menta tenue al
+  posto del grigio, senza diventare predominante (l'indaco resta riservato
+  al pulsante principale).
+- La legenda della timeline in v1.9.1 mostrava le chiavi grezze
+  (`tl_legend_nap`): era ancora il residuo del difetto di cache corretto
+  nella stessa versione, con `app.js` nuovo e `i18n.js` vecchio. Questa e' la
+  prima versione che si installa con il prelievo forzato dalla rete.
+
 ## v1.9.1 · 27/08/2026
 - **Correzione della causa per cui la v1.9.0 e' arrivata a meta'.** Il service
   worker popolava la propria cache con `cache.addAll`, che passa dalla cache
