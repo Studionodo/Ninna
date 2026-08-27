@@ -3,6 +3,35 @@
 Versionamento semantico (MAJOR.MINOR.PATCH). Ogni release da qui in avanti
 viene registrata qui, in ordine cronologico, più recente in cima.
 
+## v1.9.0 · 27/08/2026
+- Fix reale: il toast di conferma (es. "Allattamento registrato") si
+  disegnava dietro la modalita' notte per un z-index piu' basso della sua
+  sovrapposizione: toccando allattamento o biberon nello schermo notte non
+  si vedeva alcuna conferma, anche se l'azione veniva registrata
+  correttamente. Corretto portando il toast sopra ogni altro livello.
+  Aggiunto anche un feedback di pressione immediato sui due pulsanti,
+  indipendente dal toast.
+- Modalita' notte: pulsante di uscita reso piu' visibile (icona + sfondo,
+  non piu' solo testo appena percettibile), pulsante grande con un filo di
+  definizione in piu' (bordo e alone piu' netti, restando comunque scuro),
+  etichette di testo sotto i due pulsanti secondari perche' un cuore da
+  solo non comunica "allattamento".
+- Riepilogo per il pediatra riscritto da zero: non apre piu' una scheda
+  separata (che si era gia' rotta due volte per motivi diversi legati ai
+  popup su mobile). Ora vive dentro l'app come una schermata a schermo
+  intero, e "Stampa o salva in PDF" chiama `window.print()` sulla finestra
+  principale invece che su un popup. Una regola di stampa dedicata isola
+  solo il contenuto del report sulla pagina stampata, forzando colori
+  chiari a prescindere dal tema attivo.
+- Aggiunto `HANDOVER.md`: note tecniche non ovvie per chi riprende il
+  progetto (perche' l'audio passa da un elemento nascosto, i limiti
+  dell'ambiente di test disponibile, la disciplina versione/cache).
+
+Verificato con test funzionali reali su jsdom, incluso un caso che ha
+rivelato un limite dell'ambiente di test stesso (gli attributi onclick
+inline non si eseguono senza un'opzione esplicita) prima di essere
+scambiato per un bug dell'app.
+
 ## v1.8.0 · 26/08/2026
 - Fix visivo: il badge dell'eta ("3 giorni") poteva spezzarsi su due righe
   con il bordo arrotondato duplicato, per un `white-space` mancante.

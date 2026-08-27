@@ -23,7 +23,7 @@ const EDIT_ICON = "<svg viewBox=\"0 0 24 24\" width=\"1em\" height=\"1em\" fill=
 const INSTANT = ["breast", "bottle", "solid", "diaper", "nightwake", "pump"];
 const HEALTH = ["vitamins", "med"];
 const KOFI = "https://ko-fi.com/istantelabs/tip";
-const APP_VERSION = "1.8.0";
+const APP_VERSION = "1.9.0";
 const CUP = `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4.5 9h11v5.5a4 4 0 0 1-4 4h-3a4 4 0 0 1-4-4V9z"/><path d="M15.5 10h1.6a2.4 2.4 0 0 1 0 4.8h-1.6"/><path d="M8 4.5c0 .9.9 1.1.9 2M11.5 4c0 .9.9 1.1.9 2"/></svg>`;
 
 /* ---------- stato ---------- */
@@ -31,6 +31,7 @@ let store = loadStore();
 let lang = store.prefs.lang === "en" ? "en" : "it";
 let logOnly = store.prefs.logOnly === true;
 let showAbout = false;
+let showReport = false;
 let nightMode = false;
 let theme = store.prefs.theme || "auto";
 let view = "oggi";
@@ -104,7 +105,7 @@ function scheduleNotifications(plan) {
 /* ---------- azioni ---------- */
 window.NINNA = {
   setView(v) { view = v; render(); },
-  setLang(l) { lang = l === "en" ? "en" : "it"; store.prefs.lang = lang; persist(); render(); if (showAbout) renderAbout(); else if ($modal.innerHTML) renderSettings(); },
+  setLang(l) { lang = l === "en" ? "en" : "it"; store.prefs.lang = lang; persist(); render(); if (showAbout) renderAbout(); else if (showReport) renderReport(); else if ($modal.innerHTML) renderSettings(); },
   setTheme(v) {
     theme = v;
     store.prefs.theme = v;
@@ -236,17 +237,8 @@ window.NINNA = {
   dismissNightPrompt() { this.closeSettings(); },
   closeAbout() { showAbout = false; $modal.innerHTML = ""; },
   closeSettings() { $modal.innerHTML = ""; },
-  openReport() {
-    const blob = new Blob([buildReportHTML(14)], { type: "text/html" });
-    const url = URL.createObjectURL(blob);
-    const win = window.open(url, "_blank");
-    if (!win) {
-      // popup bloccato dal browser: scarica il file, l'utente lo apre da solo
-      downloadBlob(blob, "ninna-riepilogo.html");
-      toast(t("report_print"));
-    }
-    setTimeout(() => URL.revokeObjectURL(url), 60000);
-  },
+  openReport() { showReport = true; renderReport(); },
+  closeReport() { showReport = false; $modal.innerHTML = ""; },
   exportCSVFile() {
     const labels = Object.fromEntries(["nap","night","breast","bottle","solid","diaper","nightwake","pump"].map((k) => [k, typeLabel(k)]));
     const header = [t("csv_type"), t("csv_start"), t("csv_end"), t("csv_dur")];
@@ -575,13 +567,16 @@ function renderNightMode(f) {
     big = `<button class="night-btn" onclick="NINNA.startSleep('${kind}')">${label}</button>`;
   }
   return `<div class="night-overlay">
-    <button class="night-exit" onclick="NINNA.toggleNightMode()">${t("night_exit")}</button>
+    <button class="night-exit" onclick="NINNA.toggleNightMode()">
+      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      <span>${t("night_exit")}</span>
+    </button>
     <div class="night-status">${status}</div>
     ${active ? `<div class="night-timer">${fmtDur(Date.now() - active.start)}</div>` : ""}
     ${big}
     <div class="night-secondary">
-      <button onclick="NINNA.logInstant('breast')" aria-label="${typeLabel("breast")}">${TYPE_ICONS.breast}</button>
-      <button onclick="NINNA.logInstant('bottle')" aria-label="${typeLabel("bottle")}">${TYPE_ICONS.bottle}</button>
+      <button onclick="NINNA.logInstant('breast')">${TYPE_ICONS.breast}<span>${typeLabel("breast")}</span></button>
+      <button onclick="NINNA.logInstant('bottle')">${TYPE_ICONS.bottle}<span>${typeLabel("bottle")}</span></button>
     </div>
     <div class="night-caption">${t("night_caption")}</div>
   </div>`;
@@ -601,13 +596,16 @@ function renderOnboarding() {
 }
 
 
-/* ---------- riepilogo stampabile per il pediatra ----------
-   Nessuna libreria PDF: si apre una pagina formattata e si usa la
-   stampa di sistema, che su Android e desktop offre "Salva come PDF". */
-function buildReportHTML(days = 14) {
+/* ---------- riepilogo per il pediatra: schermata in-app ----------
+   Vive dentro l'app, non in una scheda separata: niente window.open, niente
+   popup, niente Blob. window.print() e' chiamato sulla finestra principale,
+   che esiste sempre. La regola @media print isola solo questo contenuto
+   sulla pagina stampata, forzando colori chiari a prescindere dal tema. */
+function reportContentHTML(days = 14) {
   const b = store.baby;
   const rows = [];
   let sumDay = 0, sumNight = 0, sumNaps = 0, sumWakes = 0, sumFeeds = 0, sumDiapers = 0, counted = 0;
+  const hm = (m) => `${Math.floor(m / 60)}h ${String(Math.round(m % 60)).padStart(2, "0")}m`;
   for (let i = days - 1; i >= 0; i--) {
     const ts = Date.now() - i * 86400000;
     const st = dailyStats(store.events, ts, profileFor(b.birth, ts));
@@ -615,7 +613,6 @@ function buildReportHTML(days = 14) {
     counted++;
     sumDay += st.napMinutes; sumNight += st.nightMinutes; sumNaps += st.naps;
     sumWakes += st.nightWakes; sumFeeds += st.feeds; sumDiapers += st.diapers;
-    const hm = (m) => `${Math.floor(m / 60)}h ${String(Math.round(m % 60)).padStart(2, "0")}m`;
     rows.push(`<tr>
       <td>${new Date(ts).toLocaleDateString(LOCALE(), { day: "2-digit", month: "2-digit" })}</td>
       <td>${hm(st.napMinutes)}</td><td>${hm(st.nightMinutes)}</td><td><b>${hm(st.totalMinutes)}</b></td>
@@ -623,52 +620,41 @@ function buildReportHTML(days = 14) {
     </tr>`);
   }
   const n = Math.max(1, counted);
-  const hm = (m) => `${Math.floor(m / 60)}h ${String(Math.round(m % 60)).padStart(2, "0")}m`;
   const pr = profileFor(b.birth);
   const w = Math.floor(ageWeeks(b.birth));
-  return `<!DOCTYPE html><html lang="${lang}"><head><meta charset="utf-8">
-<title>${t("report_title")} · ${esc(b.name)}</title>
-<style>
-  body { font-family: -apple-system, system-ui, sans-serif; color: #111; max-width: 760px; margin: 24px auto; padding: 0 16px; }
-  h1 { font-size: 20px; margin: 0 0 4px; }
-  .meta { color: #555; font-size: 13px; margin-bottom: 18px; line-height: 1.6; }
-  table { border-collapse: collapse; width: 100%; font-size: 13px; }
-  th, td { border: 1px solid #ccc; padding: 6px 8px; text-align: center; }
-  th { background: #f2f2f2; font-weight: 600; }
-  td:first-child, th:first-child { text-align: left; }
-  tfoot td { background: #fafafa; font-weight: 600; }
-  .note { margin-top: 18px; font-size: 11.5px; color: #666; line-height: 1.5; }
-  .btn { margin: 18px 0; padding: 10px 18px; font-size: 14px; cursor: pointer; }
-  @media print { .btn { display: none; } body { margin: 0; } }
-</style></head><body>
-<h1>${t("report_title")}</h1>
-<div class="meta">
-  <b>${t("report_child")}:</b> ${esc(b.name)} · <b>${t("report_age")}:</b> ${w} ${t("u_weeks")}<br>
-  <b>${t("report_period")}:</b> ${counted} ${t("u_days")} · <b>${t("report_generated")}:</b> ${new Date().toLocaleString(LOCALE())}<br>
-  ${t("stat_target", { lo: pr.total[0], hi: pr.total[1], nlo: pr.naps[0], nhi: pr.naps[1] })}
-</div>
-<button class="btn" onclick="window.print()">${t("report_print")}</button>
-<table>
-  <thead><tr>
-    <th>${t("report_day")}</th><th>${t("report_daysleep")}</th><th>${t("report_nightsleep")}</th>
-    <th>${t("report_tot")}</th><th>${t("report_naps")}</th><th>${t("report_wakes")}</th>
-    <th>${t("report_feeds")}</th><th>${t("report_diapers")}</th>
-  </tr></thead>
-  <tbody>${rows.join("")}</tbody>
-  <tfoot><tr>
-    <td>${t("report_avg")}</td><td>${hm(sumDay / n)}</td><td>${hm(sumNight / n)}</td>
-    <td>${hm((sumDay + sumNight) / n)}</td><td>${(sumNaps / n).toFixed(1)}</td>
-    <td>${(sumWakes / n).toFixed(1)}</td><td>${(sumFeeds / n).toFixed(1)}</td><td>${(sumDiapers / n).toFixed(1)}</td>
-  </tr></tfoot>
-</table>
-${(() => {
   const cutoff = Date.now() - days * 86400000;
   const vit = store.events.filter((e) => e.type === "vitamins" && e.at >= cutoff).length;
   const med = store.events.filter((e) => e.type === "med" && e.at >= cutoff).length;
-  return vit + med > 0 ? `<div class="meta" style="margin-top:12px"><b>${t("report_health")}:</b> ${typeLabel("vitamins")} ${vit} · ${typeLabel("med")} ${med}</div>` : "";
-})()}
-<div class="note">${t("report_note")}<br>${t("stat_variability")}</div>
-</body></html>`;
+  return `
+    <div class="about-title" style="font-size:26px">${t("report_title")}</div>
+    <div class="report-meta">
+      <b>${t("report_child")}:</b> ${esc(b.name)} · <b>${t("report_age")}:</b> ${w} ${t("u_weeks")}<br>
+      <b>${t("report_period")}:</b> ${counted} ${t("u_days")} · <b>${t("report_generated")}:</b> ${new Date().toLocaleString(LOCALE())}<br>
+      ${t("stat_target", { lo: pr.total[0], hi: pr.total[1], nlo: pr.naps[0], nhi: pr.naps[1] })}
+    </div>
+    <table class="report-table">
+      <thead><tr>
+        <th>${t("report_day")}</th><th>${t("report_daysleep")}</th><th>${t("report_nightsleep")}</th>
+        <th>${t("report_tot")}</th><th>${t("report_naps")}</th><th>${t("report_wakes")}</th>
+        <th>${t("report_feeds")}</th><th>${t("report_diapers")}</th>
+      </tr></thead>
+      <tbody>${rows.join("")}</tbody>
+      <tfoot><tr>
+        <td>${t("report_avg")}</td><td>${hm(sumDay / n)}</td><td>${hm(sumNight / n)}</td>
+        <td>${hm((sumDay + sumNight) / n)}</td><td>${(sumNaps / n).toFixed(1)}</td>
+        <td>${(sumWakes / n).toFixed(1)}</td><td>${(sumFeeds / n).toFixed(1)}</td><td>${(sumDiapers / n).toFixed(1)}</td>
+      </tr></tfoot>
+    </table>
+    ${vit + med > 0 ? `<div class="report-meta" style="margin-top:12px"><b>${t("report_health")}:</b> ${typeLabel("vitamins")} ${vit} · ${typeLabel("med")} ${med}</div>` : ""}
+    <p class="about-p" style="margin-top:16px">${t("report_note")}<br>${t("stat_variability")}</p>`;
+}
+
+function renderReport() {
+  $modal.innerHTML = `<div class="about-overlay report-overlay" id="print-area">
+    <button class="ghost about-back no-print" onclick="NINNA.closeReport()">←</button>
+    <button class="report-print-btn no-print" onclick="window.print()">${t("report_print")}</button>
+    <div class="about-scroll">${reportContentHTML(14)}</div>
+  </div>`;
 }
 
 function renderAbout() {

@@ -207,7 +207,7 @@
 
 .toast { position: fixed; bottom: 92px; left: 50%; transform: translate(-50%, 0) translateZ(0);
   background: var(--mint); color: var(--mint-ink); padding: 9px 18px; border-radius: 999px;
-  font-size: 13.5px; font-weight: 600; box-shadow: 0 8px 30px rgba(0,0,0,.3); z-index: 60; }
+  font-size: 13.5px; font-weight: 600; box-shadow: 0 8px 30px rgba(0,0,0,.3); z-index: 95; }
 
 .field { display: flex; flex-direction: column; gap: 6px; margin: 10px 0; font-size: 13px; color: var(--sub); }
 .field input, .field select { background: var(--glass); border: 1px solid var(--stroke);
@@ -392,19 +392,52 @@ button { font-family: inherit; }
 .night-overlay { position: fixed; inset: 0; z-index: 90; background: #000;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   padding: 24px; gap: 4px; }
-.night-exit { position: fixed; top: 20px; left: 20px; background: none; border: none;
-  color: rgba(255,255,255,.3); font-size: 12.5px; font-family: inherit; padding: 8px; cursor: pointer; }
+.night-exit { position: fixed; top: 18px; left: 18px; display: flex; align-items: center; gap: 6px;
+  background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.16); border-radius: 999px;
+  color: rgba(255,255,255,.55); font-size: 12.5px; font-family: inherit; padding: 8px 14px; cursor: pointer; }
+.night-exit:active { background: rgba(255,255,255,.13); }
 .night-status { color: rgba(255,255,255,.5); font-size: 14px; }
 .night-timer { color: rgba(255,255,255,.8); font-family: 'Fraunces', serif; font-size: 42px; margin: 4px 0 28px; }
-.night-btn { width: 210px; height: 210px; border-radius: 50%; background: rgba(255,255,255,.05);
-  border: 1px solid rgba(255,255,255,.16); color: rgba(255,255,255,.82); font-size: 19px;
+.night-btn { width: 210px; height: 210px; border-radius: 50%; background: rgba(255,255,255,.055);
+  border: 1px solid rgba(255,255,255,.26); color: rgba(255,255,255,.88); font-size: 19px;
   font-weight: 600; font-family: inherit; display: flex; align-items: center; justify-content: center;
-  text-align: center; padding: 20px; cursor: pointer; margin-top: 8px; }
-.night-btn:active { background: rgba(255,255,255,.1); }
-.night-secondary { display: flex; gap: 18px; margin-top: 30px; }
-.night-secondary button { width: 72px; height: 72px; border-radius: 50%; background: rgba(255,255,255,.045);
-  border: 1px solid rgba(255,255,255,.14); color: rgba(255,255,255,.6); font-size: 24px;
-  display: flex; align-items: center; justify-content: center; cursor: pointer; }
-.night-secondary button:active { background: rgba(255,255,255,.09); }
+  text-align: center; padding: 20px; cursor: pointer; margin-top: 8px;
+  box-shadow: 0 0 0 1px rgba(255,255,255,.04), 0 0 34px rgba(255,255,255,.05), inset 0 1px 0 rgba(255,255,255,.08);
+  transition: transform .2s var(--spring), background .2s; }
+.night-btn:active { background: rgba(255,255,255,.11); transform: scale(.97); }
+.night-secondary { display: flex; gap: 24px; margin-top: 30px; }
+.night-secondary button { width: 76px; display: flex; flex-direction: column; align-items: center; gap: 8px;
+  background: none; border: none; color: rgba(255,255,255,.62); font-family: inherit; cursor: pointer; }
+.night-secondary button .ico { width: 64px; height: 64px; border-radius: 50%; background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.16); font-size: 24px; display: flex; align-items: center;
+  justify-content: center; transition: transform .15s var(--spring), background .15s; }
+.night-secondary button span:last-child { font-size: 11px; color: rgba(255,255,255,.45); }
+.night-secondary button:active .ico { background: rgba(255,255,255,.14); transform: scale(.88); }
 .night-caption { position: fixed; bottom: 22px; left: 20px; right: 20px; text-align: center;
-  color: rgba(255,255,255,.22); font-size: 10.5px; }
+  color: rgba(255,255,255,.24); font-size: 10.5px; }
+
+/* riepilogo per il pediatra: schermata in-app, non piu' una scheda separata */
+.report-print-btn { position: fixed; top: 18px; right: 18px; z-index: 71;
+  background: var(--cta); color: var(--cta-text); border: none; border-radius: 999px;
+  padding: 9px 16px; font-size: 13px; font-weight: 600; font-family: inherit; cursor: pointer; }
+.report-meta { color: var(--sub); font-size: 13px; line-height: 1.6; margin: 10px 0 18px; }
+.report-table { border-collapse: collapse; width: 100%; font-size: 12.5px; }
+.report-table th, .report-table td { border: 1px solid var(--stroke); padding: 6px 7px; text-align: center; }
+.report-table th { background: var(--glass); font-weight: 600; }
+.report-table td:first-child, .report-table th:first-child { text-align: left; }
+.report-table tfoot td { background: var(--glass); font-weight: 600; }
+
+/* alla stampa: isola SOLO il contenuto del report, forza colori chiari a
+   prescindere dal tema attivo (stampare una pagina nera spreca inchiostro
+   ed e' illeggibile), nasconde i pulsanti che non hanno senso su carta */
+@media print {
+  body * { visibility: hidden !important; }
+  #print-area, #print-area * { visibility: visible !important; }
+  #print-area { position: absolute; inset: 0; background: #fff !important;
+    color: #111 !important; padding: 24px !important; }
+  #print-area .about-title { color: #111 !important; }
+  #print-area .report-meta, #print-area .about-p { color: #444 !important; }
+  #print-area .report-table th, #print-area .report-table td { border-color: #ccc !important; color: #111 !important; }
+  #print-area .report-table th, #print-area .report-table tfoot td { background: #f2f2f2 !important; }
+  .no-print { display: none !important; }
+}
