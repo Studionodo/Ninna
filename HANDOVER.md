@@ -41,6 +41,12 @@ piu' screenshot. **Usarlo prima di ogni consegna**: ha trovato bug che ne'
 `node --check` ne' jsdom vedevano (barre di grafico compresse dal flex,
 durate negative a schermo, dati non azzerati dal wipe).
 
+**Usare sempre un'altezza di viewport realistica.** Un telefono con la barra
+indirizzi di Chrome aperta ha circa 805px utili, non 915. Un test a 915px ha
+dato esito positivo su una sovrapposizione che sul telefono vero c'era
+eccome: il difetto compariva solo con lo schermo piu' corto. Provare almeno
+805, 740 e 640px.
+
 Script pronti in `/home/claude/testenv/`: `e2e.mjs` (30 passaggi d'uso),
 `bughunt.mjs` (casi limite), `shots.mjs` (screenshot delle schermate chiave).
 

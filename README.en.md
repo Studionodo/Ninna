@@ -10,17 +10,36 @@ Ninna is a web app (PWA) for parents of newborns and young children who want to 
 
 ## What it does
 
+**Predicting sleep**
+
 - **Predicts the next sleep** based on the typical wake window for the child's age, refined day by day with the real rhythms observed.
-- **Tells naps and bedtime apart on its own**: it decides which one to suggest based on the naps already taken, the time of day, and how close it is to the evening routine: the parent doesn't have to guess.
+- **Tells naps and bedtime apart on its own**, based on the naps already taken, the time of day and how close it is to the evening routine, so the parent doesn't have to guess.
 - **Explains every prediction**: a dedicated button shows the full calculation, not just the result.
-- **Logs activities**: naps, night sleep, nursing, bottle, solids, diapers, pumping, night wakings.
-- **Shows statistics**: total sleep over the last 7 days, balance against the values expected for the child's age, feeds, diapers, wakings.
 - **Flags transitions**: when a child seems to be dropping a nap, it reports it as information, never as an instruction.
-- **Sounds for sleep**: seven sounds generated in real time (white, pink, brown, waves, rain, heartbeat, shhh), with an automatic shut-off timer.
-- **A 12-article guide** on wake windows, sleepy cues, safe sleep, regressions and more, written in an informative tone, never a prescriptive one.
+
+**Logging**
+
+- **Daily activities**: naps, night sleep, nursing, bottle, solids, diapers, pumping, night wakings.
+- **Day timeline**: a bar from 00 to 24 with sleep blocks and feeds, to see how the day went without reading a list.
+- **Time correction**: every logged entry can be edited afterwards, if you noted it late.
+- **Health**: vitamins and medicines with the name of what was given, because "medicine" alone says nothing if a child takes more than one.
+- **Growth**: weight, height and head circumference over time, with a weight trend. No growth curves and no percentiles: only your child's own data, never compared against a reference population.
+
+**Supporting**
+
+- **Sounds for sleep**: seven sounds generated in real time (white, pink, brown, waves, rain, heartbeat, shhh), with a shut-off timer and a compact player reachable from any screen.
+- **Night mode**: a black screen with a single large button, made for feeding or handling a waking without turning on the light.
 - **Notifications**: alerts when the next sleep or the evening routine is approaching.
-- **Backup and export**: data can be exported as JSON (for a full backup or to hand off to another parent) or as CSV (for personal analysis or to show a paediatrician).
-- **Bilingual**: Italian and English, with instant language switching from the footer or settings.
+- **Quick shortcuts**: long-pressing the app icon brings up "Start nap" and "Start night sleep".
+- **A 13-article guide** on wake windows, sleepy cues, safe sleep, regressions and using the app, written in an informative tone, never a prescriptive one.
+
+**Sharing and adapting**
+
+- **Summary for the paediatrician**: a table of the last 14 days with averages, supplements and growth measurements, ready to print or save as PDF.
+- **Backup and export**: JSON for a full backup or to hand the data to another parent, CSV for personal analysis.
+- **Statistics without judgement**: the last 7 days of sleep and today's numbers shown alongside typical ranges for the age, with no merit labels and no targets to hit.
+- **Log-only mode**: hides predictions, comparisons and statistics when looking at the numbers stops helping.
+- **Appearance and language**: light, dark or automatic theme following the system; Italian and English, switchable instantly.
 
 ## How it handles data
 

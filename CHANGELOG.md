@@ -3,6 +3,52 @@
 Versionamento semantico (MAJOR.MINOR.PATCH). Ogni release da qui in avanti
 viene registrata qui, in ordine cronologico, più recente in cima.
 
+## v2.4.1 · 27/08/2026
+Allineamento della documentazione al lavoro delle ultime dieci versioni.
+- **README italiano e inglese riscritti** nella sezione delle funzioni, ora
+  raggruppata in quattro aree (prevedere, registrare, accompagnare,
+  condividere) invece di un elenco piatto. Aggiunte le nove funzioni
+  introdotte e mai documentate: timeline, modalita' notte, crescita, nomi di
+  farmaci e integratori, correzione degli orari, riepilogo per il pediatra,
+  modalita' solo diario, temi, scorciatoie rapide.
+- **Corretta un'affermazione inesatta**: i README promettevano ancora "il
+  bilancio rispetto ai valori attesi per l'eta", una funzione rimossa di
+  proposito nella v1.0.3 insieme alle etichette di merito. La descrizione
+  pubblica prometteva qualcosa che avevamo deciso di non fare.
+- **"Cos'e Ninna" ritoccata al minimo**: solo il primo paragrafo, per
+  includere salute e crescita fra le cose che l'app registra. Resta una
+  presentazione discorsiva e non diventa un elenco di funzioni: quello e' il
+  mestiere del README, non suo.
+- **Tredicesimo articolo nella Guida**, "Le funzioni meno ovvie": spiega
+  timeline, anello della pressione, correzione degli orari, modalita' notte,
+  crescita, riepilogo per il pediatra e modalita' solo diario. Sono le
+  funzioni che finora si scoprivano per caso, ora descritte nel posto dove
+  si cercano le risposte.
+
+## v2.4.0 · 27/08/2026
+Tre difetti della modalita' notte, tutti segnalati con screenshot reali.
+- **Il selettore dei suoni si sovrapponeva al tasto centrale.** La correzione
+  della v2.3.2 (limitare l'altezza della lista) non bastava: con la barra
+  indirizzi di Chrome aperta lo schermo utile scende a ~805px e la
+  sovrapposizione tornava. Ora il selettore **sostituisce** la schermata
+  invece di galleggiarci sopra: a schermo pieno, con i sette suoni in elenco.
+  Per costruzione non puo' piu' sovrapporsi a nulla, a nessuna altezza.
+  Scegliere un suono chiude il selettore e riporta subito alla schermata.
+- **Pausa e play veri, non solo stop.** L'icona sul controllo in alto e' ora
+  una pausa (due barre) mentre suona e un play (triangolo) quando e' in
+  pausa: la pausa conserva il suono scelto, il tasto "Ferma suono" dentro il
+  selettore lo azzera del tutto. Distinzione prima assente.
+- **Il tasto centrale non si sposta piu'.** Avviando un pisolino compariva il
+  cronometro, che spingeva il cerchio 44px piu' in basso mentre il dito era
+  ancora li'. La testata ha ora un'altezza fissa: spostamento misurato 0px.
+- Se nessun suono e' mai partito, in alto compare comunque una scorciatoia
+  per aprire il selettore, invece di nulla.
+
+Verificato su Chrome reale a tre altezze di schermo (805, 740, 640px):
+quindici controlli superati, zero errori. Nota di metodo aggiunta
+all'handover: i test vanno eseguiti a un'altezza che tenga conto della barra
+del browser, altrimenti danno falsi positivi come e' successo in v2.3.2.
+
 ## v2.3.2 · 27/08/2026
 Due difetti nello switcher dei suoni della modalita' notte, entrambi
 segnalati con uno screenshot reale.

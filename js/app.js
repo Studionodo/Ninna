@@ -25,7 +25,8 @@ const HEALTH = ["vitamins", "med"];
 const KOFI = "https://ko-fi.com/istantelabs/tip";
 const STOP_ICON = '<svg viewBox="0 0 24 24" width="14" height="14"><rect x="5" y="5" width="14" height="14" rx="2" fill="currentColor"/></svg>';
 const PLAY_ICON = '<svg viewBox="0 0 24 24" width="14" height="14"><path d="M7 5v14l12-7z" fill="currentColor"/></svg>';
-const APP_VERSION = "2.3.2";
+const PAUSE_ICON = '<svg viewBox="0 0 24 24" width="14" height="14"><rect x="6" y="5" width="4" height="14" rx="1.5" fill="currentColor"/><rect x="14" y="5" width="4" height="14" rx="1.5" fill="currentColor"/></svg>';
+const APP_VERSION = "2.4.1";
 const CUP = `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4.5 9h11v5.5a4 4 0 0 1-4 4h-3a4 4 0 0 1-4-4V9z"/><path d="M15.5 10h1.6a2.4 2.4 0 0 1 0 4.8h-1.6"/><path d="M8 4.5c0 .9.9 1.1.9 2M11.5 4c0 .9.9 1.1.9 2"/></svg>`;
 
 /* ---------- stato ---------- */
@@ -268,7 +269,7 @@ window.NINNA = {
     updateMiniPlayer();
     render();
   },
-  stopSound() { sound.stop(); nightSoundListOpen = false; updateMiniPlayer(); render(); },
+  stopSound() { sound.stop(); nightSoundListOpen = false; nightLastSound = null; updateMiniPlayer(); render(); },
   toggleMiniPlayer() { miniCollapsed = !miniCollapsed; updateMiniPlayer(); },
   setVolume(v) {
     const f = parseFloat(v);
@@ -288,7 +289,8 @@ window.NINNA = {
   openSettings() { renderSettings(); },
   openAbout() { showAbout = true; renderAbout(); },
   toggleNightMode() { nightMode = !nightMode; if (!nightMode) { nightSoundListOpen = false; nightLastSound = null; } render(); },
-  resumeNightSound() { if (nightLastSound) NINNA.playSound(nightLastSound); },
+  resumeNightSound() { if (nightLastSound) this.playSound(nightLastSound); },
+  pauseNightSound() { sound.stop(); updateMiniPlayer(); render(); },
   toggleNightSoundList() { nightSoundListOpen = !nightSoundListOpen; render(); },
   acceptNightPrompt() { nightMode = true; this.closeSettings(); render(); },
   dismissNightPrompt() { this.closeSettings(); },
@@ -680,7 +682,30 @@ function renderGuida() {
 }
 
 function renderNightMode(f) {
-  if (sound.playing) nightLastSound = sound.playing;  // memoria: sopravvive allo stop, per il tasto "riprendi"
+  if (sound.playing) nightLastSound = sound.playing;  // memoria: sopravvive alla pausa
+
+  /* La scelta del suono SOSTITUISCE la schermata invece di galleggiarci sopra:
+     e' l'unico modo per cui, a qualunque altezza di schermo e con la barra del
+     browser aperta, non possa mai sovrapporsi al tasto centrale. */
+  if (nightSoundListOpen) {
+    return `<div class="night-overlay night-picker">
+      <button class="night-exit" onclick="NINNA.toggleNightSoundList()">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 5l-7 7 7 7"/></svg>
+        <span>${t("close")}</span>
+      </button>
+      <div class="picker-list">
+        <div class="picker-title">${t("sounds_title")}</div>
+        ${SOUNDS.map((s) => {
+          const on = sound.playing === s.id;
+          return `<button class="picker-row${on ? " on" : ""}" onclick="NINNA.${on ? "pauseNightSound()" : `playSound('${s.id}')`}">
+            <span>${t("sound_" + s.id)}</span>${on ? PAUSE_ICON : PLAY_ICON}
+          </button>`;
+        }).join("")}
+        ${nightLastSound ? `<button class="picker-stop" onclick="NINNA.stopSound()">${t("mp_stop")}</button>` : ""}
+      </div>
+    </div>`;
+  }
+
   const active = store.events.find((e) => (e.type === "nap" || e.type === "night") && !e.end);
   let status, big;
   if (active) {
@@ -699,13 +724,12 @@ function renderNightMode(f) {
     </button>
     ${nightLastSound ? `<div class="night-sound">
       <button class="ns-name" onclick="NINNA.toggleNightSoundList()">${t("sound_" + nightLastSound)}</button>
-      <button class="ns-stop ${sound.playing ? "" : "paused"}" onclick="${sound.playing ? "NINNA.stopSound()" : "NINNA.resumeNightSound()"}" aria-label="${sound.playing ? t("mp_stop") : t("night_resume")}">${sound.playing ? STOP_ICON : PLAY_ICON}</button>
+      <button class="ns-stop ${sound.playing ? "" : "paused"}" onclick="${sound.playing ? "NINNA.pauseNightSound()" : "NINNA.resumeNightSound()"}" aria-label="${sound.playing ? t("night_pause") : t("night_resume")}">${sound.playing ? PAUSE_ICON : PLAY_ICON}</button>
+    </div>` : `<button class="night-sound ns-empty" onclick="NINNA.toggleNightSoundList()">${PLAY_ICON}<span>${t("tab_suoni")}</span></button>`}
+    <div class="night-head">
+      <div class="night-status">${status}</div>
+      ${active ? `<div class="night-timer">${fmtDur(Date.now() - active.start)}</div>` : ""}
     </div>
-    ${nightSoundListOpen ? `<div class="night-sound-list">
-      ${SOUNDS.filter((s) => s.id !== nightLastSound).map((s) => `<button onclick="NINNA.playSound('${s.id}')">${PLAY_ICON}${t("sound_" + s.id)}</button>`).join("")}
-    </div>` : ""}` : ""}
-    <div class="night-status">${status}</div>
-    ${active ? `<div class="night-timer">${fmtDur(Date.now() - active.start)}</div>` : ""}
     ${big}
     <div class="night-secondary">
       <button onclick="NINNA.logInstant('breast')"><span class="night-circle">${TYPE_ICONS.breast}</span><span class="night-lbl">${typeLabel("breast")}</span></button>
