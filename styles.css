@@ -360,3 +360,48 @@ button { font-family: inherit; }
 .theme3 .langopt { flex: 1; padding: 9px 8px; font-size: 12px; letter-spacing: .04em; }
 .theme3 .langopt:first-child { border-right: 1px solid var(--stroke); }
 .theme3 .langopt:not(:first-child):not(:last-child) { border-right: 1px solid var(--stroke); }
+
+/* timeline visiva della giornata: barra 00-24 con blocchi di sonno e
+   puntini delle poppate. Usa lo stesso ritaglio a mezzanotte del motore. */
+.timeline { margin-bottom: 14px; }
+.timeline-track { position: relative; height: 34px; background: var(--glass);
+  border: 1px solid var(--stroke); border-radius: 12px; overflow: hidden; }
+.tl-sleep { position: absolute; top: 4px; bottom: 4px; background: var(--mint);
+  border-radius: 6px; opacity: .85; min-width: 2px; }
+.tl-sleep.night { background: var(--sleeping); }
+.tl-feed { position: absolute; top: 50%; width: 6px; height: 6px;
+  margin-left: -3px; margin-top: -3px; background: var(--rose); border-radius: 50%;
+  box-shadow: 0 0 0 2px var(--bg); }
+.tl-now { position: absolute; top: -2px; bottom: -2px; width: 2px;
+  background: var(--text); opacity: .35; }
+.timeline-labels { display: flex; justify-content: space-between; margin-top: 5px;
+  font-size: 10px; color: var(--sub); }
+
+/* pulsante di attivazione, nell'header di Oggi */
+.topbar-actions { display: flex; align-items: center; gap: 8px; }
+.nightbtn { display: flex; align-items: center; gap: 5px; background: var(--glass);
+  border: 1px solid var(--stroke); color: var(--sub); border-radius: 999px;
+  padding: 7px 12px; font-size: 12.5px; font-family: inherit; cursor: pointer; }
+.nightbtn .ico { font-size: 14px; }
+
+/* schermo notte: nero vero indipendentemente dal tema chiaro/scuro/automatico
+   scelto altrove, perche' qui l'obiettivo e' zero luce, non coerenza estetica */
+.night-overlay { position: fixed; inset: 0; z-index: 90; background: #000;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 24px; gap: 4px; }
+.night-exit { position: fixed; top: 20px; left: 20px; background: none; border: none;
+  color: rgba(255,255,255,.3); font-size: 12.5px; font-family: inherit; padding: 8px; cursor: pointer; }
+.night-status { color: rgba(255,255,255,.5); font-size: 14px; }
+.night-timer { color: rgba(255,255,255,.8); font-family: 'Fraunces', serif; font-size: 42px; margin: 4px 0 28px; }
+.night-btn { width: 210px; height: 210px; border-radius: 50%; background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.16); color: rgba(255,255,255,.82); font-size: 19px;
+  font-weight: 600; font-family: inherit; display: flex; align-items: center; justify-content: center;
+  text-align: center; padding: 20px; cursor: pointer; margin-top: 8px; }
+.night-btn:active { background: rgba(255,255,255,.1); }
+.night-secondary { display: flex; gap: 18px; margin-top: 30px; }
+.night-secondary button { width: 72px; height: 72px; border-radius: 50%; background: rgba(255,255,255,.045);
+  border: 1px solid rgba(255,255,255,.14); color: rgba(255,255,255,.6); font-size: 24px;
+  display: flex; align-items: center; justify-content: center; cursor: pointer; }
+.night-secondary button:active { background: rgba(255,255,255,.09); }
+.night-caption { position: fixed; bottom: 22px; left: 20px; right: 20px; text-align: center;
+  color: rgba(255,255,255,.22); font-size: 10.5px; }

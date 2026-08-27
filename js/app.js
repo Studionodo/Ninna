@@ -23,7 +23,7 @@ const EDIT_ICON = "<svg viewBox=\"0 0 24 24\" width=\"1em\" height=\"1em\" fill=
 const INSTANT = ["breast", "bottle", "solid", "diaper", "nightwake", "pump"];
 const HEALTH = ["vitamins", "med"];
 const KOFI = "https://ko-fi.com/istantelabs/tip";
-const APP_VERSION = "1.5.0";
+const APP_VERSION = "1.7.0";
 const CUP = `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4.5 9h11v5.5a4 4 0 0 1-4 4h-3a4 4 0 0 1-4-4V9z"/><path d="M15.5 10h1.6a2.4 2.4 0 0 1 0 4.8h-1.6"/><path d="M8 4.5c0 .9.9 1.1.9 2M11.5 4c0 .9.9 1.1.9 2"/></svg>`;
 
 /* ---------- stato ---------- */
@@ -31,6 +31,7 @@ let store = loadStore();
 let lang = store.prefs.lang === "en" ? "en" : "it";
 let logOnly = store.prefs.logOnly === true;
 let showAbout = false;
+let nightMode = false;
 let theme = store.prefs.theme || "auto";
 let view = "oggi";
 let showWhy = false, showManual = false;
@@ -123,6 +124,17 @@ window.NINNA = {
   startSleep(kind) {
     store.events.push({ id: uid(), type: kind, start: Date.now(), end: null });
     persist(); toast(typeLabel(kind) + " · " + t("started")); render();
+    if (kind === "night" && !nightMode && !store.prefs.nightPromptSeen) {
+      store.prefs.nightPromptSeen = true; persist();
+      $modal.innerHTML = `<div class="modal-wrap" onclick="NINNA.dismissNightPrompt()">
+        <div class="modal" onclick="event.stopPropagation()">
+          <div class="card-title">${t("night_prompt_title")}</div>
+          <p class="dim small" style="line-height:1.55">${t("night_prompt_body")}</p>
+          <button class="primary block" onclick="NINNA.acceptNightPrompt()">${t("night_prompt_yes")}</button>
+          <button class="link block" onclick="NINNA.dismissNightPrompt()">${t("night_prompt_no")}</button>
+        </div>
+      </div>`;
+    }
   },
   endSleep(id) {
     const e = store.events.find((x) => x.id === id);
@@ -212,6 +224,9 @@ window.NINNA = {
   toggleArticle(id) { const el = document.getElementById("art-" + id); if (el) el.hidden = !el.hidden; },
   openSettings() { renderSettings(); },
   openAbout() { showAbout = true; renderAbout(); },
+  toggleNightMode() { nightMode = !nightMode; render(); },
+  acceptNightPrompt() { nightMode = true; this.closeSettings(); render(); },
+  dismissNightPrompt() { this.closeSettings(); },
   closeAbout() { showAbout = false; $modal.innerHTML = ""; },
   closeSettings() { $modal.innerHTML = ""; },
   openReport() {
@@ -331,6 +346,35 @@ function footerHTML(kind) {
   </div>`;
 }
 
+function timelineHTML(events, now) {
+  const d0 = new Date(now); d0.setHours(0, 0, 0, 0);
+  const dayStart = d0.getTime(), dayEnd = dayStart + 86400000;
+  const pct = (ts) => Math.max(0, Math.min(100, ((ts - dayStart) / 86400000) * 100));
+
+  const sleepSegs = events
+    .filter((e) => (e.type === "nap" || e.type === "night") && e.start < dayEnd && (e.end || now) > dayStart)
+    .map((e) => {
+      const s = Math.max(e.start, dayStart);
+      const en = Math.min(e.end || now, dayEnd);
+      return { left: pct(s), width: pct(en) - pct(s), night: e.type === "night" };
+    })
+    .filter((seg) => seg.width > 0.3);
+
+  const feedDots = events
+    .filter((e) => ["breast", "bottle", "solid"].includes(e.type) && e.at >= dayStart && e.at < dayEnd)
+    .map((e) => pct(e.at));
+
+  const hourMarks = [0, 6, 12, 18, 24];
+  return `<div class="timeline">
+    <div class="timeline-track">
+      ${sleepSegs.map((sgt) => `<div class="tl-sleep${sgt.night ? " night" : ""}" style="left:${sgt.left}%;width:${sgt.width}%"></div>`).join("")}
+      ${feedDots.map((p) => `<div class="tl-feed" style="left:${p}%"></div>`).join("")}
+      <div class="tl-now" style="left:${pct(now)}%"></div>
+    </div>
+    <div class="timeline-labels">${hourMarks.map((h) => `<span>${String(h).padStart(2, "0")}</span>`).join("")}</div>
+  </div>`;
+}
+
 function renderOggi(f) {
   const active = store.events.find((e) => (e.type === "nap" || e.type === "night") && !e.end);
   const b = store.baby;
@@ -379,6 +423,7 @@ function renderOggi(f) {
 
   return `
     ${!logOnly && f.transition.detected ? `<div class="banner">${t("transition", { avg: f.transition.avgNaps, lo: f.transition.expected[0], hi: f.transition.expected[1] })}</div>` : ""}
+    ${timelineHTML(store.events, Date.now())}
     <div class="card hero">${hero}</div>
     ${!active ? (() => {
       const k = logOnly ? null : f.next.kind;
@@ -508,6 +553,31 @@ function renderGuida() {
         <p class="artbody" id="art-${a.id}" hidden>${a.b}</p>
       </div>`).join("")}
   `).join("") + `<div class="dim small pad">${t("guide_disclaimer")}</div>`;
+}
+
+function renderNightMode(f) {
+  const active = store.events.find((e) => (e.type === "nap" || e.type === "night") && !e.end);
+  let status, big;
+  if (active) {
+    status = `${typeLabel(active.type)} · ${t("hero_sleeping")}`;
+    big = `<button class="night-btn" onclick="NINNA.endSleep('${active.id}')">${t("btn_awake")}</button>`;
+  } else {
+    status = f.lastWake ? t("awake_for", { dur: fmtDur(Date.now() - f.lastWake) }) : "";
+    const kind = f.next ? f.next.kind : "night";
+    const label = kind === "night" ? t("btn_night") : t("btn_nap");
+    big = `<button class="night-btn" onclick="NINNA.startSleep('${kind}')">${label}</button>`;
+  }
+  return `<div class="night-overlay">
+    <button class="night-exit" onclick="NINNA.toggleNightMode()">${t("night_exit")}</button>
+    <div class="night-status">${status}</div>
+    ${active ? `<div class="night-timer">${fmtDur(Date.now() - active.start)}</div>` : ""}
+    ${big}
+    <div class="night-secondary">
+      <button onclick="NINNA.logInstant('breast')" aria-label="${typeLabel("breast")}">${TYPE_ICONS.breast}</button>
+      <button onclick="NINNA.logInstant('bottle')" aria-label="${typeLabel("bottle")}">${TYPE_ICONS.bottle}</button>
+    </div>
+    <div class="night-caption">${t("night_caption")}</div>
+  </div>`;
 }
 
 function renderOnboarding() {
@@ -658,6 +728,11 @@ function render() {
     return;
   }
   const f = forecast({ birthISO: store.baby.birth, events: store.events });
+  if (nightMode) {
+    $app.innerHTML = renderNightMode(f);
+    $tabbar.innerHTML = "";
+    return;
+  }
   scheduleNotifications(f.notifications);
 
   const w = ageWeeks(store.baby.birth);
@@ -677,7 +752,10 @@ function render() {
         ${view === "oggi" ? `<button class="about-link" onclick="NINNA.openAbout()">${t("about_link")}</button>` : ""}
         <div class="babyname">${esc(store.baby.name)}<span class="agechip">${ageLabel}</span></div>
       </div>
-      <button class="ghost" onclick="NINNA.openSettings()">⋯</button>
+      <div class="topbar-actions">
+        ${view === "oggi" ? `<button class="nightbtn" onclick="NINNA.toggleNightMode()">${TYPE_ICONS.night} ${t("night_btn")}</button>` : ""}
+        <button class="ghost" onclick="NINNA.openSettings()">⋯</button>
+      </div>
     </header>
     ${body}
     ${view === "guida" ? footerHTML("full") : ""}`;

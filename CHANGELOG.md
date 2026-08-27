@@ -3,6 +3,47 @@
 Versionamento semantico (MAJOR.MINOR.PATCH). Ogni release da qui in avanti
 viene registrata qui, in ordine cronologico, più recente in cima.
 
+## v1.7.0 · 26/08/2026
+Modalita' notte: schermo nero con un solo tasto grande, pensato per
+allattare o gestire un risveglio senza accendere la luce.
+- Attivazione manuale sempre disponibile: un pulsante "Notte" (icona +
+  etichetta, non un'icona muta) nell'header di Oggi.
+- Attivazione contestuale, una sola volta: la prima volta che si preme
+  "Inizia nanna", un breve prompt spiega cos'e' la modalita' e offre di
+  attivarla subito. Non si ripresenta piu' dopo la prima risposta, qualunque
+  essa sia.
+- Il tasto grande si adatta alla situazione: "Sveglio" se un sonno e' in
+  corso (con timer live), altrimenti il prossimo sonno consigliato, con la
+  stessa logica gia' usata in Oggi. Due tasti piu' piccoli sotto per
+  allattamento e biberon, il bisogno notturno piu' comune, senza dover
+  uscire dallo schermo scuro.
+- Nero vero indipendentemente dal tema chiaro/scuro/automatico scelto
+  altrove: qui l'obiettivo e' zero luce emessa, non coerenza estetica.
+- Una didascalia permanente e discreta spiega sempre cos'e' lo schermo,
+  per chiunque ci arrivi in qualunque modo.
+
+Trovato durante il collaudo: due funzioni chiamavano l'oggetto NINNA come
+riferimento globale bare invece di usare `this`, un pattern mai usato prima
+nel file. Funziona nel browser reale ma il test automatico l'ha segnalato
+comunque: corretto per essere robusto in ogni contesto, non solo in quello
+in cui capitava di funzionare.
+
+## v1.6.0 · 26/08/2026
+Timeline visiva della giornata, in cima a Oggi: una barra 00-24 con i
+blocchi di sonno (menta per i pisolini, indaco-violetto per la nanna,
+riusando lo stesso colore dell'anello quando il bambino dorme) e un
+puntino per ogni poppata. Riusa lo stesso ritaglio a mezzanotte gia'
+presente nel motore, quindi una nanna a cavallo di due giorni appare
+divisa correttamente su entrambi. Un sonno ancora in corso si allunga
+in tempo reale verso l'ora attuale, segnata da una sottile linea verticale.
+Resta visibile anche in modalita' solo diario: mostra cosa e' successo,
+non lo confronta con nessun valore atteso.
+
+Corretto durante lo sviluppo: un primo tentativo aveva lasciato scritta
+solo la chiamata alla funzione, non la funzione stessa, per un errore di
+script che si era fermato a meta' senza salvare. Il test funzionale
+automatico l'ha rilevato subito, prima di qualunque consegna.
+
 ## v1.5.0 · 26/08/2026
 Tema Chiaro/Scuro/Automatico, in Impostazioni accanto alla lingua.
 - Automatico segue l'impostazione del sistema (prefers-color-scheme) e si
