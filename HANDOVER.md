@@ -56,6 +56,20 @@ dopo un deploy, la versione nuova appare alla *seconda* apertura dell'app, non
 alla prima (la prima serve ancora dalla cache, scarica la nuova in
 background).
 
+## Cache: perché il service worker usa `cache: "reload"`
+
+In `sw.js`, l'installazione non usa `cache.addAll(SHELL)` ma costruisce ogni
+richiesta con `new Request(url, { cache: "reload" })`. **Non toccare questo
+dettaglio.** Con `addAll` semplice, il prelievo passa dalla cache HTTP del
+browser: all'installazione di una versione nuova si rischia di ricopiare nella
+cache nuova dei file vecchi ancora considerati validi dal browser. E' successo
+davvero in v1.9.0: e' arrivato JavaScript aggiornato con CSS vecchio, e la
+schermata notte risultava a meta' fra due versioni.
+
+A supporto, `vercel.json` marca `index.html`, `styles.css`,
+`manifest.webmanifest` e tutto `/js/` come `Cache-Control: no-cache`: la cache
+offline la gestisce il service worker, il browser deve sempre rivalidare.
+
 ## Riepilogo per il pediatra: perché vive dentro l'app
 
 Le prime due versioni di questa funzione aprivano una scheda separata

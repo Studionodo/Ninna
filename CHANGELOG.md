@@ -3,6 +3,23 @@
 Versionamento semantico (MAJOR.MINOR.PATCH). Ogni release da qui in avanti
 viene registrata qui, in ordine cronologico, più recente in cima.
 
+## v1.9.1 · 27/08/2026
+- **Correzione della causa per cui la v1.9.0 e' arrivata a meta'.** Il service
+  worker popolava la propria cache con `cache.addAll`, che passa dalla cache
+  HTTP del browser: all'installazione di una versione nuova poteva quindi
+  ricopiare file vecchi ancora validi per il browser. Risultato concreto sul
+  telefono: JavaScript aggiornato (icona X, etichette) con CSS vecchio
+  (nessuna pillola sull'uscita, pulsanti non impilati). Ora ogni file della
+  shell viene prelevato forzatamente dalla rete, e `vercel.json` marca i file
+  dell'app come sempre da rivalidare.
+- Pulsanti secondari della modalita' notte ristrutturati: il cerchio e'
+  ora un contenitore esplicito invece di uno stile applicato direttamente
+  all'SVG, e l'etichetta ha un elemento proprio. Piu' prevedibile fra
+  browser diversi, e non piu' soggetto alla sovrapposizione vista in v1.9.0.
+- Aggiunta una legenda compatta sotto la timeline (pisolino, nanna, poppata)
+  con i campioni di colore corrispondenti: spiega la barra a chi la vede per
+  la prima volta senza occupare una riga di prosa.
+
 ## v1.9.0 · 27/08/2026
 - Fix reale: il toast di conferma (es. "Allattamento registrato") si
   disegnava dietro la modalita' notte per un z-index piu' basso della sua

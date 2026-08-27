@@ -23,7 +23,7 @@ const EDIT_ICON = "<svg viewBox=\"0 0 24 24\" width=\"1em\" height=\"1em\" fill=
 const INSTANT = ["breast", "bottle", "solid", "diaper", "nightwake", "pump"];
 const HEALTH = ["vitamins", "med"];
 const KOFI = "https://ko-fi.com/istantelabs/tip";
-const APP_VERSION = "1.9.0";
+const APP_VERSION = "1.9.1";
 const CUP = `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4.5 9h11v5.5a4 4 0 0 1-4 4h-3a4 4 0 0 1-4-4V9z"/><path d="M15.5 10h1.6a2.4 2.4 0 0 1 0 4.8h-1.6"/><path d="M8 4.5c0 .9.9 1.1.9 2M11.5 4c0 .9.9 1.1.9 2"/></svg>`;
 
 /* ---------- stato ---------- */
@@ -371,6 +371,11 @@ function timelineHTML(events, now) {
       <div class="tl-now" style="left:${pct(now)}%"></div>
     </div>
     <div class="timeline-labels">${hourMarks.map((h) => `<span>${String(h).padStart(2, "0")}</span>`).join("")}</div>
+    <div class="tl-legend">
+      <span><i class="sw nap"></i>${t("tl_legend_nap")}</span>
+      <span><i class="sw night"></i>${t("tl_legend_night")}</span>
+      <span><i class="sw feed"></i>${t("tl_legend_feed")}</span>
+    </div>
   </div>`;
 }
 
@@ -575,8 +580,8 @@ function renderNightMode(f) {
     ${active ? `<div class="night-timer">${fmtDur(Date.now() - active.start)}</div>` : ""}
     ${big}
     <div class="night-secondary">
-      <button onclick="NINNA.logInstant('breast')">${TYPE_ICONS.breast}<span>${typeLabel("breast")}</span></button>
-      <button onclick="NINNA.logInstant('bottle')">${TYPE_ICONS.bottle}<span>${typeLabel("bottle")}</span></button>
+      <button onclick="NINNA.logInstant('breast')"><span class="night-circle">${TYPE_ICONS.breast}</span><span class="night-lbl">${typeLabel("breast")}</span></button>
+      <button onclick="NINNA.logInstant('bottle')"><span class="night-circle">${TYPE_ICONS.bottle}</span><span class="night-lbl">${typeLabel("bottle")}</span></button>
     </div>
     <div class="night-caption">${t("night_caption")}</div>
   </div>`;

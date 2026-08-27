@@ -1,7 +1,7 @@
 /* NINNA service worker: cache-first sull'app shell, cache versionata su
    APP_VERSION (ogni rilascio la rinnova). Nessuna risorsa esterna: font,
    icone e codice sono tutti serviti dall'origine dell'app. */
-const CACHE = "ninna-v1.9.0";
+const CACHE = "ninna-v1.9.1";
 const SHELL = [
   "./", "index.html", "styles.css", "manifest.webmanifest",
   "js/app.js", "js/i18n.js", "js/engine.js", "js/sounds.js", "js/content-store.js",
@@ -11,7 +11,15 @@ const SHELL = [
 ];
 
 self.addEventListener("install", (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));
+  // cache: "reload" forza il prelievo dalla rete ignorando la cache HTTP del
+  // browser. Senza, all'installazione di una nuova versione si rischia di
+  // ricopiare nella cache nuova dei file vecchi ancora validi per il browser:
+  // e' cosi' che in v1.9.0 e' arrivato JavaScript aggiornato con CSS vecchio.
+  e.waitUntil(
+    caches.open(CACHE)
+      .then((c) => Promise.all(SHELL.map((u) => c.add(new Request(u, { cache: "reload" })))))
+      .then(() => self.skipWaiting())
+  );
 });
 
 self.addEventListener("activate", (e) => {
