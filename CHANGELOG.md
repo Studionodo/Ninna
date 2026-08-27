@@ -3,6 +3,80 @@
 Versionamento semantico (MAJOR.MINOR.PATCH). Ogni release da qui in avanti
 viene registrata qui, in ordine cronologico, più recente in cima.
 
+## v2.2.0 · 27/08/2026
+L'anello della pressione del sonno poteva mostrare "150%" completamente
+pieno: il disegno si ferma per forza al 100% (un cerchio non puo' disegnare
+piu' di un giro), ma il numero dentro continuava a salire, raccontando due
+cose diverse nello stesso punto.
+- Il numero non supera mai 100%, come il disegno: stesso limite per
+  entrambi, nessun valore che sembra un errore.
+- Oltre quella soglia, l'anello pulsa lentamente invece di restare fermo:
+  e' il segnale di "stiamo andando oltre", senza aggiungere un testo che
+  potesse suonare come un avviso.
+- L'anello e la scritta "pressione del sonno" sono ora tappabili: un tocco
+  apre una spiegazione breve di cosa significhi il numero, dove serve
+  leggerla invece che solo nella Guida.
+
+Nella stessa occasione, un residuo trovato nel file .jsx: il cerchio di
+sfondo dell'anello aveva ancora un colore fisso invece di seguire il tema,
+sfuggito all'audit sui contrasti di qualche versione fa perche' quella
+volta era stata corretta solo la PWA. Corretto anche li'.
+
+## v2.1.1 · 27/08/2026
+Il player diventa dinamico, come discusso.
+- Sparisce del tutto sulla scheda Suoni: la riga del suono attivo ha gia' il
+  suo controllo, un secondo indicatore lì sarebbe ridondante.
+- Uscendo da Suoni con un audio attivo, si apre a piena dimensione: e' il
+  momento in cui conferma che il suono e' ancora acceso.
+- Se lo riduci a pallino su un'altra scheda, la scelta resta rispettata
+  passando ad altre schede (Oggi, Statistiche, Guida non si scambiano fra
+  loro il reset). Torna a comparire pieno solo rientrando su Suoni e
+  uscendone di nuovo.
+- Apertura e riduzione animate con la stessa curva a molla gia' usata nel
+  resto dell'app, non un comparire a scatto.
+- Il render periodico dei 30 secondi non ridisegna piu' il player quando il
+  suo contenuto non e' cambiato: evita che l'animazione ripartisse da sola
+  ogni mezzo minuto mentre un suono resta attivo.
+
+Durante la preparazione, il controllo delle variabili non dichiarate (nuovo
+dalla v2.1.0) ha confermato zero problemi, ma un controllo diverso — mai
+fatto prima, aggiunto oggi — ha trovato che il CSS del mini player introdotto
+in v2.1.0 non era mai stato scritto nel file `.jsx`: la logica c'era, le
+classi pure nel markup, ma nessuna regola le vestiva. Scritto ora per intero.
+
+## v2.1.0 · 27/08/2026
+Il lettore musicale che si affrontava a parole nella chiacchierata precedente:
+- Un player persistente ancorato in basso a destra, sopra la tab bar, visibile
+  da qualunque scheda finche' un suono e' attivo: nome del suono, un tasto
+  per ridurlo a un piccolo pallino colorato, un tasto per fermarlo. Un tocco
+  sul nome apre la scheda Suoni. Deliberatamente ancorato, non trascinabile:
+  alle sue dimensioni la liberta' di movimento avrebbe aggiunto complessita'
+  senza risolvere un problema reale.
+- Nella modalita' notte compare una versione smorzata e integrata nello
+  stesso stile di quella schermata (bianco tenue su nero), non l'aspetto
+  acceso del resto dell'app.
+
+Durante la preparazione di questa versione, un controllo nuovo (analisi
+statica delle variabili non dichiarate sul file .jsx, mai fatta prima
+d'ora) ha trovato che **nightMode, nightPromptSeen e nightPrompt non erano
+mai stati dichiarati** in quel file, nonostante fossero usati in tutta la
+modalita' notte fin dalla sua introduzione. E' la causa esatta dell'errore
+"nightMode is not defined" segnalato in precedenza. Corretto. Il controllo
+resta in uso per ogni consegna futura del file di anteprima.
+
+## v2.0.2 · 27/08/2026
+- **Suoni: abbandonata l'integrazione con i controlli di sistema, l'audio
+  torna a funzionare.** Dalla v1.8.0 il suono passava da un elemento audio
+  nascosto per far comparire play/pausa nella notifica Android. Su
+  dispositivo reale quella strada risultava muta, e in modo subdolo:
+  l'elemento dichiarava di essere in riproduzione, quindi nemmeno il ripiego
+  aggiunto in v2.0.1 poteva accorgersene. Rimosso del tutto: l'audio torna
+  all'uscita diretta, la stessa che funzionava fino alla v1.7.0. Meglio un
+  suono che si sente senza controlli di sistema, che controlli senza suono.
+- Logotipo: terminali affilati al posto di quelli arrotondati (asse SOFT del
+  carattere portato a 0) e lettere leggermente distanziate. Stacca molto di
+  piu' dal resto dell'interfaccia. Sempre 1,3 KB.
+
 ## v2.0.1 · 27/08/2026
 - **Possibile silenzio totale dei suoni, corretto.** Dalla v1.8.0 l'audio
   passa da un elemento nascosto per ottenere i controlli di sistema, ma

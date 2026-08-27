@@ -4,31 +4,25 @@ Non è il changelog (quello resta in `CHANGELOG.md`, cronologico). Questo file
 raccoglie le decisioni che non sono ovvie leggendo il codice, pensate per chi
 riprende il progetto a freddo — un'altra sessione, un altro sviluppatore.
 
-## Audio: perché passa da un `<audio>` nascosto
+## Audio: uscita diretta, e perché non si torna indietro
 
-In `js/sounds.js`, `SoundEngine._setupOutput()` non collega il grafo Web Audio
-direttamente a `ctx.destination` come si farebbe normalmente. Lo collega a un
-`MediaStreamDestination`, che alimenta un elemento `<audio>` invisibile
-(`this.anchor`), il quale è l'unico percorso reale verso gli altoparlanti.
+`SoundEngine._setupOutput()` collega il grafo Web Audio direttamente a
+`ctx.destination`. È la strada semplice, ed è quella giusta.
 
-**Il motivo non è stilistico.** Web Audio puro (oscillatori, buffer) non viene
-riconosciuto da Android/iOS/desktop come "sto riproducendo audio": niente
-controlli nella notifica, niente schermata di blocco, e le pagine vengono
-congelate più aggressivamente in background. Un vero elemento `<audio>` in
-riproduzione risolve entrambe le cose.
+Fra la v1.8.0 e la v2.0.1 l'audio passava invece da un elemento `<audio>`
+alimentato da un `MediaStreamDestination`, per ottenere i controlli play/pausa
+nella notifica di sistema (MediaSession). **Su Android quella strada è
+risultata muta.** Il fallimento è stato subdolo: l'elemento `<audio>`
+dichiarava di essere in riproduzione, quindi nessun controllo di errore e
+nessuna rete di sicurezza basata su `paused` poteva accorgersene, ma dagli
+altoparlanti non usciva niente. Due tentativi di irrobustimento non l'hanno
+risolto.
 
-**Se tocchi questo file**: non aggiungere mai un secondo collegamento diretto
-a `ctx.destination` insieme a quello verso l'ancora — l'audio uscirebbe
-raddoppiato. Esiste `_fallbackToDirect()`, che stacca l'ancora e ricollega
-l'uscita diretta: viene chiamato se `anchor.play()` fallisce, se resta appesa
-oltre 600 ms, o se il browser non ha `createMediaStreamDestination`. **Non
-rimuoverlo e non ridurlo a un `.catch(() => {})` vuoto**: in v1.8.0 era
-scritto proprio così e, se la riproduzione dell'ancora falliva, l'app restava
-completamente muta senza alcun segnale.
-
-**Limite noto**: il supporto iOS a questo meccanismo nelle PWA è meno
-affidabile di Android. Non è stato possibile verificarlo su un browser reale
-in questo ambiente di sviluppo (vedi sotto).
+**Non reintrodurre quel percorso** senza avere prima un modo per verificarlo
+su un dispositivo Android reale. Il problema di ergonomia che voleva
+risolvere (fermare il suono senza tornare nella scheda Suoni) va affrontato
+dentro l'app, con un lettore compatto persistente, non delegandolo al
+sistema operativo.
 
 ## Ambiente di test: niente browser reale disponibile
 

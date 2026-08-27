@@ -23,7 +23,8 @@ const EDIT_ICON = "<svg viewBox=\"0 0 24 24\" width=\"1em\" height=\"1em\" fill=
 const INSTANT = ["breast", "bottle", "solid", "diaper", "nightwake", "pump"];
 const HEALTH = ["vitamins", "med"];
 const KOFI = "https://ko-fi.com/istantelabs/tip";
-const APP_VERSION = "2.0.1";
+const STOP_ICON = '<svg viewBox="0 0 24 24" width="14" height="14"><rect x="5" y="5" width="14" height="14" rx="2" fill="currentColor"/></svg>';
+const APP_VERSION = "2.2.0";
 const CUP = `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4.5 9h11v5.5a4 4 0 0 1-4 4h-3a4 4 0 0 1-4-4V9z"/><path d="M15.5 10h1.6a2.4 2.4 0 0 1 0 4.8h-1.6"/><path d="M8 4.5c0 .9.9 1.1.9 2M11.5 4c0 .9.9 1.1.9 2"/></svg>`;
 
 /* ---------- stato ---------- */
@@ -31,11 +32,12 @@ let store = loadStore();
 let lang = store.prefs.lang === "en" ? "en" : "it";
 let logOnly = store.prefs.logOnly === true;
 let showAbout = false;
+let miniCollapsed = false;
 let showReport = false;
 let nightMode = false;
 let theme = store.prefs.theme || "auto";
 let view = "oggi";
-let showWhy = false, showManual = false, showHealth = false;
+let showWhy = false, showManual = false, showHealth = false, showPressureInfo = false;
 let sound = new SoundEngine();
 let timerMin = 0;
 let notifTimeouts = [];
@@ -44,6 +46,7 @@ const $app = document.getElementById("app");
 const $tabbar = document.getElementById("tabbar");
 const $toast = document.getElementById("toast");
 const $modal = document.getElementById("modal-root");
+const $mini = document.getElementById("miniplayer-root");
 
 /* ---------- i18n ---------- */
 const t = (k, params) => {
@@ -104,7 +107,14 @@ function scheduleNotifications(plan) {
 
 /* ---------- azioni ---------- */
 window.NINNA = {
-  setView(v) { view = v; render(); },
+  setView(v) {
+    // lasciando Suoni con un audio attivo, il player torna a piena
+    // dimensione: e' il momento in cui conferma che il suono e' ancora
+    // acceso, anche se prima l'avevi ridotto apposta
+    if (view === "suoni" && v !== "suoni" && sound.playing) miniCollapsed = false;
+    view = v;
+    render();
+  },
   setLang(l) { lang = l === "en" ? "en" : "it"; store.prefs.lang = lang; persist(); render(); if (showAbout) renderAbout(); else if (showReport) renderReport(); else if ($modal.innerHTML) renderSettings(); },
   setTheme(v) {
     theme = v;
@@ -228,6 +238,7 @@ window.NINNA = {
     persist(); this.closeSettings(); toast(t("edit_done")); render();
   },
   toggleWhy() { showWhy = !showWhy; render(); },
+  togglePressureInfo() { showPressureInfo = !showPressureInfo; render(); },
   toggleManual() { showManual = !showManual; render(); },
   toggleHealth() { showHealth = !showHealth; render(); },
   addManual() {
@@ -247,9 +258,11 @@ window.NINNA = {
   playSound(id) {
     sound.setVolume(store.prefs.volume ?? 0.4);
     sound.play(id);
-    if (sound.playing === id) sound.setNowPlayingLabel(t("sound_" + id));
+    updateMiniPlayer();
     render();
   },
+  stopSound() { sound.stop(); updateMiniPlayer(); render(); },
+  toggleMiniPlayer() { miniCollapsed = !miniCollapsed; updateMiniPlayer(); },
   setVolume(v) {
     const f = parseFloat(v);
     sound.setVolume(f);
@@ -327,9 +340,12 @@ function downloadBlob(blob, filename) {
 function ringSVG(pct, sleeping) {
   const R = 52, C = 2 * Math.PI * R, filled = C * Math.min(1, pct);
   const color = sleeping ? "var(--sleeping)" : pct < 0.75 ? "var(--mint)" : "var(--rose)";
-  const label = sleeping ? "zZ" : Math.round(pct * 100) + "%";
-  const sub = sleeping ? (lang === "it" ? "sta dormendo" : "sleeping") : (lang === "it" ? "pressione del sonno" : "sleep pressure");
-  return `<svg width="120" height="120" viewBox="0 0 128 128" class="ring">
+  // il numero non supera mai il 100%, come il disegno: un valore "150%" legge
+  // come un errore. Oltre la soglia, la classe "over" fa pulsare l'anello,
+  // che diventa l'unico segnale di "stiamo andando oltre", senza testo nuovo.
+  const label = sleeping ? "zZ" : Math.round(Math.min(1, pct) * 100) + "%";
+  const sub = sleeping ? (lang === "it" ? "sta dormendo" : "sleeping") : t("pressure_label");
+  return `<svg width="120" height="120" viewBox="0 0 128 128" class="ring${!sleeping && pct > 1 ? " over" : ""}">
     <circle cx="64" cy="64" r="${R}" stroke="var(--stroke)" stroke-width="10" fill="none"/>
     <circle cx="64" cy="64" r="${R}" fill="none" stroke-width="10" stroke-linecap="round"
       stroke="${color}" stroke-dasharray="${filled} ${C}" transform="rotate(-90 64 64)"/>
@@ -356,6 +372,28 @@ if (window.matchMedia) {
   window.matchMedia("(prefers-color-scheme: light)").addEventListener("change", () => {
     if (theme === "auto") applyTheme();   // il sistema cambia mentre siamo in automatico
   });
+}
+
+/* ---------- mini player persistente ---------- */
+function updateMiniPlayer() {
+  // niente sulla scheda Suoni: la riga del suono attivo ha gia' il suo
+  // controllo, un secondo indicatore lì sarebbe rumore, non informazione
+  let html = "";
+  if (sound.playing && view !== "suoni") {
+    const label = t("sound_" + sound.playing);
+    html = miniCollapsed
+      ? `<button class="miniplayer collapsed" onclick="NINNA.toggleMiniPlayer()" aria-label="${t("mp_expand")}">
+          <span class="mp-dot"></span>
+        </button>`
+      : `<div class="miniplayer">
+          <button class="mp-name" onclick="NINNA.setView('suoni')">${label}</button>
+          <button class="mp-btn mp-collapse" onclick="NINNA.toggleMiniPlayer()" aria-label="${t("mp_collapse")}">–</button>
+          <button class="mp-btn mp-stop" onclick="NINNA.stopSound()" aria-label="${t("mp_stop")}">${STOP_ICON}</button>
+        </div>`;
+  }
+  // ridisegna solo se il contenuto cambia davvero: il render periodico dei
+  // 30s non deve far ripartire l'animazione di apertura senza motivo
+  if ($mini.innerHTML !== html) $mini.innerHTML = html;
 }
 
 function footerHTML(kind) {
@@ -433,7 +471,7 @@ function renderOggi(f) {
   } else if (f.lastWake) {
     const s = f.sweetSpot;
     const isNight = f.next.kind === "night";
-    hero = `${ringSVG(f.pressure, false)}
+    hero = `<button class="ringtap" onclick="NINNA.togglePressureInfo()" aria-label="${t("pressure_label")}">${ringSVG(f.pressure, false)}</button>
       <div class="hero-text">
         <div class="hero-label">${isNight ? t("hero_night") : t("hero_nap")}</div>
         <div class="hero-big">${isNight ? fmtHM(f.bedtime.at) : fmtHM(s.from) + "–" + fmtHM(s.to)}</div>
@@ -448,6 +486,7 @@ function renderOggi(f) {
             ? t("why_observed", { name: esc(b.name), ema: f.window.observedEma, conf: Math.round(f.window.confidence * 100), min: f.window.minutes })
             : t("why_default", { min: f.window.minutes })}
           ${t("why_bed", { time: fmtHM(f.bedtime.at) })}</div>` : ""}
+        ${showPressureInfo ? `<div class="why">${t("pressure_info")}</div>` : ""}
       </div>`;
   } else if (store.events.length === 0) {
     // il riquadro introduttivo sparisce dopo la prima registrazione: da li'
@@ -615,6 +654,9 @@ function renderNightMode(f) {
       <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
       <span>${t("night_exit")}</span>
     </button>
+    ${sound.playing ? `<button class="night-sound" onclick="NINNA.stopSound()" aria-label="${t("mp_stop")}">
+      <span>${t("sound_" + sound.playing)}</span>${STOP_ICON}
+    </button>` : ""}
     <div class="night-status">${status}</div>
     ${active ? `<div class="night-timer">${fmtDur(Date.now() - active.start)}</div>` : ""}
     ${big}
@@ -812,6 +854,8 @@ function render() {
   $tabbar.innerHTML = tabs
     .map(([id, label]) => `<button class="tab ${view === id ? "active" : ""}" onclick="NINNA.setView('${id}')">${label}</button>`)
     .join("");
+
+  updateMiniPlayer();
 }
 
 /* ---------- scorciatoie da long-press sull'icona ---------- */
