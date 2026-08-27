@@ -347,6 +347,7 @@ button { font-family: inherit; }
 .coffee span { border-bottom: 1px solid rgba(var(--mint-rgb),.55); padding-bottom: 2px; }
 .hairline { height: 1px; background: rgba(255,255,255,.09); margin: 0 0 16px; }
 .finelines { text-align: center; color: var(--sub); font-size: 13px; line-height: 1.8; padding-bottom: 4px; }
+.finelines a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
 
 /* interruttore modalità solo diario */
 .logonly-row { margin: 14px 0 4px; }

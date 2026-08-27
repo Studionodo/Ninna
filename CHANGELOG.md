@@ -3,6 +3,14 @@
 Versionamento semantico (MAJOR.MINOR.PATCH). Ogni release da qui in avanti
 viene registrata qui, in ordine cronologico, più recente in cima.
 
+## v2.5.1 · 27/08/2026
+Aggiunto il riferimento a GitHub, stesso trattamento di Posa: dentro la riga
+del copyright, non un pulsante a parte. Trovati due punti dove quella riga
+compare (in fondo alla Guida e in "Cos'e Ninna") ed e' stato aggiunto in
+entrambi, in entrambe le lingue. Il link si fonde nel testo — stesso colore
+della riga, solo sottolineato — invece di saltare all'occhio come farebbe un
+link blu di default.
+
 ## v2.5.0 · 27/08/2026
 - **Onde e pioggia rifatti.** Le onde cambiavano solo di volume, come una
   manopola su un rumore fisso: ora sono due strati distinti, una massa grave
