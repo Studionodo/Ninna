@@ -152,6 +152,7 @@ export function _gen(id, sr = 44100) { return GENERATORS[id](sr); } // per i tes
 export class SoundEngine {
   constructor() {
     this.ctx = null; this.master = null; this.source = null; this.anchor = null;
+    this._dest = null; this._direct = false;
     this.playing = null; this.volume = 0.4;
     this._buffers = {}; this._nodes = []; this._timer = null;
   }
@@ -163,7 +164,7 @@ export class SoundEngine {
       this._setupOutput();
     }
     if (this.ctx.state === "suspended") this.ctx.resume();
-    if (this.anchor && this.anchor.paused) this.anchor.play().catch(() => {});
+    if (this.anchor && this.anchor.paused && !this._direct) this.anchor.play().catch(() => this._fallbackToDirect());
   }
   /* L'uscita passa da un <audio> nascosto invece che direttamente sugli
      altoparlanti: e' l'unico modo per cui Android/iOS/desktop riconoscano
@@ -173,19 +174,40 @@ export class SoundEngine {
      Effetto collaterale utile: le pagine con una sessione audio riconosciuta
      vengono congelate meno aggressivamente in background dal sistema. Se il
      browser non supporta questo percorso, si torna all'uscita diretta. */
+  /* L'uscita passa da un <audio> nascosto per ottenere i controlli di sistema.
+     Se quel percorso fallisce (capita su alcune versioni di Android/iOS), NON
+     si puo' restare in silenzio: si torna subito all'uscita diretta. Il primo
+     tentativo swallowa l'errore, quindi qui il ripiego e' esplicito. */
   _setupOutput() {
     try {
       if (this.ctx.createMediaStreamDestination && typeof Audio !== "undefined") {
-        const dest = this.ctx.createMediaStreamDestination();
-        this.master.connect(dest);
+        this._dest = this.ctx.createMediaStreamDestination();
+        this.master.connect(this._dest);
         this.anchor = new Audio();
-        this.anchor.srcObject = dest.stream;
+        this.anchor.srcObject = this._dest.stream;
         this.anchor.loop = true;
-        this.anchor.play().catch(() => {});
-        this._setupMediaSession();
+        this.anchor.muted = false;
+        this.anchor.play().then(() => {
+          this._setupMediaSession();
+        }).catch(() => {
+          this._fallbackToDirect();
+        });
+        // rete di sicurezza: se dopo un istante l'ancora non sta suonando,
+        // non aspettiamo la promessa e passiamo comunque all'uscita diretta
+        setTimeout(() => {
+          if (this.anchor && this.anchor.paused && !this._direct) this._fallbackToDirect();
+        }, 600);
         return;
       }
-    } catch (e) { /* ricade sull'uscita diretta sotto */ }
+    } catch (e) { /* ricade sull'uscita diretta */ }
+    this._fallbackToDirect();
+  }
+  _fallbackToDirect() {
+    if (this._direct) return;
+    this._direct = true;
+    try { if (this._dest) this.master.disconnect(this._dest); } catch (e) {}
+    try { if (this.anchor) { this.anchor.pause(); this.anchor.srcObject = null; } } catch (e) {}
+    this.anchor = null;
     this.master.connect(this.ctx.destination);
   }
   _setupMediaSession() {

@@ -3,6 +3,20 @@
 Versionamento semantico (MAJOR.MINOR.PATCH). Ogni release da qui in avanti
 viene registrata qui, in ordine cronologico, più recente in cima.
 
+## v2.0.1 · 27/08/2026
+- **Possibile silenzio totale dei suoni, corretto.** Dalla v1.8.0 l'audio
+  passa da un elemento nascosto per ottenere i controlli di sistema, ma
+  l'eventuale errore di avvio veniva inghiottito da un `catch` vuoto: se il
+  browser rifiutava quella riproduzione, non usciva alcun suono e nulla lo
+  segnalava. Ora esiste un ripiego esplicito verso l'uscita diretta, con tre
+  inneschi: errore, attesa oltre 600 ms senza risposta, oppure API non
+  disponibile. Verificato su quattro scenari simulati: in nessuno l'app
+  resta muta.
+- Logotipo rifatto: il peso 600 a 19px sembrava solo testo un po' piu'
+  grande. Ora e' peso 900 a 23px, in menta con il punto in rosa, cosi' usa
+  entrambi i colori della palette e si legge come un marchio invece che come
+  un'intestazione. Sempre 1,3 KB.
+
 ## v2.0.0 · 27/08/2026
 - **Farmaci e integratori ora hanno un nome.** Registrare "Farmaco" e basta
   non dice nulla se il bambino ne prende piu' di uno: toccando Vitamine o

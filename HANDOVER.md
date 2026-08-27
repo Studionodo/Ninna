@@ -19,8 +19,12 @@ riproduzione risolve entrambe le cose.
 
 **Se tocchi questo file**: non aggiungere mai un secondo collegamento diretto
 a `ctx.destination` insieme a quello verso l'ancora — l'audio uscirebbe
-raddoppiato. Il fallback per i browser senza `createMediaStreamDestination`
-c'è già (torna al collegamento diretto), non rimuoverlo.
+raddoppiato. Esiste `_fallbackToDirect()`, che stacca l'ancora e ricollega
+l'uscita diretta: viene chiamato se `anchor.play()` fallisce, se resta appesa
+oltre 600 ms, o se il browser non ha `createMediaStreamDestination`. **Non
+rimuoverlo e non ridurlo a un `.catch(() => {})` vuoto**: in v1.8.0 era
+scritto proprio così e, se la riproduzione dell'ancora falliva, l'app restava
+completamente muta senza alcun segnale.
 
 **Limite noto**: il supporto iOS a questo meccanismo nelle PWA è meno
 affidabile di Android. Non è stato possibile verificarlo su un browser reale
