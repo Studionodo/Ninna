@@ -24,7 +24,8 @@ const INSTANT = ["breast", "bottle", "solid", "diaper", "nightwake", "pump"];
 const HEALTH = ["vitamins", "med"];
 const KOFI = "https://ko-fi.com/istantelabs/tip";
 const STOP_ICON = '<svg viewBox="0 0 24 24" width="14" height="14"><rect x="5" y="5" width="14" height="14" rx="2" fill="currentColor"/></svg>';
-const APP_VERSION = "2.2.0";
+const PLAY_ICON = '<svg viewBox="0 0 24 24" width="14" height="14"><path d="M7 5v14l12-7z" fill="currentColor"/></svg>';
+const APP_VERSION = "2.3.1";
 const CUP = `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4.5 9h11v5.5a4 4 0 0 1-4 4h-3a4 4 0 0 1-4-4V9z"/><path d="M15.5 10h1.6a2.4 2.4 0 0 1 0 4.8h-1.6"/><path d="M8 4.5c0 .9.9 1.1.9 2M11.5 4c0 .9.9 1.1.9 2"/></svg>`;
 
 /* ---------- stato ---------- */
@@ -34,7 +35,9 @@ let logOnly = store.prefs.logOnly === true;
 let showAbout = false;
 let miniCollapsed = false;
 let showReport = false;
+let showGrowth = false, showGrowthForm = false;
 let nightMode = false;
+let nightSoundListOpen = false;
 let theme = store.prefs.theme || "auto";
 let view = "oggi";
 let showWhy = false, showManual = false, showHealth = false, showPressureInfo = false;
@@ -60,7 +63,9 @@ const typeLabel = (type) => t("type_" + type);
 /* ---------- utilita' ---------- */
 const uid = () => Math.random().toString(36).slice(2, 10);
 const fmtHM = (ts) => new Date(ts).toLocaleTimeString(LOCALE(), { hour: "2-digit", minute: "2-digit" });
-const fmtDur = (ms) => { const m = Math.round(ms / 60000), h = Math.floor(m / 60); return h > 0 ? `${h}h ${String(m % 60).padStart(2, "0")}m` : `${m} min`; };
+// Math.max(0, ...): un orologio che si sposta o un evento datato di poco nel
+// futuro producevano durate negative a schermo ("sveglio da -7 min").
+const fmtDur = (ms) => { const m = Math.max(0, Math.round(ms / 60000)), h = Math.floor(m / 60); return h > 0 ? `${h}h ${String(m % 60).padStart(2, "0")}m` : `${m} min`; };
 const sameDay = (a, b) => new Date(a).toDateString() === new Date(b).toDateString();
 const localTodayISO = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
@@ -258,10 +263,11 @@ window.NINNA = {
   playSound(id) {
     sound.setVolume(store.prefs.volume ?? 0.4);
     sound.play(id);
+    nightSoundListOpen = false;
     updateMiniPlayer();
     render();
   },
-  stopSound() { sound.stop(); updateMiniPlayer(); render(); },
+  stopSound() { sound.stop(); nightSoundListOpen = false; updateMiniPlayer(); render(); },
   toggleMiniPlayer() { miniCollapsed = !miniCollapsed; updateMiniPlayer(); },
   setVolume(v) {
     const f = parseFloat(v);
@@ -280,13 +286,38 @@ window.NINNA = {
   toggleArticle(id) { const el = document.getElementById("art-" + id); if (el) el.hidden = !el.hidden; },
   openSettings() { renderSettings(); },
   openAbout() { showAbout = true; renderAbout(); },
-  toggleNightMode() { nightMode = !nightMode; render(); },
+  toggleNightMode() { nightMode = !nightMode; if (!nightMode) nightSoundListOpen = false; render(); },
+  toggleNightSoundList() { nightSoundListOpen = !nightSoundListOpen; render(); },
   acceptNightPrompt() { nightMode = true; this.closeSettings(); render(); },
   dismissNightPrompt() { this.closeSettings(); },
   closeAbout() { showAbout = false; $modal.innerHTML = ""; },
   closeSettings() { $modal.innerHTML = ""; },
   openReport() { showReport = true; renderReport(); },
   closeReport() { showReport = false; $modal.innerHTML = ""; },
+  openGrowth() { showGrowth = true; showGrowthForm = false; renderGrowth(); },
+  closeGrowth() { showGrowth = false; showGrowthForm = false; $modal.innerHTML = ""; render(); },
+  toggleGrowthForm() { showGrowthForm = !showGrowthForm; renderGrowth(); },
+  setSex(sex) { store.baby.sex = sex; persist(); renderGrowth(); },
+  saveGrowth() {
+    const dateEl = document.getElementById("g-date");
+    const w = parseFloat(document.getElementById("g-weight").value);
+    const h = parseFloat(document.getElementById("g-height").value);
+    const hc = parseFloat(document.getElementById("g-head").value);
+    if (!(w > 0) && !(h > 0) && !(hc > 0)) return toast(t("growth_empty_error"));
+    const rec = { id: uid(), date: dateEl.value || localTodayISO() };
+    if (w > 0) rec.weight = w;
+    if (h > 0) rec.height = h;
+    if (hc > 0) rec.head = hc;
+    store.growth.push(rec);
+    store.growth.sort((a, b) => a.date.localeCompare(b.date));
+    showGrowthForm = false;
+    persist(); toast(t("added")); renderGrowth(); render();
+  },
+  deleteGrowth(id) {
+    if (!confirm(t("growth_delete_confirm"))) return;
+    store.growth = store.growth.filter((g) => g.id !== id);
+    persist(); renderGrowth(); render();
+  },
   exportCSVFile() {
     const labels = Object.fromEntries(["nap","night","breast","bottle","solid","diaper","nightwake","pump"].map((k) => [k, typeLabel(k)]));
     const header = [t("csv_type"), t("csv_start"), t("csv_end"), t("csv_dur"), t("health_which")];
@@ -319,8 +350,8 @@ window.NINNA = {
   },
   wipe() {
     if (!confirm(t("wipe_confirm"))) return;
-    store = { version: 1, baby: null, events: [], prefs: { volume: 0.4, lang, logOnly, theme } };
-    persist(); NINNA.closeSettings(); render();
+    store = { version: 1, baby: null, events: [], growth: [], prefs: { volume: 0.4, lang, logOnly, theme } };
+    persist(); this.closeSettings(); render();
   },
   saveBaby() {
     const name = document.getElementById("ob-name").value.trim();
@@ -571,7 +602,7 @@ function renderStat(f) {
       <div class="bars">${days.map((d) => `
         <div class="barcol">
           <div class="barval">${d.total ? d.total.toFixed(1) + "h" : "·"}</div>
-          <div class="bar" style="height:${(d.total / maxH) * 100}%"></div>
+          <div class="bar" style="height:${(d.total / maxH) * 75}%"></div>
           <div class="barlabel">${d.label}</div>
         </div>`).join("")}</div>
       <div class="dim small">${t("stat_target", { lo: pr.total[0], hi: pr.total[1], nlo: pr.naps[0], nhi: pr.naps[1] })}</div>
@@ -584,6 +615,15 @@ function renderStat(f) {
       ${row(t("stat_diapers"), st.diapers)}
       ${row(t("stat_wakes"), st.nightWakes)}
       <div class="dim small">${t("stat_variability")}</div>
+    </div>
+    <div class="card">
+      <div class="card-title">${t("growth")}</div>
+      ${(() => {
+        if (!store.growth.length) return `<div class="dim">${t("growth_none")}</div>`;
+        const last = [...store.growth].sort((a, b2) => b2.date.localeCompare(a.date))[0];
+        return `<div class="logrow"><span class="loglabel">${t("growth_latest", { date: new Date(last.date + "T00:00:00").toLocaleDateString(LOCALE(), { day: "2-digit", month: "short" }), summary: growthSummary(last) })}</span></div>`;
+      })()}
+      <button class="link block" onclick="NINNA.openGrowth()">${t("growth_open")} →</button>
     </div>
     <button class="secondary block" onclick="NINNA.exportCSVFile()">${t("export_csv")}</button>`;
 }
@@ -654,9 +694,13 @@ function renderNightMode(f) {
       <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
       <span>${t("night_exit")}</span>
     </button>
-    ${sound.playing ? `<button class="night-sound" onclick="NINNA.stopSound()" aria-label="${t("mp_stop")}">
-      <span>${t("sound_" + sound.playing)}</span>${STOP_ICON}
-    </button>` : ""}
+    ${sound.playing ? `<div class="night-sound">
+      <button class="ns-name" onclick="NINNA.toggleNightSoundList()">${t("sound_" + sound.playing)}</button>
+      <button class="ns-stop" onclick="NINNA.stopSound()" aria-label="${t("mp_stop")}">${STOP_ICON}</button>
+    </div>
+    ${nightSoundListOpen ? `<div class="night-sound-list">
+      ${SOUNDS.filter((s) => s.id !== sound.playing).map((s) => `<button onclick="NINNA.playSound('${s.id}')">${PLAY_ICON}${t("sound_" + s.id)}</button>`).join("")}
+    </div>` : ""}` : ""}
     <div class="night-status">${status}</div>
     ${active ? `<div class="night-timer">${fmtDur(Date.now() - active.start)}</div>` : ""}
     ${big}
@@ -741,7 +785,67 @@ function reportContentHTML(days = 14) {
     </table>
     ${vit + med > 0 ? `<div class="report-meta" style="margin-top:12px"><b>${t("report_health")}</b><br>
       ${vitL ? `${typeLabel("vitamins")}: ${vitL}<br>` : ""}${medL ? `${typeLabel("med")}: ${medL}` : ""}</div>` : ""}
+    ${store.growth.length ? `<div class="report-meta" style="margin-top:12px"><b>${t("report_growth")}</b>${b.sex ? ` · ${b.sex === "m" ? t("growth_male") : t("growth_female")}` : ""}<br>
+      ${[...store.growth].sort((a, b2) => a.date.localeCompare(b2.date)).map((g) => `${new Date(g.date + "T00:00:00").toLocaleDateString(LOCALE())}: ${growthSummary(g)}`).join("<br>")}</div>` : ""}
     <p class="about-p" style="margin-top:16px">${t("report_note")}<br>${t("stat_variability")}</p>`;
+}
+
+/* ---------- schermata Crescita: peso, altezza, circonferenza cranica.
+   Niente curve, niente percentili, nessun confronto con popolazioni di
+   riferimento: solo l'andamento del proprio bambino nel tempo. ---------- */
+function growthSummary(g) {
+  const parts = [];
+  if (g.weight) parts.push(`${g.weight} kg`);
+  if (g.height) parts.push(`${g.height} cm`);
+  if (g.head) parts.push(`${t("growth_head_short")} ${g.head} cm`);
+  return parts.join(" · ");
+}
+function renderGrowth() {
+  const list = [...store.growth].sort((a, b) => b.date.localeCompare(a.date));
+  const trend = [...store.growth].filter((g) => g.weight).sort((a, b) => a.date.localeCompare(b.date)).slice(-12);
+  const maxW = Math.max(1, ...trend.map((g) => g.weight));
+  const b = store.baby;
+  $modal.innerHTML = `<div class="about-overlay">
+    <button class="ghost about-back" onclick="NINNA.closeGrowth()">←</button>
+    <div class="about-scroll">
+      <div class="about-title" style="font-size:26px">${t("growth")}</div>
+      <div class="report-meta" style="margin-bottom:18px">
+        <span>${t("growth_sex")}:</span>
+        <div class="langpill" style="display:inline-flex;margin-left:8px;vertical-align:middle">
+          <button class="langopt ${b.sex === "m" ? "on" : ""}" onclick="NINNA.setSex('m')">${t("growth_male")}</button>
+          <button class="langopt ${b.sex === "f" ? "on" : ""}" onclick="NINNA.setSex('f')">${t("growth_female")}</button>
+        </div>
+      </div>
+
+      ${trend.length >= 2 ? `<div class="card-title" style="font-size:15px">${t("growth_trend")}</div>
+      <div class="bars" style="margin-bottom:18px">${trend.map((g) => `
+        <div class="barcol">
+          <div class="barval">${g.weight}</div>
+          <div class="bar" style="height:${(g.weight / maxW) * 75}%"></div>
+          <div class="barlabel">${new Date(g.date + "T00:00:00").toLocaleDateString(LOCALE(), { day: "2-digit", month: "2-digit" })}</div>
+        </div>`).join("")}</div>` : ""}
+
+      <button class="link block" onclick="NINNA.toggleGrowthForm()">${showGrowthForm ? t("close") : t("growth_add")}</button>
+      ${showGrowthForm ? `<div class="card">
+        <label class="field"><span>${t("growth_date")}</span><input type="date" id="g-date" value="${localTodayISO()}"></label>
+        <div class="row2">
+          <label class="field"><span>${t("growth_weight")}</span><input type="number" step="0.01" min="0" id="g-weight" placeholder="—"></label>
+          <label class="field"><span>${t("growth_height")}</span><input type="number" step="0.1" min="0" id="g-height" placeholder="—"></label>
+        </div>
+        <label class="field"><span>${t("growth_head")}</span><input type="number" step="0.1" min="0" id="g-head" placeholder="—"></label>
+        <div class="dim small" style="margin:6px 0 10px">${t("growth_save_hint")}</div>
+        <button class="secondary block" onclick="NINNA.saveGrowth()">${t("save")}</button>
+      </div>` : ""}
+
+      <div class="card-title" style="font-size:15px;margin-top:8px">${t("growth_history")}</div>
+      ${list.length === 0 ? `<div class="dim">${t("growth_none")}</div>` : list.map((g) => `
+        <div class="logrow">
+          <span class="loglabel">${new Date(g.date + "T00:00:00").toLocaleDateString(LOCALE(), { day: "2-digit", month: "short", year: "numeric" })}</span>
+          <span class="logtime">${growthSummary(g)}</span>
+          <button class="del" onclick="NINNA.deleteGrowth('${g.id}')">✕</button>
+        </div>`).join("")}
+    </div>
+  </div>`;
 }
 
 function renderReport() {

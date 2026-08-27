@@ -24,6 +24,28 @@ risolvere (fermare il suono senza tornare nella scheda Suoni) va affrontato
 dentro l'app, con un lettore compatto persistente, non delegandolo al
 sistema operativo.
 
+## Ambiente di test: Chrome reale, disponibile
+
+Un binario Chromium funzionante si trova in `/opt/google/chrome/chrome`.
+Playwright non riesce a scaricare il proprio browser (rete bloccata), ma si
+collega a questo:
+
+```js
+chromium.launch({ executablePath: '/opt/google/chrome/chrome', args: ['--no-sandbox'] })
+```
+
+Con un `python3 -m http.server` sulla cartella del progetto si ottiene un
+banco di prova completo: l'app vera, servita su HTTP, pilotata come farebbe
+un utente, con cattura di errori di console, eccezioni e richieste fallite,
+piu' screenshot. **Usarlo prima di ogni consegna**: ha trovato bug che ne'
+`node --check` ne' jsdom vedevano (barre di grafico compresse dal flex,
+durate negative a schermo, dati non azzerati dal wipe).
+
+Script pronti in `/home/claude/testenv/`: `e2e.mjs` (30 passaggi d'uso),
+`bughunt.mjs` (casi limite), `shots.mjs` (screenshot delle schermate chiave).
+
+## Nota storica: prima non c'era
+
 ## Ambiente di test: niente browser reale disponibile
 
 Playwright è installato ma **l'installazione del browser Chromium fallisce**

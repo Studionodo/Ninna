@@ -3,6 +3,55 @@
 Versionamento semantico (MAJOR.MINOR.PATCH). Ogni release da qui in avanti
 viene registrata qui, in ordine cronologico, più recente in cima.
 
+## v2.3.1 · 27/08/2026
+Prima sessione di collaudo su Chrome reale, con l'app servita su HTTP e
+pilotata come la userebbe una persona. Trenta passaggi d'uso completi piu'
+sette casi limite: zero errori JavaScript, ma tre difetti reali emersi, che
+ne' il controllo di sintassi ne' i test simulati avevano visto.
+- **"Cancella tutto e ricomincia" non azzerava le misure di crescita.** Chi
+  cancellava tutto si sarebbe ritrovato i dati del bambino precedente: un
+  problema di riservatezza, non solo di pulizia. Corretto.
+- **Le barre dei grafici potevano apparire tutte della stessa altezza.**
+  Mancava `flex-shrink: 0`: quando la barra piu' le etichette superavano il
+  contenitore, il browser le comprimeva, e valori diversi finivano identici a
+  schermo. Riguardava sia il grafico del sonno a 7 giorni sia quello della
+  crescita. Corretto, con le altezze riscalate perche' le differenze restino
+  sempre leggibili.
+- **Durate negative a schermo** ("sveglio da -7 min") se l'orologio del
+  dispositivo si sposta o un evento risulta datato di poco nel futuro. Ora il
+  minimo mostrato e' zero.
+- Rifiniture nella schermata Crescita emerse guardandola davvero: date in
+  formato locale invece che ISO grezzo, "cranio" al posto di "Circonferenza
+  cranica" nel riepilogo compatto, larghezza massima delle barre quando le
+  misure sono poche.
+
+## v2.3.0 · 27/08/2026
+Due funzioni distinte, sviluppate e verificate separatamente.
+
+**Sezione Crescita**, come discusso: peso, altezza, circonferenza cranica nel
+tempo, sesso del bambino come dato fisso del profilo. Nessuna curva, nessun
+percentile, nessun confronto con popolazioni di riferimento. Terza card in
+Statistiche (dopo "Oggi in numeri"), che mostra l'ultima misura a colpo
+d'occhio senza dover aprire nulla. Da lì si apre la schermata completa:
+storico, aggiunta di una nuova misura (anche un solo valore, non serve
+compilarli tutti), andamento del peso quando ci sono almeno due misure,
+eliminazione. Presente nel riepilogo per il pediatra con il sesso, se
+impostato. Non compare mai nel diario di Oggi: sono misure episodiche, non
+quotidiane.
+
+**Switcher dei suoni nella modalità notte**: il controllo in alto a destra
+non è più un solo pulsante che ferma l'audio. Nome e stop sono ora separati;
+toccando il nome si apre un piccolo elenco degli altri sei suoni, e sceglierne
+uno cambia l'audio senza uscire dalla modalità notte.
+
+Durante la preparazione, un errore mio ha cancellato per sbaglio l'intestazione
+della funzione del riepilogo per il pediatra, lasciandone il corpo orfano:
+`node --check` non l'ha rilevato, il test funzionale che carica il file per
+davvero sì. Corretto prima di consegnare. Entrambe le funzionalità verificate
+con test reali (12 controlli), inclusi i due controlli statici ormai di
+routine sul file di anteprima .jsx (variabili non dichiarate, classi CSS
+orfane): zero problemi residui.
+
 ## v2.2.0 · 27/08/2026
 L'anello della pressione del sonno poteva mostrare "150%" completamente
 pieno: il disegno si ferma per forza al 100% (un cerchio non puo' disegnare

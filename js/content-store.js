@@ -11,12 +11,13 @@ const KEY = "ninna_v1";
 export function loadStore() {
   try {
     const raw = localStorage.getItem(KEY);
-    if (!raw) return { version: 1, baby: null, events: [], prefs: { volume: 0.4 } };
+    if (!raw) return { version: 1, baby: null, events: [], growth: [], prefs: { volume: 0.4 } };
     const data = JSON.parse(raw);
     if (!data.version) data.version = 1;
+    if (!Array.isArray(data.growth)) data.growth = [];
     return data;
   } catch {
-    return { version: 1, baby: null, events: [], prefs: { volume: 0.4 } };
+    return { version: 1, baby: null, events: [], growth: [], prefs: { volume: 0.4 } };
   }
 }
 
@@ -44,7 +45,11 @@ export function importJSON(text) {
     ((typeof e.start === "number" && (e.end == null || typeof e.end === "number")) ||
      typeof e.at === "number"))
     .map((e) => (typeof e.note === "string" && e.note.trim() ? e : (({ note, ...rest }) => rest)(e)));
-  return { version: data.version || 1, baby: data.baby || null, events, prefs: data.prefs || {} };
+  const growth = Array.isArray(data.growth)
+    ? data.growth.filter((g) => g && typeof g.date === "string" &&
+        [g.weight, g.height, g.head].some((v) => typeof v === "number" && v > 0))
+    : [];
+  return { version: data.version || 1, baby: data.baby || null, events, growth, prefs: data.prefs || {} };
 }
 
 export function exportCSV(events, labels, header = ["tipo", "inizio", "fine", "durata_min", "nome"]) {
