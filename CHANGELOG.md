@@ -3,6 +3,20 @@
 Versionamento semantico (MAJOR.MINOR.PATCH). Ogni release da qui in avanti
 viene registrata qui, in ordine cronologico, più recente in cima.
 
+## v2.5.2 · 27/08/2026
+- **Corretto un difetto reale di impaginazione**, non solo nella schermata
+  Crescita segnalata: ogni riga a due colonne (peso/altezza, inizio/fine di
+  un sonno) poteva far traboccare il secondo campo fuori dallo schermo. Causa
+  misurata: gli input non avevano mai una larghezza dichiarata, usavano
+  quella predefinita del browser (spesso piu' larga della colonna che li
+  ospitava) invece di riempirla. Corretto ovunque nell'app, verificato sia
+  sulla Crescita sia sulla modifica di un sonno.
+- **Testo di apertura corretto e reso meno ridondante.** "Gratuita, senza
+  account, dati solo tuoi" aveva un accordo di genere sbagliato (femminile
+  dopo un soggetto maschile) e ripeteva "senza account" gia' presente tre
+  righe sotto, nello stesso schermo. Ora: "Gratis, per restare solo tuo" —
+  stessa informazione, nessuna ripetizione, genere coerente.
+
 ## v2.5.1 · 27/08/2026
 Aggiunto il riferimento a GitHub, stesso trattamento di Posa: dentro la riga
 del copyright, non un pulsante a parte. Trovati due punti dove quella riga

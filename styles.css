@@ -167,6 +167,7 @@
   border: 1px solid rgba(var(--mint-rgb),.3); border-radius: var(--r-in); padding: 10px; line-height: 1.5; }
 
 .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+.row2 > .field { min-width: 0; }
 .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 12px; }
 .tile { background: var(--glass); border: 1px solid var(--stroke);
   -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
@@ -244,7 +245,7 @@
   border: 1px solid rgba(255,255,255,.16); box-shadow: none; font-weight: 500; }
 
 .field { display: flex; flex-direction: column; gap: 6px; margin: 10px 0; font-size: 13px; color: var(--sub); }
-.field input, .field select { background: var(--glass); border: 1px solid var(--stroke);
+.field input, .field select { width: 100%; background: var(--glass); border: 1px solid var(--stroke);
   border-radius: var(--r-in); padding: 11px 12px; color: var(--text); font-size: 15px; font-family: inherit; }
 .field input[type=range] { padding: 0; accent-color: var(--mint); }
 
