@@ -122,6 +122,22 @@ produttori). I controlli play/stop dei suoni usano invece forme piene
 (triangolo/quadrato), deliberatamente in uno stile diverso: sono controlli
 media universali, non categorie di contenuto — non uniformarli agli altri.
 
+## Non fondere due elementi con CSS: farne uno solo
+
+In v2.6.0, il pannello volume/timer si "agganciava" alla riga del suono attivo
+con `:has()` e un margine negativo per far combaciare i bordi. In alcuni
+contesti di rendering (verificato nell'anteprima .jsx) lasciava piccoli
+artefatti agli angoli — il trucco simulava un unico blocco senza esserlo
+davvero.
+
+Corretto in v2.6.1: riga e pannello vivono in un vero `<div class="soundgroup
+active">` quando il suono e' attivo, che possiede lui il bordo e lo sfondo;
+i due figli restano trasparenti e senza bordo proprio. **Se in futuro serve
+di nuovo "unire visivamente" due elementi adiacenti, usare questo pattern
+(un contenitore vero) invece di selettori come `:has()` combinati con margini
+negativi**: sembra funzionare nel test principale ma il supporto e il
+comportamento con margini negativi non sono garantiti in ogni contesto.
+
 ## Codice morto: successo raramente al primo colpo
 
 Più di un audit in questo progetto ha trovato CSS o funzioni mai più

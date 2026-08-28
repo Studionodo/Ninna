@@ -26,8 +26,10 @@ const KOFI = "https://ko-fi.com/istantelabs/tip";
 const GITHUB = "https://github.com/Studionodo";
 const STOP_ICON = '<svg viewBox="0 0 24 24" width="14" height="14"><rect x="5" y="5" width="14" height="14" rx="2" fill="currentColor"/></svg>';
 const PLAY_ICON = '<svg viewBox="0 0 24 24" width="14" height="14"><path d="M7 5v14l12-7z" fill="currentColor"/></svg>';
+const VOL_ICON = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/></svg>';
+const CLOCK_ICON = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 1.8"/></svg>';
 const PAUSE_ICON = '<svg viewBox="0 0 24 24" width="14" height="14"><rect x="6" y="5" width="4" height="14" rx="1.5" fill="currentColor"/><rect x="14" y="5" width="4" height="14" rx="1.5" fill="currentColor"/></svg>';
-const APP_VERSION = "2.5.2";
+const APP_VERSION = "2.9.0";
 const CUP = `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4.5 9h11v5.5a4 4 0 0 1-4 4h-3a4 4 0 0 1-4-4V9z"/><path d="M15.5 10h1.6a2.4 2.4 0 0 1 0 4.8h-1.6"/><path d="M8 4.5c0 .9.9 1.1.9 2M11.5 4c0 .9.9 1.1.9 2"/></svg>`;
 
 /* ---------- stato ---------- */
@@ -38,6 +40,7 @@ let showAbout = false;
 let miniCollapsed = false;
 let showReport = false;
 let showGrowth = false, showGrowthForm = false;
+let profileFrom = "settings";
 let nightMode = false;
 let nightSoundListOpen = false;
 let nightLastSound = null;
@@ -291,6 +294,19 @@ window.NINNA = {
   },
   toggleArticle(id) { const el = document.getElementById("art-" + id); if (el) el.hidden = !el.hidden; },
   openSettings() { renderSettings(); },
+  openProfile(from) { profileFrom = from || "settings"; renderProfileEdit(); },
+  closeProfile() { if (profileFrom === "settings") NINNA.openSettings(); else { $modal.innerHTML = ""; } },
+  saveProfile() {
+    const n = document.getElementById("p-name").value.trim();
+    const d = document.getElementById("p-birth").value;
+    if (!n) return toast(t("ob_need_name"));
+    if (!d) return toast(t("ob_need_birth"));
+    // una data futura falserebbe eta' e previsioni
+    if (new Date(d + "T00:00:00").getTime() > Date.now()) return toast(t("profile_future"));
+    store.baby.name = n;
+    store.baby.birth = d;
+    persist(); toast(t("edit_done")); NINNA.closeProfile(); render();
+  },
   openAbout() { showAbout = true; renderAbout(); },
   toggleNightMode() { nightMode = !nightMode; if (!nightMode) { nightSoundListOpen = false; nightLastSound = null; } render(); },
   resumeNightSound() { if (nightLastSound) this.playSound(nightLastSound); },
@@ -603,24 +619,48 @@ function renderStat(f) {
     const s = dailyStats(store.events, ts, profileFor(store.baby.birth, ts));
     days.push({ label: new Date(ts).toLocaleDateString(LOCALE(), { weekday: "short" }), total: s.totalMinutes / 60 });
   }
-  const maxH = Math.max(1, ...days.map((d) => d.total));
   const st = f.stats, pr = f.profile;
+  /* Il grafico non parte piu' da zero: con valori tipici fra 12 e 15 ore le
+     barre da zero risultavano tutte uguali e la variazione, l'unica cosa che
+     interessa, era invisibile. La fascia mostra l'intervallo tipico per
+     l'eta': si legge la posizione della barra rispetto alla fascia, non la
+     sua lunghezza. Il giorno in corso e' tratteggiato: confrontarlo pieno
+     con giorni completi mostrava un crollo che non esiste. */
+  const TRACK = 106;
+  // il giorno in corso non partecipa alla scala: le sue ore parziali
+  // stirerebbero il dominio verso il basso comprimendo la variazione dei
+  // giorni completi, che e' proprio cio' che il grafico deve mostrare
+  const complete = days.slice(0, 6).filter((d) => d.total > 0);
+  const dataMax = Math.max(...complete.map((d) => d.total), pr.total[1]);
+  const dataMin = complete.length ? Math.min(...complete.map((d) => d.total), pr.total[0]) : pr.total[0];
+  const lo = Math.max(0, dataMin - 1.5), hi = dataMax + 0.5;
+  const px = (v) => Math.max(3, Math.round(((v - lo) / (hi - lo)) * TRACK));
+  const bandBottom = Math.round(((pr.total[0] - lo) / (hi - lo)) * TRACK);
+  const bandH = Math.round(((pr.total[1] - pr.total[0]) / (hi - lo)) * TRACK);
   const row = (k, v) => `<div class="logrow"><span class="loglabel">${k}</span><span class="logtime">${v}</span></div>`;
   return `
     <div class="card">
       <div class="card-title">${t("stat_title")}</div>
-      <div class="bars">${days.map((d) => `
-        <div class="barcol">
-          <div class="barval">${d.total ? d.total.toFixed(1) + "h" : "·"}</div>
-          <div class="bar" style="height:${(d.total / maxH) * 75}%"></div>
-          <div class="barlabel">${d.label}</div>
-        </div>`).join("")}</div>
-      <div class="dim small">${t("stat_target", { lo: pr.total[0], hi: pr.total[1], nlo: pr.naps[0], nhi: pr.naps[1] })}</div>
+      <div class="chart">
+        <div class="chart-vals">${days.map((d, i) => `<span class="${i === 6 ? "dimv" : ""}">${d.total ? d.total.toFixed(1) + "h" : "·"}</span>`).join("")}</div>
+        <div class="chart-track">
+          <div class="chart-band" style="bottom:${bandBottom}px;height:${bandH}px"></div>
+          <div class="chart-bars">${days.map((d, i) => `<div class="cbar ${i === 6 ? "today" : ""}" style="height:${d.total ? px(d.total) : 3}px"></div>`).join("")}</div>
+        </div>
+        <div class="chart-labels">${days.map((d, i) => `<span>${i === 6 ? t("stat_today_short") : d.label}</span>`).join("")}</div>
+      </div>
+      <div class="chart-legend">
+        <span class="lg-band"></span>${t("stat_band")}
+        <span class="lg-today"></span>${t("stat_inprogress")}
+      </div>
     </div>
     <div class="card">
       <div class="card-title">${t("stat_today")}</div>
+      <div class="dim small" style="margin-bottom:6px">${t("stat_today_note")}</div>
       ${row(t("stat_day"), t("stat_rangefmt", { v: Math.round(st.napMinutes / 6) / 10, lo: pr.day[0], hi: pr.day[1] }))}
       ${row(t("stat_night"), t("stat_rangefmt", { v: Math.round(st.nightMinutes / 6) / 10, lo: pr.night[0], hi: pr.night[1] }))}
+      ${row(t("stat_naps"), t("count_rangefmt", { v: st.naps, lo: pr.naps[0], hi: pr.naps[1] }))}
+      <div class="hairline slim"></div>
       ${row(t("stat_feeds"), `${st.feeds}${st.avgFeedGapMin ? " · " + t("stat_every", { h: Math.round(st.avgFeedGapMin / 6) / 10 }) : ""}`)}
       ${row(t("stat_diapers"), st.diapers)}
       ${row(t("stat_wakes"), st.nightWakes)}
@@ -640,35 +680,40 @@ function renderStat(f) {
 
 function renderSuoni() {
   const vol = store.prefs.volume ?? 0.4;
+  const soundCtl = (inline) => `<div class="soundctl${inline ? " inline" : ""}">
+    <div class="ctl-compact">
+      <span class="ctl-ico" aria-hidden="true">${VOL_ICON}</span>
+      <input class="ctl-range" type="range" min="0" max="1" step="0.01" value="${vol}"
+        aria-label="${t("volume")}" oninput="NINNA.setVolume(this.value)">
+      <span class="ctl-value" id="vol-val">${Math.round(vol * 100)}%</span>
+      <span class="ctl-sep" aria-hidden="true"></span>
+      <span class="ctl-ico" aria-hidden="true">${CLOCK_ICON}</span>
+      <select class="ctl-select" aria-label="${t("sleep_timer")}" onchange="NINNA.setSleepTimer(this.value)">
+        <option value="0"${timerMin === 0 ? " selected" : ""}>${t("never")}</option>
+        ${[15, 30, 45, 60].map((n) => `<option value="${n}"${timerMin === n ? " selected" : ""}>${t("timer_min", { n })}</option>`).join("")}
+      </select>
+    </div>
+  </div>`;
+  const activeId = sound.playing;
   return `
     <div class="card">
       <div class="card-title">${t("sounds_title")}</div>
       <div class="dim small">${t("sounds_note")}</div>
       ${SOUNDS.map((s) => {
-        const on = sound.playing === s.id;
+        const on = s.id === activeId;
         const icon = on
           ? `<svg viewBox="0 0 24 24" width="18" height="18"><rect x="5" y="5" width="14" height="14" rx="2" fill="currentColor"/></svg>`
           : `<svg viewBox="0 0 24 24" width="18" height="18"><path d="M7 5v14l12-7z" fill="currentColor"/></svg>`;
-        return `<button class="soundrow ${on ? "on" : ""}" onclick="NINNA.playSound('${s.id}')">
+        const row = `<button class="soundrow ${on ? "on" : ""}" onclick="NINNA.playSound('${s.id}')">
         <span class="soundtext"><b>${t("sound_" + s.id)}</b><small>${t("sounddesc_" + s.id)}</small></span>
         <span class="soundstate ${on ? "stop" : "play"}">${icon}</span>
       </button>`;
+        // il suono attivo e il pannello vivono in un unico contenitore reale,
+        // non due elementi separati con un trucco css a farli combaciare:
+        // quel trucco (:has() + margine negativo) lasciava artefatti visibili
+        // in alcuni contesti di rendering
+        return on ? `<div class="soundgroup active">${row}${soundCtl(true)}</div>` : row;
       }).join("")}
-      <div class="soundctl">
-        <div class="ctl-row">
-          <span class="ctl-label">${t("volume")}</span>
-          <span class="ctl-value" id="vol-val">${Math.round(vol * 100)}%</span>
-        </div>
-        <input class="ctl-range" type="range" min="0" max="1" step="0.01" value="${vol}"
-          oninput="NINNA.setVolume(this.value)">
-        <div class="ctl-row ctl-timer">
-          <span class="ctl-label">${t("sleep_timer")}</span>
-          <select class="ctl-select" onchange="NINNA.setSleepTimer(this.value)">
-            <option value="0"${timerMin === 0 ? " selected" : ""}>${t("never")}</option>
-            ${[15, 30, 45, 60].map((n) => `<option value="${n}"${timerMin === n ? " selected" : ""}>${t("timer_min", { n })}</option>`).join("")}
-          </select>
-        </div>
-      </div>
     </div>`;
 }
 
@@ -703,9 +748,21 @@ function renderNightMode(f) {
         <div class="picker-title">${t("sounds_title")}</div>
         ${SOUNDS.map((s) => {
           const on = sound.playing === s.id;
+          const nctl = `<div class="nctl">
+            <span class="ctl-ico" aria-hidden="true">${VOL_ICON}</span>
+            <input class="ctl-range" type="range" min="0" max="1" step="0.01" value="${store.prefs.volume ?? 0.4}"
+              aria-label="${t("volume")}" oninput="NINNA.setVolume(this.value)">
+            <span class="ctl-value" id="vol-val">${Math.round((store.prefs.volume ?? 0.4) * 100)}%</span>
+            <span class="ctl-sep" aria-hidden="true"></span>
+            <span class="ctl-ico" aria-hidden="true">${CLOCK_ICON}</span>
+            <select class="ctl-select" aria-label="${t("sleep_timer")}" onchange="NINNA.setSleepTimer(this.value)">
+              <option value="0"${timerMin === 0 ? " selected" : ""}>${t("never")}</option>
+              ${[15, 30, 45, 60].map((n) => `<option value="${n}"${timerMin === n ? " selected" : ""}>${t("timer_min", { n })}</option>`).join("")}
+            </select>
+          </div>`;
           return `<button class="picker-row${on ? " on" : ""}" onclick="NINNA.${on ? "pauseNightSound()" : `playSound('${s.id}')`}">
             <span>${t("sound_" + s.id)}</span>${on ? PAUSE_ICON : PLAY_ICON}
-          </button>`;
+          </button>${on ? nctl : ""}`;
         }).join("")}
         ${nightLastSound ? `<button class="picker-stop" onclick="NINNA.stopSound()">${t("mp_stop")}</button>` : ""}
       </div>
@@ -907,13 +964,31 @@ function renderAbout() {
   </div>`;
 }
 
+function renderProfileEdit() {
+  const b = store.baby;
+  $modal.innerHTML = `<div class="modal-wrap" onclick="NINNA.closeProfile()">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="card-title">${t("profile_title")}</div>
+      <label class="field"><span>${t("profile_name")}</span>
+        <input id="p-name" value="${esc(b.name)}" maxlength="40" autocomplete="off"></label>
+      <label class="field"><span>${t("profile_birth")}</span>
+        <input type="date" id="p-birth" value="${b.birth}" max="${localTodayISO()}"></label>
+      <div class="dim small" style="margin:2px 0 12px">${t("profile_birth_hint")}</div>
+      <button class="secondary block" onclick="NINNA.saveProfile()">${t("save")}</button>
+      <button class="link block" onclick="NINNA.closeProfile()">${t("close")}</button>
+    </div>
+  </div>`;
+  const el = document.getElementById("p-name");
+  if (el) el.focus();
+}
+
 function renderSettings() {
   const b = store.baby;
   $modal.innerHTML = `<div class="modal-wrap" onclick="NINNA.closeSettings()">
     <div class="modal" onclick="event.stopPropagation()">
       <div class="card-title">${t("settings")}</div>
       <div class="dim small" style="opacity:.6">Ninna v${APP_VERSION}</div>
-      <div class="dim small">${t("profile_line", { name: esc(b.name), date: new Date(b.birth + "T00:00:00").toLocaleDateString(LOCALE()), w: Math.floor(ageWeeks(b.birth)) })}</div>
+      <button class="dim small profile-edit" onclick="NINNA.openProfile()">${t("profile_line", { name: esc(b.name), date: new Date(b.birth + "T00:00:00").toLocaleDateString(LOCALE()), w: Math.floor(ageWeeks(b.birth)) })} ${EDIT_ICON}</button>
       <div class="langrow inmodal">
         <span class="langlabel">${t("appearance").toUpperCase()}</span>
         <div class="langpill theme3">
@@ -976,7 +1051,7 @@ function render() {
       <div>
         <div class="wordmark">Ninna<span class="wm-dot">.</span></div>
         ${view === "oggi" ? `<button class="about-link" onclick="NINNA.openAbout()">${t("about_link")}</button>` : ""}
-        <div class="babyname">${esc(store.baby.name)}<span class="agechip">${ageLabel}</span></div>
+        <button class="babyname babyname-tap" onclick="NINNA.openProfile('oggi')">${esc(store.baby.name)}<span class="agechip">${ageLabel}</span><span class="name-edit">${EDIT_ICON}</span></button>
       </div>
       <div class="topbar-actions">
         ${view === "oggi" ? `<button class="nightbtn" onclick="NINNA.toggleNightMode()">${TYPE_ICONS.night} ${t("night_btn")}</button>` : ""}

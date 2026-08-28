@@ -284,6 +284,12 @@
   transition: transform .3s var(--spring), border-color .2s; box-shadow: var(--specular); }
 .soundrow:active { transform: scale(.98); }
 .soundrow.on { border-color: rgba(var(--mint-rgb),.6); background: rgba(var(--mint-rgb),.08); }
+/* quando la riga vive dentro un gruppo attivo (vedi .soundgroup sotto), il
+   contenitore possiede bordo/sfondo/margine: la riga stessa resta neutra,
+   cosi' non ci sono due elementi che devono combaciare a pixel */
+.soundgroup.active { margin-top: 10px; border: 1px solid rgba(var(--mint-rgb),.6);
+  border-radius: var(--r-in); background: rgba(var(--mint-rgb),.08); overflow: hidden; }
+.soundgroup.active .soundrow { margin-top: 0; border: none; border-radius: 0; background: transparent; }
 .soundtext { flex: 1; display: flex; flex-direction: column; }
 .soundtext b { font-size: 14.5px; }
 .soundtext small { color: var(--sub); }
@@ -355,16 +361,21 @@ button { font-family: inherit; }
 .logonly-row .dim { margin-top: 8px; line-height: 1.5; }
 
 /* pannello controlli dei suoni: separato dalla lista, non un campo di modulo */
-.soundctl { margin-top: 18px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,.08); }
-.ctl-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.ctl-label { font-size: 13.5px; color: var(--sub); }
-.ctl-value { font-size: 13.5px; color: var(--mint); font-variant-numeric: tabular-nums; }
-.ctl-range { width: 100%; margin: 10px 0 4px; accent-color: var(--mint);
-  background: transparent; height: 26px; }
-.ctl-timer { margin-top: 14px; }
+.soundctl.inline { margin: 0; padding: 4px 14px 14px;
+  background: transparent; border: none; border-top: 1px solid rgba(var(--mint-rgb),.2); }
+/* Riga unica: volume e spegnimento affiancati invece di due blocchi
+   impilati con le rispettive etichette. Le icone sostituiscono le parole
+   "Volume" e "Spegnimento automatico", che occupavano da sole meta' spazio. */
+.ctl-compact { display: flex; align-items: center; gap: 9px; }
+.ctl-ico { display: flex; align-items: center; color: var(--sub); flex-shrink: 0; }
+.ctl-value { font-size: 13px; color: var(--mint); font-variant-numeric: tabular-nums;
+  min-width: 34px; text-align: right; flex-shrink: 0; }
+.ctl-range { flex: 1; min-width: 0; margin: 0; accent-color: var(--mint);
+  background: transparent; height: 44px; }
+.ctl-sep { width: 1px; height: 20px; background: var(--stroke); flex-shrink: 0; }
 .ctl-select { background: var(--glass); border: 1px solid var(--stroke); color: var(--text);
-  border-radius: 999px; padding: 9px 14px; font-family: inherit; font-size: 14px;
-  min-height: 44px; cursor: pointer; }
+  border-radius: 999px; padding: 11px 8px 11px 10px; font-family: inherit; font-size: 13px;
+  cursor: pointer; flex-shrink: 0; max-width: 96px; min-height: 42px; }
 
 /* link "Cos'è Ninna", solo in cima a Oggi */
 .about-link { background: none; border: none; color: var(--mint); font-size: 12px;
@@ -570,3 +581,54 @@ button { font-family: inherit; }
 /* caffe' in "Cos'e Ninna": subito dopo il paragrafo che spiega che l'app e'
    gratuita e senza tracciamento, prima del copyright. Discreto, non un banner */
 .about-coffee { margin: 16px 0 4px; }
+
+/* la riga del profilo diventa toccabile: si modifica dove la si legge */
+.profile-edit { display: flex; align-items: center; gap: 6px; width: 100%;
+  background: none; border: none; padding: 2px 0; text-align: left;
+  font-family: inherit; font-size: 13px; color: var(--sub); cursor: pointer; }
+.profile-edit .ico-edit { color: var(--mint); flex-shrink: 0; }
+
+/* grafico statistiche: fascia dell'intervallo tipico dietro le barre,
+   geometria in pixel per un allineamento esatto fra fascia e barre */
+.chart { margin-top: 4px; }
+.chart-vals, .chart-labels, .chart-bars { display: flex; gap: 8px; justify-content: center; }
+.chart-vals > span, .chart-labels > span { flex: 1; max-width: 64px; text-align: center;
+  font-size: 11px; color: var(--sub); }
+.chart-vals { margin-bottom: 6px; }
+.chart-vals .dimv { opacity: .55; }
+.chart-labels { margin-top: 6px; }
+.chart-track { position: relative; height: 106px; }
+.chart-band { position: absolute; left: -4px; right: -4px;
+  background: rgba(var(--mint-rgb),.09);
+  border-top: 1px solid rgba(var(--mint-rgb),.22);
+  border-bottom: 1px solid rgba(var(--mint-rgb),.22); border-radius: 4px; }
+.chart-bars { position: relative; height: 100%; align-items: flex-end; }
+.cbar { flex: 1; max-width: 64px; background: var(--mint);
+  border-radius: 7px 7px 3px 3px; min-height: 3px; }
+.cbar.today { background: rgba(var(--mint-rgb),.16);
+  border: 1.5px dashed rgba(var(--mint-rgb),.75); }
+.chart-legend { display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+  margin-top: 12px; font-size: 12px; color: var(--sub); }
+.chart-legend .lg-band { width: 14px; height: 9px; border-radius: 3px; flex-shrink: 0;
+  background: rgba(var(--mint-rgb),.14); border: 1px solid rgba(var(--mint-rgb),.3); }
+.chart-legend .lg-today { width: 14px; height: 9px; border-radius: 3px; flex-shrink: 0; margin-left: 8px;
+  background: rgba(var(--mint-rgb),.14); border: 1.5px dashed rgba(var(--mint-rgb),.7); }
+.hairline.slim { margin: 8px 0; }
+
+/* nome del bambino toccabile in Oggi: apre la modifica del profilo.
+   La matita e' l'indizio che si puo' toccare, senza cambiare l'aspetto */
+.babyname-tap { background: none; border: none; padding: 0; text-align: left;
+  color: inherit; cursor: pointer; }
+.name-edit { display: inline-flex; align-self: center; font-size: 14px;
+  color: var(--sub); margin-left: 2px; }
+
+/* controlli volume/timer nel selettore notturno: stessa riga di Suoni,
+   smorzata come tutto il resto di quella schermata */
+.night-picker .nctl { display: flex; align-items: center; gap: 9px;
+  padding: 2px 14px 14px; margin-top: -4px; }
+.night-picker .nctl .ctl-ico { color: rgba(255,255,255,.4); }
+.night-picker .nctl .ctl-value { color: rgba(255,255,255,.6); }
+.night-picker .nctl .ctl-range { accent-color: rgba(255,255,255,.55); }
+.night-picker .nctl .ctl-sep { background: rgba(255,255,255,.15); }
+.night-picker .nctl .ctl-select { background: rgba(255,255,255,.06);
+  border-color: rgba(255,255,255,.16); color: rgba(255,255,255,.7); }

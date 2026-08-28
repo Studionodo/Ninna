@@ -3,6 +3,109 @@
 Versionamento semantico (MAJOR.MINOR.PATCH). Ogni release da qui in avanti
 viene registrata qui, in ordine cronologico, più recente in cima.
 
+## v2.9.0 · 28/08/2026
+- **Rimosso il pannello volume/timer in fondo alla scheda Suoni.** Da quando
+  i controlli si agganciano al suono attivo era diventato ridondante: ora
+  esistono solo li', dove servono. A riposo la lista e' pulita.
+- **Volume e spegnimento anche nella modalita' notte**: nel selettore dei
+  suoni, sotto il suono attivo, compare la stessa riga compatta di Suoni,
+  smorzata come tutto il resto di quella schermata. Non serve piu' uscire
+  dalla notte per regolare il volume o impostare il timer.
+- **Il nome del bambino in Oggi e' ora toccabile** e apre la modifica del
+  profilo (nome e data di nascita), con una piccola matita come indizio. La
+  modifica introdotta nella v2.7.1 esisteva solo dietro Impostazioni ed era
+  difficile da scoprire: ora e' raggiungibile dal punto piu' visibile
+  dell'app. Salvando, si torna da dove si era arrivati: a Oggi se aperta dal
+  nome, a Impostazioni se aperta da li'.
+
+## v2.8.0 · 28/08/2026
+Pagina Statistiche ricalibrata, quattro interventi decisi insieme dopo un
+audit con dati realistici.
+- **Il giorno in corso non finge piu' di essere un giorno completo.** Prima
+  la sua barra, inevitabilmente piu' corta, compariva piena accanto ai
+  giorni finiti: ogni mattina il grafico mostrava un crollo che non esisteva.
+  Ora e' tratteggiata, etichettata "oggi", con il valore smorzato, ed e'
+  esclusa dal calcolo della scala del grafico, cosi' le sue ore parziali non
+  comprimono la variazione dei giorni veri.
+- **La fascia dell'intervallo tipico per l'eta' sta dietro le barre.** Il
+  grafico non parte piu' da zero: con valori tipici fra 12 e 15 ore, da zero
+  le barre risultavano tutte uguali. Ora si legge la posizione rispetto alla
+  fascia: dentro, sopra, sotto. Una legenda spiega fascia e tratteggio.
+- **Via la riga duplicata.** L'intervallo tipico compariva due volte, sotto
+  il grafico e nella tabella. Resta nel grafico (come fascia) e nella
+  tabella (come "tipico"); la frase sotto il grafico e' stata rimossa. Resta
+  invece nel riepilogo per il pediatra, dove un grafico non c'e'.
+- **"Oggi in numeri" separa confronti e conteggi.** Sopra il sonno (diurno,
+  notturno, e la nuova riga dei pisolini con l'intervallo tipico), un filo di
+  separazione, sotto i conteggi nudi (poppate, pannolini, risvegli). In cima,
+  una nota chiarisce che la giornata e' in corso e i numeri crescono fino a
+  sera.
+
+## v2.7.1 · 27/08/2026
+**Nome e data di nascita ora si possono correggere.** Fino a questa versione
+non esisteva alcun modo di farlo: la riga del profilo nelle impostazioni era
+solo informativa, e l'unica strada per rimediare a un refuso nel nome era
+"Cancella tutto e ricomincia", perdendo l'intero diario.
+
+Ora quella riga e' toccabile e apre una schermata di modifica: si corregge
+dove la si legge, senza doverla cercare altrove. Inclusa anche la data di
+nascita, perche' sbagliarla e' piu' grave di un refuso: falsa previsioni,
+statistiche e riepilogo per il pediatra.
+
+Controlli: rifiuta un nome vuoto e una data nel futuro; una nota avvisa che
+cambiare la data ricalcola previsioni e statistiche ma non tocca i dati gia'
+registrati. Verificato su Chrome reale che dopo la correzione diario, misure
+di crescita ed eta' ricalcolata restino tutti coerenti.
+
+## v2.7.0 · 27/08/2026
+Controlli del suono ridisegnati su una riga sola. Prima erano quattro righe
+impilate: etichetta "Volume" con la percentuale, lo slider a tutta larghezza,
+poi "Spegnimento automatico" con il suo menu. Ora sono un'unica riga con
+icona altoparlante, slider accorciato, percentuale, un filetto di
+separazione, icona orologio e il menu dello spegnimento. Le due etichette
+testuali sono state sostituite dalle icone: da sole occupavano circa meta'
+dello spazio disponibile.
+
+La card del suono attivo passa cosi' da quattro righe a due, ed e' molto
+piu' leggibile a colpo d'occhio.
+
+Nel verificare il risultato e' emerso un difetto che l'aspetto precedente
+nascondeva: le aree tattili di slider e menu erano scese a 30 e 33 pixel,
+sotto il minimo raccomandato di 44. Su un'app pensata anche per le tre di
+notte, con una mano sola, contava. Allargate a 44 e 42 pixel senza cambiare
+l'aspetto visivo, perche' il binario dello slider resta disegnato sottile.
+
+## v2.6.1 · 27/08/2026
+Il collegamento visivo fra la riga del suono attivo e il pannello
+volume/timer, introdotto in v2.6.0, lasciava piccoli artefatti agli angoli
+in alcuni contesti di rendering: il trucco usato (`:has()` piu' un margine
+negativo per far combaciare due elementi separati) simulava un unico blocco
+senza esserlo davvero.
+
+Corretto costruendo l'unione per davvero: quando un suono e' attivo, la riga
+e il pannello vivono ora dentro un unico contenitore reale, che possiede
+lui solo bordo e sfondo; i due elementi al suo interno restano trasparenti.
+Zero trucchi di posizionamento, zero possibilita' di disallineamento.
+Verificato su Chrome reale con uno screenshot ravvicinato del blocco:
+nessun artefatto residuo.
+
+## v2.6.0 · 27/08/2026
+Volume e spegnimento automatico non stanno piu' sempre in fondo alla lista
+dei suoni. Prima erano un pannello fisso dopo l'ultima riga (Shhh), scollegato
+da qualunque cosa stesse suonando: se era attivo il terzo suono su sette, i
+controlli restavano quattro righe piu' in basso, senza alcun legame visivo
+con cio' che governavano.
+
+Ora il pannello si aggancia subito sotto la riga del suono attivo, ovunque
+essa sia nella lista, con il bordo che si fonde in un unico blocco invece di
+restare due elementi separati. Cambiando suono, il pannello si sposta con
+lui. Quando nessun suono e' attivo, resta nella posizione di prima, in fondo,
+come area per impostare volume e timer prima ancora di scegliere.
+
+Verificato su Chrome reale in tre stati: nessun suono attivo (nessuna
+regressione), un suono a meta' lista, e l'ultimo della lista — il pannello
+segue correttamente in tutti e tre.
+
 ## v2.5.2 · 27/08/2026
 - **Corretto un difetto reale di impaginazione**, non solo nella schermata
   Crescita segnalata: ogni riga a due colonne (peso/altezza, inizio/fine di
