@@ -29,7 +29,7 @@ const PLAY_ICON = '<svg viewBox="0 0 24 24" width="14" height="14"><path d="M7 5
 const VOL_ICON = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/></svg>';
 const CLOCK_ICON = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 1.8"/></svg>';
 const PAUSE_ICON = '<svg viewBox="0 0 24 24" width="14" height="14"><rect x="6" y="5" width="4" height="14" rx="1.5" fill="currentColor"/><rect x="14" y="5" width="4" height="14" rx="1.5" fill="currentColor"/></svg>';
-const APP_VERSION = "2.9.0";
+const APP_VERSION = "2.9.1";
 const CUP = `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4.5 9h11v5.5a4 4 0 0 1-4 4h-3a4 4 0 0 1-4-4V9z"/><path d="M15.5 10h1.6a2.4 2.4 0 0 1 0 4.8h-1.6"/><path d="M8 4.5c0 .9.9 1.1.9 2M11.5 4c0 .9.9 1.1.9 2"/></svg>`;
 
 /* ---------- stato ---------- */
@@ -281,10 +281,14 @@ window.NINNA = {
   setVolume(v) {
     const f = parseFloat(v);
     sound.setVolume(f);
-    const lbl = document.getElementById("vol-val");
-    if (lbl) lbl.textContent = Math.round(f * 100) + "%";
+    // il valore in memoria si aggiorna subito: ogni ridisegno ricostruisce lo
+    // slider da qui, e se restasse indietro mostrerebbe il valore vecchio
+    // mentre l'audio suona a quello nuovo. Solo la scrittura su disco resta
+    // ritardata, per non scrivere a ogni pixel trascinato.
+    store.prefs.volume = f;
+    document.querySelectorAll(".ctl-value").forEach((el) => { el.textContent = Math.round(f * 100) + "%"; });
     clearTimeout(this._volT);
-    this._volT = setTimeout(() => { store.prefs.volume = f; persist(); }, 400);
+    this._volT = setTimeout(() => persist(), 400);
   },
   setSleepTimer(min) {
     const n = parseInt(min, 10) || 0;
@@ -685,7 +689,7 @@ function renderSuoni() {
       <span class="ctl-ico" aria-hidden="true">${VOL_ICON}</span>
       <input class="ctl-range" type="range" min="0" max="1" step="0.01" value="${vol}"
         aria-label="${t("volume")}" oninput="NINNA.setVolume(this.value)">
-      <span class="ctl-value" id="vol-val">${Math.round(vol * 100)}%</span>
+      <span class="ctl-value">${Math.round(vol * 100)}%</span>
       <span class="ctl-sep" aria-hidden="true"></span>
       <span class="ctl-ico" aria-hidden="true">${CLOCK_ICON}</span>
       <select class="ctl-select" aria-label="${t("sleep_timer")}" onchange="NINNA.setSleepTimer(this.value)">
@@ -752,7 +756,7 @@ function renderNightMode(f) {
             <span class="ctl-ico" aria-hidden="true">${VOL_ICON}</span>
             <input class="ctl-range" type="range" min="0" max="1" step="0.01" value="${store.prefs.volume ?? 0.4}"
               aria-label="${t("volume")}" oninput="NINNA.setVolume(this.value)">
-            <span class="ctl-value" id="vol-val">${Math.round((store.prefs.volume ?? 0.4) * 100)}%</span>
+            <span class="ctl-value">${Math.round((store.prefs.volume ?? 0.4) * 100)}%</span>
             <span class="ctl-sep" aria-hidden="true"></span>
             <span class="ctl-ico" aria-hidden="true">${CLOCK_ICON}</span>
             <select class="ctl-select" aria-label="${t("sleep_timer")}" onchange="NINNA.setSleepTimer(this.value)">

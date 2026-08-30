@@ -3,6 +3,31 @@
 Versionamento semantico (MAJOR.MINOR.PATCH). Ogni release da qui in avanti
 viene registrata qui, in ordine cronologico, più recente in cima.
 
+## v2.9.1 · 28/08/2026
+Due difetti segnalati, entrambi riprodotti e corretti.
+
+**Volume che "a volte non funziona".** Riprodotto: muovendo lo slider e
+toccando un altro suono entro 400 millisecondi, lo slider tornava al valore
+precedente mentre l'audio suonava a quello nuovo. La causa: il valore veniva
+scritto in memoria solo alla fine del ritardo, ma ogni ridisegno ricostruiva
+lo slider leggendo il valore vecchio. Ora la memoria si aggiorna subito e
+solo la scrittura su disco resta ritardata. Rimossi anche due identificatori
+HTML duplicati fra la scheda Suoni e il selettore notturno.
+
+**Tema automatico che resta scuro su alcuni Android.** La logica del tema e'
+corretta (verificata in tutte e sei le combinazioni fra sistema e scelta
+dell'utente), ma mancava la dichiarazione `color-scheme`. Senza, Chrome su
+Android puo' applicare da solo uno scurimento automatico ai contenuti web
+ignorando il CSS della pagina, e i controlli nativi (menu del timer,
+selettore di data, barre di scorrimento) restano scuri anche in tema chiaro.
+Ora e' dichiarata nei tre casi: scuro, chiaro e automatico. Verificato che il
+menu del timer, in tema chiaro su un sistema scuro, ora segua l'app.
+
+Nota: se il tema automatico continua a restare scuro con il telefono in
+chiaro, la causa e' l'impostazione tema di Chrome stesso, che su Android
+determina `prefers-color-scheme` indipendentemente dal sistema. In quel caso
+la scelta esplicita "Chiaro" resta la strada giusta.
+
 ## v2.9.0 · 28/08/2026
 - **Rimosso il pannello volume/timer in fondo alla scheda Suoni.** Da quando
   i controlli si agganciano al suono attivo era diventato ridondante: ora

@@ -18,6 +18,12 @@
    supporto a prefers-color-scheme. Sovrascritto da .theme-light e, in
    modalita' automatica, dalla media query piu' sotto. */
 :root {
+  /* Dichiarare color-scheme e' indispensabile su Android: senza, Chrome puo'
+     applicare da solo uno scurimento automatico ai contenuti web ignorando il
+     CSS, e i controlli nativi (menu a tendina, selettori di data, barre di
+     scorrimento) restano scuri anche in tema chiaro. */
+  color-scheme: dark;
+
   --bg: #0B1118;
   --glass: rgba(255,255,255,.055);
   --glass-strong: rgba(255,255,255,.08);
@@ -50,6 +56,7 @@
 /* Tema chiaro: stessa identita' (menta/rosa/indaco), toni approfonditi per
    restare leggibili su fondo chiaro invece che invertiti meccanicamente. */
 .theme-light {
+  color-scheme: light;
   /* Contrasti verificati su fondo #F6F4EF: ogni colore di testo raggiunge
      almeno 4.6:1 (WCAG AA). Il tema chiaro si usa spesso all'aperto, dove
      un contrasto appena sufficiente diventa illeggibile. */
@@ -84,6 +91,7 @@
    impostate a mano sull'elemento radice. */
 @media (prefers-color-scheme: light) {
   html:not(.theme-dark):not(.theme-light) {
+    color-scheme: light;
     --bg: #F6F4EF;
     --glass: rgba(11,17,24,.05);
     --glass-strong: rgba(11,17,24,.08);
