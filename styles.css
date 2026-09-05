@@ -554,6 +554,8 @@ button { font-family: inherit; }
   justify-content: center; cursor: pointer; flex-shrink: 0; }
 .ns-stop:active { background: rgba(255,255,255,.18); }
 .ns-stop.paused { background: rgba(var(--mint-rgb),.18); color: rgba(255,255,255,.85); }
+.ns-elapsed { position: fixed; top: 58px; right: 18px; z-index: 90;
+  font-size: 10.5px; color: rgba(255,255,255,.28); text-align: right; }
 /* Selettore dei suoni: occupa l'intera schermata al posto del tasto centrale,
    invece di galleggiarci sopra. Nessuna sovrapposizione possibile, a nessuna
    altezza di schermo. */
@@ -632,11 +634,23 @@ button { font-family: inherit; }
 
 /* controlli volume/timer nel selettore notturno: stessa riga di Suoni,
    smorzata come tutto il resto di quella schermata */
-.night-picker .nctl { display: flex; align-items: center; gap: 9px;
-  padding: 2px 14px 14px; margin-top: -4px; }
+.night-picker .nctl { padding: 2px 14px 14px; margin-top: -4px; }
+.ctl-elapsed { font-size: 11.5px; color: var(--sub); margin-bottom: 8px; }
+.night-picker .nctl .ctl-elapsed { color: rgba(255,255,255,.4); }
 .night-picker .nctl .ctl-ico { color: rgba(255,255,255,.4); }
 .night-picker .nctl .ctl-value { color: rgba(255,255,255,.6); }
 .night-picker .nctl .ctl-range { accent-color: rgba(255,255,255,.55); }
 .night-picker .nctl .ctl-sep { background: rgba(255,255,255,.15); }
 .night-picker .nctl .ctl-select { background: rgba(255,255,255,.06);
   border-color: rgba(255,255,255,.16); color: rgba(255,255,255,.7); }
+
+/* promemoria dose: tre stati con lo stesso rosa gia' usato per gli avvisi
+   (.amber esistente e' proprio --rose, non un colore nuovo). L'animazione
+   riusa la stessa curva dell'anello della pressione del sonno. */
+.dosecard { display: block; width: 100%; text-align: left; cursor: pointer;
+  font-family: inherit; color: inherit; }
+.dose-soon .hero-sub { color: var(--rose); }
+.dose-ready { border: 1px solid rgba(var(--rose-rgb),.5) !important; background: var(--rose-tint-bg) !important; }
+.dose-ready .hero-sub { color: var(--rose); }
+.dose-pulse { animation: dose-pulse 1.8s ease-in-out infinite; }
+@keyframes dose-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .6; } }

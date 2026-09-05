@@ -4,6 +4,11 @@ Non è il changelog (quello resta in `CHANGELOG.md`, cronologico). Questo file
 raccoglie le decisioni che non sono ovvie leggendo il codice, pensate per chi
 riprende il progetto a freddo — un'altra sessione, un altro sviluppatore.
 
+Nota: la questione delle notifiche (cosa possono fare, cosa no, e perché
+farle "vere" richiederebbe un server) ha un documento a sé, `NOTIFICHE.md`,
+perché è una domanda che torna spesso e merita una risposta completa invece
+di un paragrafo qui in mezzo ad altro.
+
 ## Audio: uscita diretta, e perché non si torna indietro
 
 `SoundEngine._setupOutput()` collega il grafo Web Audio direttamente a

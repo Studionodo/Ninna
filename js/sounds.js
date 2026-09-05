@@ -230,7 +230,7 @@ export class SoundEngine {
     }
     node.connect(this.master);
     src.start();
-    this.source = src; this.playing = id;
+    this.source = src; this.playing = id; this.startedAt = Date.now();
     const t = this.ctx.currentTime;
     this.master.gain.cancelScheduledValues(t);
     this.master.gain.setValueAtTime(0.0001, t);
@@ -238,6 +238,7 @@ export class SoundEngine {
   }
   stop() {
     if (!this.ctx || !this.playing) return;
+    this.startedAt = null;
     const t = this.ctx.currentTime;
     this.master.gain.cancelScheduledValues(t);
     this.master.gain.setTargetAtTime(0, t, FADE_S / 3);

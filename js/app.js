@@ -22,6 +22,28 @@ const TYPE_ICONS = {
 const EDIT_ICON = "<svg viewBox=\"0 0 24 24\" width=\"1em\" height=\"1em\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"ico ico-edit\"><path d=\"M4 20l.9-3.6L15.5 6a1.7 1.7 0 0 1 2.4 0l.1.1a1.7 1.7 0 0 1 0 2.4L7.6 19.1 4 20z\"/><path d=\"M13.8 7.7l2.5 2.5\"/></svg>";
 const INSTANT = ["breast", "bottle", "solid", "diaper", "nightwake", "pump"];
 const HEALTH = ["vitamins", "med"];
+
+/* ---------- promemoria di dosi: farmaci/integratori con ripetizione ----------
+   Aggancio al NOME, non all'evento: se registri di nuovo lo stesso farmaco,
+   e' quella voce piu' recente a valere, non quella con cui avevi impostato
+   la ripetizione la prima volta. Nessun server, nessuna sveglia garantita a
+   telefono chiuso: solo un calcolo mostrato ogni volta che apri l'app, piu'
+   una notifica se capita di averla aperta all'ora giusta. */
+function doseReminders() {
+  // il nome piu' recente vince SEMPRE, anche se quell'ultima registrazione
+  // non ha ripetizione: e' cosi' che "interrompi" deve poter cancellare un
+  // promemoria, invece di lasciare riemergere una versione piu' vecchia
+  const byName = new Map();
+  for (const e of store.events) {
+    if (!HEALTH.includes(e.type) || !e.note) continue;
+    const prev = byName.get(e.note);
+    if (!prev || e.at > prev.at) byName.set(e.note, e);
+  }
+  return [...byName.entries()]
+    .filter(([, e]) => e.repeatH)
+    .map(([name, e]) => ({ name, type: e.type, repeatH: e.repeatH, lastAt: e.at, due: e.at + e.repeatH * 3600000 }))
+    .sort((a, b) => a.due - b.due);
+}
 const KOFI = "https://ko-fi.com/istantelabs/tip";
 const GITHUB = "https://github.com/Studionodo";
 const STOP_ICON = '<svg viewBox="0 0 24 24" width="14" height="14"><rect x="5" y="5" width="14" height="14" rx="2" fill="currentColor"/></svg>';
@@ -29,7 +51,7 @@ const PLAY_ICON = '<svg viewBox="0 0 24 24" width="14" height="14"><path d="M7 5
 const VOL_ICON = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/></svg>';
 const CLOCK_ICON = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 1.8"/></svg>';
 const PAUSE_ICON = '<svg viewBox="0 0 24 24" width="14" height="14"><rect x="6" y="5" width="4" height="14" rx="1.5" fill="currentColor"/><rect x="14" y="5" width="4" height="14" rx="1.5" fill="currentColor"/></svg>';
-const APP_VERSION = "2.9.1";
+const APP_VERSION = "2.12.0";
 const CUP = `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4.5 9h11v5.5a4 4 0 0 1-4 4h-3a4 4 0 0 1-4-4V9z"/><path d="M15.5 10h1.6a2.4 2.4 0 0 1 0 4.8h-1.6"/><path d="M8 4.5c0 .9.9 1.1.9 2M11.5 4c0 .9.9 1.1.9 2"/></svg>`;
 
 /* ---------- stato ---------- */
@@ -41,6 +63,7 @@ let miniCollapsed = false;
 let showReport = false;
 let showGrowth = false, showGrowthForm = false;
 let profileFrom = "settings";
+let ackedDoses = {};  // { nome: orario_dovuto_gia_visto } — un nuovo orario dovuto (nuova dose registrata) fa ripartire da capo il lampeggio
 let nightMode = false;
 let nightSoundListOpen = false;
 let nightLastSound = null;
@@ -87,10 +110,12 @@ function toast(msg) {
 
 /* ---------- composizione testi dal motore (codici -> lingua) ---------- */
 const reasonText = (next) => t("r_" + { routine:"routine", max_naps:"max", window_into_night:"window", first_nap:"first", nap_n:"napn", night_hours:"nighth" }[next.code], next.params);
-const notifText = (id, babyName) =>
+const notifText = (id, babyName, extra) =>
   id === "pre-nap"
     ? { title: t("n_nap_t", { name: babyName }), body: t("n_nap_b") }
-    : { title: t("n_bed_t"), body: t("n_bed_b") };
+    : id === "pre-bed"
+    ? { title: t("n_bed_t"), body: t("n_bed_b") }
+    : { title: t("n_dose_t", { name: extra }), body: t("n_dose_b") };
 
 /* ---------- notifiche (client-side, approccio Bariletto) ---------- */
 const hasNotif = () => "Notification" in window;
@@ -113,7 +138,7 @@ function scheduleNotifications(plan) {
   const now = Date.now();
   plan.filter((n) => n.at > now && n.at - now < 12 * 3600000).forEach((n) => {
     notifTimeouts.push(setTimeout(() => {
-      const { title, body } = notifText(n.id, store.baby ? store.baby.name : "");
+      const { title, body } = notifText(n.id, store.baby ? store.baby.name : "", n.name);
       showNotif(title, body);
     }, n.at - now));
   });
@@ -181,9 +206,14 @@ window.NINNA = {
       <div class="modal" onclick="event.stopPropagation()">
         <div class="card-title">${TYPE_ICONS[type]} ${typeLabel(type)}</div>
         ${recent.length ? `<div class="dim small">${t("health_recent")}</div>
-        <div class="chiprow">${recent.map((r) => `<button class="chip" onclick="NINNA.saveHealth('${type}', ${JSON.stringify(r)})">${esc(r)}</button>`).join("")}</div>` : ""}
+        <div class="chiprow">${recent.map((r) => `<button class="chip" onclick="NINNA.saveHealth('${type}', ${esc(JSON.stringify(r))})">${esc(r)}</button>`).join("")}</div>` : ""}
         <label class="field"><span>${t("health_which")}</span>
           <input id="h-name" placeholder="${t("health_ph_" + type)}" autocomplete="off"></label>
+        <label class="field"><span>${t("health_repeat")}</span>
+          <select id="h-repeat">
+            <option value="0">${t("health_repeat_none")}</option>
+            ${[4, 6, 8, 12, 24].map((h) => `<option value="${h}">${t("health_repeat_in", { h })}</option>`).join("")}
+          </select></label>
         <button class="secondary block" onclick="NINNA.saveHealth('${type}')">${t("save")}</button>
         <button class="link block" onclick="NINNA.saveHealth('${type}', '')">${t("health_skip")}</button>
       </div>
@@ -193,9 +223,14 @@ window.NINNA = {
   },
   saveHealth(type, preset) {
     const el = document.getElementById("h-name");
+    const repEl = document.getElementById("h-repeat");
     const note = (preset !== undefined ? preset : (el ? el.value : "")).trim();
+    const repeatH = repEl ? parseInt(repEl.value, 10) || 0 : 0;
     const ev = { id: uid(), type, at: Date.now() };
     if (note) ev.note = note;
+    // il promemoria si aggancia al NOME: se domani registri di nuovo lo
+    // stesso farmaco, e' quella la voce piu' recente a contare, non questa
+    if (note && repeatH) ev.repeatH = repeatH;
     store.events.push(ev);
     showHealth = false;
     persist(); this.closeSettings();
@@ -299,6 +334,24 @@ window.NINNA = {
   toggleArticle(id) { const el = document.getElementById("art-" + id); if (el) el.hidden = !el.hidden; },
   openSettings() { renderSettings(); },
   openProfile(from) { profileFrom = from || "settings"; renderProfileEdit(); },
+  openDoseReminder(name) {
+    const d = doseReminders().find((x) => x.name === name);
+    if (!d) return;
+    ackedDoses[name] = d.due;  // il tocco ferma il lampeggio, a prescindere da cosa si fa dopo
+    renderDoseReminder(name);
+    render();
+  },
+  logDoseAgain(name, keepRepeat) {
+    const d = doseReminders().find((x) => x.name === name);
+    if (!d) return;
+    const ev = { id: uid(), type: d.type, at: Date.now(), note: name };
+    if (keepRepeat) ev.repeatH = d.repeatH;
+    store.events.push(ev);
+    delete ackedDoses[name];
+    persist(); this.closeSettings();
+    toast(t("logged_type", { label: name }));
+    render();
+  },
   closeProfile() { if (profileFrom === "settings") NINNA.openSettings(); else { $modal.innerHTML = ""; } },
   saveProfile() {
     const n = document.getElementById("p-name").value.trim();
@@ -577,6 +630,16 @@ function renderOggi(f) {
       <div class="hero-sub">${TYPE_ICONS.night} ${t("bed_card")} <b class="lit">${fmtHM(f.bedtime.at)}</b>
       ${f.bedtime.earlier ? `<br><span class="amber">${t("bed_earlier")}</span>` : ""}</div>
     </div>` : ""}
+    ${doseReminders().map((d) => {
+      const soon = d.due - Date.now() < 30 * 60000;
+      const ready = d.due <= Date.now();
+      const acked = ackedDoses[d.name] === d.due;
+      const cls = ready ? (acked ? "dose-ready" : "dose-ready dose-pulse") : soon ? "dose-soon" : "";
+      const label = ready ? t("dose_ready", { name: esc(d.name) }) : t("dose_next", { name: esc(d.name), time: fmtHM(d.due) });
+      return `<button class="card slim dosecard ${cls}" onclick="NINNA.openDoseReminder(${esc(JSON.stringify(d.name))})">
+        <div class="hero-sub">${TYPE_ICONS.med} ${label}</div>
+      </button>`;
+    }).join("")}
     <div class="grid3">
       ${INSTANT.map((ty) => `<button class="tile" onclick="NINNA.logInstant('${ty}')">
         <span class="tile-icon">${TYPE_ICONS[ty]}</span><span>${typeLabel(ty)}</span>
@@ -682,9 +745,15 @@ function renderStat(f) {
     <button class="secondary block" onclick="NINNA.exportCSVFile()">${t("export_csv")}</button>`;
 }
 
+// "0 min" nei primi 30 secondi sembra un dato rotto, non un dato vero
+function elapsedLabel(ms) {
+  return ms < 45000 ? t("just_started") : t("playing_for", { dur: fmtDur(ms) });
+}
+
 function renderSuoni() {
   const vol = store.prefs.volume ?? 0.4;
   const soundCtl = (inline) => `<div class="soundctl${inline ? " inline" : ""}">
+    ${inline && sound.startedAt ? `<div class="ctl-elapsed">${elapsedLabel(Date.now() - sound.startedAt)}</div>` : ""}
     <div class="ctl-compact">
       <span class="ctl-ico" aria-hidden="true">${VOL_ICON}</span>
       <input class="ctl-range" type="range" min="0" max="1" step="0.01" value="${vol}"
@@ -753,16 +822,19 @@ function renderNightMode(f) {
         ${SOUNDS.map((s) => {
           const on = sound.playing === s.id;
           const nctl = `<div class="nctl">
-            <span class="ctl-ico" aria-hidden="true">${VOL_ICON}</span>
-            <input class="ctl-range" type="range" min="0" max="1" step="0.01" value="${store.prefs.volume ?? 0.4}"
-              aria-label="${t("volume")}" oninput="NINNA.setVolume(this.value)">
-            <span class="ctl-value">${Math.round((store.prefs.volume ?? 0.4) * 100)}%</span>
-            <span class="ctl-sep" aria-hidden="true"></span>
-            <span class="ctl-ico" aria-hidden="true">${CLOCK_ICON}</span>
-            <select class="ctl-select" aria-label="${t("sleep_timer")}" onchange="NINNA.setSleepTimer(this.value)">
-              <option value="0"${timerMin === 0 ? " selected" : ""}>${t("never")}</option>
-              ${[15, 30, 45, 60].map((n) => `<option value="${n}"${timerMin === n ? " selected" : ""}>${t("timer_min", { n })}</option>`).join("")}
-            </select>
+            ${sound.startedAt ? `<div class="ctl-elapsed">${elapsedLabel(Date.now() - sound.startedAt)}</div>` : ""}
+            <div class="ctl-compact">
+              <span class="ctl-ico" aria-hidden="true">${VOL_ICON}</span>
+              <input class="ctl-range" type="range" min="0" max="1" step="0.01" value="${store.prefs.volume ?? 0.4}"
+                aria-label="${t("volume")}" oninput="NINNA.setVolume(this.value)">
+              <span class="ctl-value">${Math.round((store.prefs.volume ?? 0.4) * 100)}%</span>
+              <span class="ctl-sep" aria-hidden="true"></span>
+              <span class="ctl-ico" aria-hidden="true">${CLOCK_ICON}</span>
+              <select class="ctl-select" aria-label="${t("sleep_timer")}" onchange="NINNA.setSleepTimer(this.value)">
+                <option value="0"${timerMin === 0 ? " selected" : ""}>${t("never")}</option>
+                ${[15, 30, 45, 60].map((n) => `<option value="${n}"${timerMin === n ? " selected" : ""}>${t("timer_min", { n })}</option>`).join("")}
+              </select>
+            </div>
           </div>`;
           return `<button class="picker-row${on ? " on" : ""}" onclick="NINNA.${on ? "pauseNightSound()" : `playSound('${s.id}')`}">
             <span>${t("sound_" + s.id)}</span>${on ? PAUSE_ICON : PLAY_ICON}
@@ -792,7 +864,8 @@ function renderNightMode(f) {
     ${nightLastSound ? `<div class="night-sound">
       <button class="ns-name" onclick="NINNA.toggleNightSoundList()">${t("sound_" + nightLastSound)}</button>
       <button class="ns-stop ${sound.playing ? "" : "paused"}" onclick="${sound.playing ? "NINNA.pauseNightSound()" : "NINNA.resumeNightSound()"}" aria-label="${sound.playing ? t("night_pause") : t("night_resume")}">${sound.playing ? PAUSE_ICON : PLAY_ICON}</button>
-    </div>` : `<button class="night-sound ns-empty" onclick="NINNA.toggleNightSoundList()">${PLAY_ICON}<span>${t("tab_suoni")}</span></button>`}
+    </div>
+    ${sound.playing && sound.startedAt ? `<div class="ns-elapsed">${elapsedLabel(Date.now() - sound.startedAt)}</div>` : ""}` : `<button class="night-sound ns-empty" onclick="NINNA.toggleNightSoundList()">${PLAY_ICON}<span>${t("tab_suoni")}</span></button>`}
     <div class="night-head">
       <div class="night-status">${status}</div>
       ${active ? `<div class="night-timer">${fmtDur(Date.now() - active.start)}</div>` : ""}
@@ -968,6 +1041,24 @@ function renderAbout() {
   </div>`;
 }
 
+function renderDoseReminder(name) {
+  const d = doseReminders().find((x) => x.name === name);
+  if (!d) return;
+  const ready = d.due <= Date.now();
+  $modal.innerHTML = `<div class="modal-wrap" onclick="NINNA.closeSettings()">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="card-title">${TYPE_ICONS.med} ${esc(name)}</div>
+      <div class="dim small" style="margin-bottom:14px">${t("dose_last_at", { time: fmtHM(d.lastAt) })}</div>
+      <div class="hero-sub" style="margin-bottom:18px">${ready
+        ? t("dose_ready", { name: esc(name) })
+        : t("dose_next", { name: esc(name), time: fmtHM(d.due) })}</div>
+      <button class="secondary block" onclick="NINNA.logDoseAgain(${esc(JSON.stringify(name))}, true)">${t("dose_log_repeat", { h: d.repeatH })}</button>
+      <button class="link block" onclick="NINNA.logDoseAgain(${esc(JSON.stringify(name))}, false)">${t("dose_log_stop")}</button>
+      <button class="link block" onclick="NINNA.closeSettings()">${t("close")}</button>
+    </div>
+  </div>`;
+}
+
 function renderProfileEdit() {
   const b = store.baby;
   $modal.innerHTML = `<div class="modal-wrap" onclick="NINNA.closeProfile()">
@@ -1038,7 +1129,10 @@ function render() {
     $tabbar.innerHTML = "";
     return;
   }
-  scheduleNotifications(f.notifications);
+  scheduleNotifications([
+    ...f.notifications,
+    ...doseReminders().map((d) => ({ id: "dose:" + d.name, at: d.due, name: d.name })),
+  ]);
 
   const w = ageWeeks(store.baby.birth);
   const ageLabel = w < 5 ? `${Math.round(w * 7)} ${t("u_days")}` : `${Math.floor(w / 4.345)} ${t("u_months")}`;
@@ -1094,5 +1188,10 @@ render();
 setInterval(() => {
   const tag = document.activeElement && document.activeElement.tagName;
   const typing = tag === "INPUT" || tag === "SELECT" || tag === "TEXTAREA";
-  if (view === "oggi" && !$modal.innerHTML && !showManual && !typing) render();
+  // il contatore "in riproduzione da..." vive anche sulla scheda Suoni, non
+  // solo su Oggi: senza questo secondo caso resterebbe fermo al valore di
+  // quando la scheda e' stata aperta
+  const onOggi = view === "oggi" && !$modal.innerHTML && !showManual;
+  const onSuoni = view === "suoni" && sound.playing;
+  if ((onOggi || onSuoni) && !typing) render();
 }, 30000);

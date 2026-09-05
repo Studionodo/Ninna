@@ -3,6 +3,76 @@
 Versionamento semantico (MAJOR.MINOR.PATCH). Ogni release da qui in avanti
 viene registrata qui, in ordine cronologico, più recente in cima.
 
+## v2.12.0 · 28/08/2026
+Il promemoria di dose diventa a tre stati, tutti con lo stesso rosa gia'
+usato in Ninna per gli avvisi (".amber" era gia' --rose: nessun colore
+nuovo introdotto).
+- **Normale**: testo neutro, come prima.
+- **In avvicinamento** (ultimi 30 minuti, lo stesso anticipo gia' usato dalle
+  notifiche del sonno): il testo passa al rosa.
+- **Pronta**: sfondo e bordo rosa che pulsano lentamente (la stessa curva
+  gia' usata per l'anello della pressione del sonno), finche' non la tocchi.
+
+**Toccare la card ferma il lampeggio e apre una schermata dedicata**, prima
+inesistente: mostra l'ultima somministrazione e offre due azioni - registrare
+subito una nuova dose mantenendo la stessa ripetizione, oppure registrarla
+interrompendo il promemoria. Il lampeggio si ripristina da solo alla dose
+successiva, senza bisogno di ripulire alcuno stato: e' agganciato all'orario
+dovuto, non al nome, quindi un nuovo orario riparte gia' spento.
+
+Durante la verifica e' emerso un difetto di logica reale: "interrompi la
+ripetizione" non funzionava, perche' il calcolo considerava solo le
+registrazioni che avevano gia' un intervallo impostato, lasciando riemergere
+una versione piu' vecchia del promemoria invece di cancellarlo. Corretto:
+ora conta sempre la registrazione piu' recente per quel nome, con o senza
+ripetizione.
+
+## v2.11.0 · 28/08/2026
+Promemoria per farmaci e integratori, nella versione onesta discussa: non un
+allarme garantito (richiederebbe un server, fuori dall'architettura di
+Ninna), ma un calcolo mostrato ogni volta che apri l'app, con una notifica
+in piu' se capita di averla aperta all'ora giusta — riusando il sistema di
+notifiche gia' esistente per le previsioni del sonno.
+
+- **Ripetizione opzionale** al momento di registrare un farmaco o un
+  integratore: "Ripeti fra" con le opzioni piu' comuni (4/6/8/12/24 ore) o
+  "Non ripetere". Il promemoria e' agganciato al **nome**, non alla singola
+  registrazione: se domani dai di nuovo lo stesso farmaco, e' quella voce
+  piu' recente a valere.
+- **Una riga in Oggi**, nello stesso stile della "Nanna serale prevista" gia'
+  esistente: mostra l'orario della prossima dose, o "Puoi ripetere" quando
+  e' gia' arrivato.
+- **Notifica riusata dal sistema gia' in uso** per gli avvisi di sonno: se
+  l'app e' aperta all'ora giusta, arriva un avviso; se e' chiusa, nulla
+  arriva — lo stesso limite gia' vero per tutte le notifiche di Ninna,
+  dichiarato non nascosto.
+
+Durante la verifica e' emerso un difetto reale, pre-esistente e non legato a
+questa funzione: le scorciatoie con i nomi recenti nel modulo Salute
+(introdotte tempo fa) avevano un attributo HTML mal formato per una
+collisione di virgolette fra il nome e l'attributo che lo conteneva.
+Cliccarle non faceva letteralmente nulla, in silenzio, da quando sono state
+introdotte — nessun test le aveva mai davvero cliccate. Corretto.
+
+## v2.10.0 · 28/08/2026
+Aggiunto un contatore "in riproduzione da..." per il suono attivo, sia in
+Suoni sia in modalita' notte.
+
+Durante la verifica, un mio sospetto di bug si e' rivelato un falso allarme:
+a 28 secondi dall'avvio, mostrare "0 min" e' l'arrotondamento corretto
+(0,47 arrotonda per difetto), non un difetto. Ma proprio da li' e' emerso un
+problema di presentazione reale: "0 min" nei primi secondi di ogni
+riproduzione suona come un dato rotto. Sotto i 45 secondi il contatore ora
+mostra "Appena avviato" invece di un numero.
+
+Un secondo problema, questa volta vero: nella prima versione il contatore
+viveva solo dentro il selettore a schermo intero della modalita' notte — che
+pero' si chiude nell'istante in cui tocchi una riga, anche solo per mettere
+in pausa o riprendere. Nella pratica non si vedeva quasi mai. Spostato sulla
+pillola persistente in alto a destra, quella visibile per tutta la notte:
+ora sopravvive a pausa e ripresa fatte direttamente da li', senza dover
+aprire il selettore.
+
 ## v2.9.1 · 28/08/2026
 Due difetti segnalati, entrambi riprodotti e corretti.
 
