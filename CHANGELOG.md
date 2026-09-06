@@ -3,6 +3,19 @@
 Versionamento semantico (MAJOR.MINOR.PATCH). Ogni release da qui in avanti
 viene registrata qui, in ordine cronologico, più recente in cima.
 
+## v2.13.1 · 28/08/2026
+Corretta una sovrapposizione visibile solo nella primissima "Inizia nanna" in
+assoluto: quel tocco fa partire sia il toast di conferma sia la finestra che
+suggerisce la modalita' notte, e i due comparivano nello stesso istante — il
+toast, con la sua posizione fissa in basso, finiva sopra il testo della
+finestra, tagliandolo a meta'.
+
+Corretto evitando che il toast compaia in quel caso specifico: la finestra
+stessa conferma gia' che la nanna e' iniziata, il toast sarebbe stato
+ridondante oltre che sovrapposto. In ogni altro caso — nanne successive,
+pisolini — il toast normale resta invariato. Verificato tutti e tre i casi
+su Chrome reale.
+
 ## v2.13.0 · 28/08/2026
 Prima ristrutturazione del layout di Oggi da quando l'app e' nata. Non una
 funzione nuova: un riordino, dopo che dodici blocchi impilati avevano

@@ -51,7 +51,7 @@ const PLAY_ICON = '<svg viewBox="0 0 24 24" width="14" height="14"><path d="M7 5
 const VOL_ICON = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/></svg>';
 const CLOCK_ICON = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 1.8"/></svg>';
 const PAUSE_ICON = '<svg viewBox="0 0 24 24" width="14" height="14"><rect x="6" y="5" width="4" height="14" rx="1.5" fill="currentColor"/><rect x="14" y="5" width="4" height="14" rx="1.5" fill="currentColor"/></svg>';
-const APP_VERSION = "2.13.0";
+const APP_VERSION = "2.13.1";
 const CUP = `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4.5 9h11v5.5a4 4 0 0 1-4 4h-3a4 4 0 0 1-4-4V9z"/><path d="M15.5 10h1.6a2.4 2.4 0 0 1 0 4.8h-1.6"/><path d="M8 4.5c0 .9.9 1.1.9 2M11.5 4c0 .9.9 1.1.9 2"/></svg>`;
 
 /* ---------- stato ---------- */
@@ -173,8 +173,14 @@ window.NINNA = {
   },
   startSleep(kind) {
     store.events.push({ id: uid(), type: kind, start: Date.now(), end: null });
-    persist(); toast(typeLabel(kind) + " · " + t("started")); render();
-    if (kind === "night" && !nightMode && !store.prefs.nightPromptSeen) {
+    persist();
+    // la primissima "Inizia nanna" apre anche il suggerimento della modalita'
+    // notte: il toast in quel solo caso si sovrappone al testo della finestra,
+    // che gia' conferma da sola che la nanna e' partita
+    const willPromptNight = kind === "night" && !nightMode && !store.prefs.nightPromptSeen;
+    if (!willPromptNight) toast(typeLabel(kind) + " · " + t("started"));
+    render();
+    if (willPromptNight) {
       store.prefs.nightPromptSeen = true; persist();
       $modal.innerHTML = `<div class="modal-wrap" onclick="NINNA.dismissNightPrompt()">
         <div class="modal" onclick="event.stopPropagation()">
