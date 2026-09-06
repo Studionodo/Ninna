@@ -3,6 +3,34 @@
 Versionamento semantico (MAJOR.MINOR.PATCH). Ogni release da qui in avanti
 viene registrata qui, in ordine cronologico, più recente in cima.
 
+## v2.13.0 · 28/08/2026
+Prima ristrutturazione del layout di Oggi da quando l'app e' nata. Non una
+funzione nuova: un riordino, dopo che dodici blocchi impilati avevano
+raggiunto quasi una schermata e mezza di scorrimento.
+
+**Zone esplicite.** La schermata e' ora divisa in tre aree con un'etichetta
+discreta ciascuna (lo stesso stile maiuscoletto gia' usato nella Guida per
+le categorie): "Da tenere d'occhio", "Registra", "Oggi". Prima tutto aveva
+lo stesso peso visivo e la stessa forma - la previsione principale e un
+promemoria di farmaco erano entrambi un rettangolo arrotondato, distinguibili
+solo dal colore.
+
+**Un solo blocco per gli avvisi.** La previsione della nanna serale e i
+promemoria di dose non generano piu' una card ciascuno: confluiscono in
+un'unica card che cresce in righe, non in numero di elementi. Con tre
+farmaci in ripetizione si arrivava a quattro card identiche impilate prima
+ancora dei tasti di registrazione; ora restano quattro righe dentro un solo
+blocco. Se non c'e' nulla da segnalare, la zona sparisce insieme alla sua
+etichetta.
+
+Rimosso anche il titolo "Oggi" dentro la card del diario, che duplicava
+l'etichetta di zona appena sopra, e le regole CSS della vecchia card di dose,
+diventate codice morto.
+
+Nota onesta sul risultato: con un solo avviso attivo la schermata e' circa 80
+pixel piu' alta di prima, perche' le etichette costano spazio. Il guadagno si
+vede quando gli avvisi si accumulano - ed e' li' che il problema esisteva.
+
 ## v2.12.0 · 28/08/2026
 Il promemoria di dose diventa a tre stati, tutti con lo stesso rosa gia'
 usato in Ninna per gli avvisi (".amber" era gia' --rose: nessun colore

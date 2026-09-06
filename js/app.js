@@ -51,7 +51,7 @@ const PLAY_ICON = '<svg viewBox="0 0 24 24" width="14" height="14"><path d="M7 5
 const VOL_ICON = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/></svg>';
 const CLOCK_ICON = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 1.8"/></svg>';
 const PAUSE_ICON = '<svg viewBox="0 0 24 24" width="14" height="14"><rect x="6" y="5" width="4" height="14" rx="1.5" fill="currentColor"/><rect x="14" y="5" width="4" height="14" rx="1.5" fill="currentColor"/></svg>';
-const APP_VERSION = "2.12.0";
+const APP_VERSION = "2.13.0";
 const CUP = `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4.5 9h11v5.5a4 4 0 0 1-4 4h-3a4 4 0 0 1-4-4V9z"/><path d="M15.5 10h1.6a2.4 2.4 0 0 1 0 4.8h-1.6"/><path d="M8 4.5c0 .9.9 1.1.9 2M11.5 4c0 .9.9 1.1.9 2"/></svg>`;
 
 /* ---------- stato ---------- */
@@ -626,20 +626,34 @@ function renderOggi(f) {
       const btn = (kind, label) => `<button class="bigbtn ${k === kind ? "" : "alt"}" onclick="NINNA.startSleep('${kind}')">${TYPE_ICONS[kind]} ${label}${k === kind ? `<span class="rec">${t("recommended")}</span>` : ""}</button>`;
       return `<div class="row2">${btn("nap", t("btn_nap"))}${btn("night", t("btn_night"))}</div>`;
     })() : ""}
-    ${!active && !logOnly && f.lastWake && f.next.kind === "nap" ? `<div class="card slim">
-      <div class="hero-sub">${TYPE_ICONS.night} ${t("bed_card")} <b class="lit">${fmtHM(f.bedtime.at)}</b>
-      ${f.bedtime.earlier ? `<br><span class="amber">${t("bed_earlier")}</span>` : ""}</div>
-    </div>` : ""}
-    ${doseReminders().map((d) => {
-      const soon = d.due - Date.now() < 30 * 60000;
-      const ready = d.due <= Date.now();
-      const acked = ackedDoses[d.name] === d.due;
-      const cls = ready ? (acked ? "dose-ready" : "dose-ready dose-pulse") : soon ? "dose-soon" : "";
-      const label = ready ? t("dose_ready", { name: esc(d.name) }) : t("dose_next", { name: esc(d.name), time: fmtHM(d.due) });
-      return `<button class="card slim dosecard ${cls}" onclick="NINNA.openDoseReminder(${esc(JSON.stringify(d.name))})">
-        <div class="hero-sub">${TYPE_ICONS.med} ${label}</div>
-      </button>`;
-    }).join("")}
+    ${(() => {
+      /* Un solo blocco per tutti gli avvisi, invece di una card per ciascuno:
+         con due farmaci in ripetizione si arrivava a quattro card identiche
+         impilate prima ancora dei tasti di registrazione. Cosi' il blocco
+         cresce in altezza, non in numero, e resta distinto dalla previsione
+         principale (l'anello) che e' un'altra cosa. */
+      const rows = [];
+      if (!active && !logOnly && f.lastWake && f.next.kind === "nap") {
+        rows.push(`<div class="alert-row">
+          <span class="alert-ico">${TYPE_ICONS.night}</span>
+          <span>${t("bed_card")} <b class="lit">${fmtHM(f.bedtime.at)}</b>${f.bedtime.earlier ? `<br><span class="amber">${t("bed_earlier")}</span>` : ""}</span>
+        </div>`);
+      }
+      for (const d of doseReminders()) {
+        const soon = d.due - Date.now() < 30 * 60000;
+        const ready = d.due <= Date.now();
+        const acked = ackedDoses[d.name] === d.due;
+        const cls = ready ? (acked ? "dose-ready" : "dose-ready dose-pulse") : soon ? "dose-soon" : "";
+        const label = ready ? t("dose_ready", { name: esc(d.name) }) : t("dose_next", { name: esc(d.name), time: fmtHM(d.due) });
+        rows.push(`<button class="alert-row tap ${cls}" onclick="NINNA.openDoseReminder(${esc(JSON.stringify(d.name))})">
+          <span class="alert-ico">${TYPE_ICONS.med}</span><span>${label}</span>
+        </button>`);
+      }
+      if (!rows.length) return "";
+      return `<div class="catlabel">${t("zone_alerts")}</div>
+        <div class="card slim alerts">${rows.join("")}</div>`;
+    })()}
+    <div class="catlabel">${t("zone_actions")}</div>
     <div class="grid3">
       ${INSTANT.map((ty) => `<button class="tile" onclick="NINNA.logInstant('${ty}')">
         <span class="tile-icon">${TYPE_ICONS[ty]}</span><span>${typeLabel(ty)}</span>
@@ -662,8 +676,8 @@ function renderOggi(f) {
       </div>
       <button class="secondary block" onclick="NINNA.addManual()">${t("save")}</button>
     </div>` : ""}
+    <div class="catlabel">${t("zone_diary")}</div>
     <div class="card">
-      <div class="card-title">${t("today")}</div>
       ${todayEvents.length === 0 ? `<div class="dim">${t("today_empty")}</div>` : ""}
       ${todayEvents.map((e) => `<div class="logrow tap" onclick="NINNA.openEdit('${e.id}')">
         <span class="logicon">${TYPE_ICONS[e.type]}</span>
