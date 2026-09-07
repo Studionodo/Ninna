@@ -3,6 +3,37 @@
 Versionamento semantico (MAJOR.MINOR.PATCH). Ogni release da qui in avanti
 viene registrata qui, in ordine cronologico, più recente in cima.
 
+## v2.14.1 · 28/08/2026
+Corretta l'asimmetria nella sezione "+ Salute" introdotta dalla farmacia di
+turno. La griglia era stata forzata a due colonne quando conteneva solo
+Vitamine e Farmaco; con la terza piastrella, quella stessa regola lasciava
+"Farmacia di turno" da sola su una riga nuova, con spazio vuoto a fianco.
+Rimossa la forzatura: la griglia standard a tre colonne, la stessa gia' in
+uso per le sei piastrelle sopra, allinea le tre voci in un'unica riga.
+
+## v2.14.0 · 28/08/2026
+Aggiunta la funzione "Farmacia di turno" discussa qualche versione fa, che
+era rimasta solo decisa e mai scritta. Terza piastrella in "+ Salute",
+accanto a Vitamine e Farmaco.
+
+Nessun sito fisso e nessun aggregatore: un tocco chiede il comune, e apre
+una ricerca mirata ("farmacia di turno oggi {comune}") in una scheda nuova,
+lasciando che sia il motore di ricerca a scegliere la fonte piu' aggiornata
+per quella zona in quel momento — la stessa conclusione a cui eravamo
+arrivati confrontando PharmAround, Google Maps e gli altri aggregatori: nessuno
+e' affidabile ovunque, quindi non ne scegliamo uno fisso per conto dell'utente.
+
+Il comune resta ricordato per la volta successiva. Nessuna connessione
+verso l'esterno finche' non si preme "Cerca": verificato registrando ogni
+richiesta di rete durante l'intera interazione, non solo leggendo il codice.
+
+## v2.13.2 · 28/08/2026
+Il testo dentro "Da tenere d'occhio" (nanna serale, promemoria di dose)
+usava lo stesso grigio secondario dell'anello della pressione del sonno —
+corretto la' dove sta sotto un numero enorme, spento qui dove invece e' lui
+il contenuto principale della card. Portato al colore di testo pieno e a
+peso 600, dopo un confronto diretto su schermo reale.
+
 ## v2.13.1 · 28/08/2026
 Corretta una sovrapposizione visibile solo nella primissima "Inizia nanna" in
 assoluto: quel tocco fa partire sia il toast di conferma sia la finestra che

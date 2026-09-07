@@ -20,6 +20,7 @@ const TYPE_ICONS = {
   med: "<svg viewBox=\"0 0 24 24\" width=\"1em\" height=\"1em\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"ico\"><rect x=\"3.2\" y=\"9.3\" width=\"17.6\" height=\"5.4\" rx=\"2.7\" transform=\"rotate(-40 12 12)\"/><path d=\"M9.8 8.6 14.2 15.4\" transform=\"rotate(-40 12 12)\"/></svg>"
 };
 const EDIT_ICON = "<svg viewBox=\"0 0 24 24\" width=\"1em\" height=\"1em\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"ico ico-edit\"><path d=\"M4 20l.9-3.6L15.5 6a1.7 1.7 0 0 1 2.4 0l.1.1a1.7 1.7 0 0 1 0 2.4L7.6 19.1 4 20z\"/><path d=\"M13.8 7.7l2.5 2.5\"/></svg>";
+const PHARMACY_ICON = "<svg viewBox=\"0 0 24 24\" width=\"1em\" height=\"1em\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"ico\"><rect x=\"3.5\" y=\"3.5\" width=\"17\" height=\"17\" rx=\"4\"/><path d=\"M12 8v8M8 12h8\"/></svg>";
 const INSTANT = ["breast", "bottle", "solid", "diaper", "nightwake", "pump"];
 const HEALTH = ["vitamins", "med"];
 
@@ -51,7 +52,7 @@ const PLAY_ICON = '<svg viewBox="0 0 24 24" width="14" height="14"><path d="M7 5
 const VOL_ICON = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/></svg>';
 const CLOCK_ICON = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 1.8"/></svg>';
 const PAUSE_ICON = '<svg viewBox="0 0 24 24" width="14" height="14"><rect x="6" y="5" width="4" height="14" rx="1.5" fill="currentColor"/><rect x="14" y="5" width="4" height="14" rx="1.5" fill="currentColor"/></svg>';
-const APP_VERSION = "2.13.1";
+const APP_VERSION = "2.14.1";
 const CUP = `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4.5 9h11v5.5a4 4 0 0 1-4 4h-3a4 4 0 0 1-4-4V9z"/><path d="M15.5 10h1.6a2.4 2.4 0 0 1 0 4.8h-1.6"/><path d="M8 4.5c0 .9.9 1.1.9 2M11.5 4c0 .9.9 1.1.9 2"/></svg>`;
 
 /* ---------- stato ---------- */
@@ -340,6 +341,34 @@ window.NINNA = {
   toggleArticle(id) { const el = document.getElementById("art-" + id); if (el) el.hidden = !el.hidden; },
   openSettings() { renderSettings(); },
   openProfile(from) { profileFrom = from || "settings"; renderProfileEdit(); },
+  /* Non un sito fisso: una ricerca mirata. Nessun aggregatore e' affidabile
+     ovunque (nemmeno Google, verificato, nei paesi piccoli), quindi lasciamo
+     che sia la ricerca a scegliere la fonte piu' aggiornata per quel comune,
+     invece di legare Ninna a un servizio specifico che potrebbe sparire o
+     non coprire una zona. Zero server, zero dati che passano da Ninna. */
+  askPharmacyTown() {
+    const last = store.prefs.pharmacyTown || "";
+    $modal.innerHTML = `<div class="modal-wrap" onclick="NINNA.closeSettings()">
+      <div class="modal" onclick="event.stopPropagation()">
+        <div class="card-title">${PHARMACY_ICON} ${t("pharmacy_tile")}</div>
+        <label class="field"><span>${t("pharmacy_town")}</span>
+          <input id="pharm-town" value="${esc(last)}" placeholder="${t("pharmacy_ph")}" autocomplete="off"></label>
+        <div class="dim small" style="margin:2px 0 12px">${t("pharmacy_hint")}</div>
+        <button class="secondary block" onclick="NINNA.searchPharmacy()">${t("pharmacy_search")}</button>
+        <button class="link block" onclick="NINNA.closeSettings()">${t("close")}</button>
+      </div>
+    </div>`;
+    const el = document.getElementById("pharm-town");
+    if (el) { el.focus(); if (last) el.select(); }
+  },
+  searchPharmacy() {
+    const town = (document.getElementById("pharm-town")?.value || "").trim();
+    if (!town) return toast(t("pharmacy_need_town"));
+    store.prefs.pharmacyTown = town; persist();
+    const q = encodeURIComponent(`farmacia di turno oggi ${town}`);
+    window.open(`https://www.google.com/search?q=${q}`, "_blank", "noopener");
+    this.closeSettings();
+  },
   openDoseReminder(name) {
     const d = doseReminders().find((x) => x.name === name);
     if (!d) return;
@@ -670,6 +699,9 @@ function renderOggi(f) {
       ${HEALTH.map((ty) => `<button class="tile" onclick="NINNA.logInstant('${ty}')">
         <span class="tile-icon">${TYPE_ICONS[ty]}</span><span>${typeLabel(ty)}</span>
       </button>`).join("")}
+      <button class="tile" onclick="NINNA.askPharmacyTown()">
+        <span class="tile-icon">${PHARMACY_ICON}</span><span>${t("pharmacy_tile")}</span>
+      </button>
     </div>` : ""}
     <button class="link block" onclick="NINNA.toggleManual()">${showManual ? t("manual_close") : t("manual_open")}</button>
     ${showManual ? `<div class="card">
