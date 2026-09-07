@@ -3,6 +3,24 @@
 Versionamento semantico (MAJOR.MINOR.PATCH). Ogni release da qui in avanti
 viene registrata qui, in ordine cronologico, più recente in cima.
 
+## v2.16.0 · 28/08/2026
+La notifica della routine serale dice "45 minuti alla nanna: luci basse,
+stessa sequenza di sempre", ma toccandola si arrivava a una schermata dove
+quel consiglio non era scritto da nessuna parte: restava solo l'orario. Il
+messaggio utile spariva insieme alla notifica.
+
+Ora, dentro la finestra dei 45 minuti, la card principale mostra anche il
+consiglio: "È il momento: luci basse e la stessa sequenza di sempre",
+in menta sotto l'orario della routine.
+
+Nota sul percorso: il primo tentativo aveva messo il consiglio nella riga
+"Da tenere d'occhio", che pero' in quella finestra temporale non esiste —
+quando la nanna si avvicina, la card principale passa a "Ora della nanna" e
+quella riga sparisce per non ripetere lo stesso orario due volte. Era codice
+irraggiungibile: il test con l'orologio simulato lo ha rivelato prima della
+consegna, e il consiglio e' stato spostato nella card principale, l'unica
+visibile in quel momento. Verificato a quattro orari diversi della giornata.
+
 ## v2.15.1 · 28/08/2026
 Nuova icona per "Farmacia di turno". La precedente era un quadrato
 arrotondato con dentro un "+": rompeva lo stile in due modi, perche' era

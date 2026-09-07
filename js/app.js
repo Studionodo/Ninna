@@ -52,7 +52,7 @@ const PLAY_ICON = '<svg viewBox="0 0 24 24" width="14" height="14"><path d="M7 5
 const VOL_ICON = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/></svg>';
 const CLOCK_ICON = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 1.8"/></svg>';
 const PAUSE_ICON = '<svg viewBox="0 0 24 24" width="14" height="14"><rect x="6" y="5" width="4" height="14" rx="1.5" fill="currentColor"/><rect x="14" y="5" width="4" height="14" rx="1.5" fill="currentColor"/></svg>';
-const APP_VERSION = "2.15.1";
+const APP_VERSION = "2.16.0";
 const CUP = `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4.5 9h11v5.5a4 4 0 0 1-4 4h-3a4 4 0 0 1-4-4V9z"/><path d="M15.5 10h1.6a2.4 2.4 0 0 1 0 4.8h-1.6"/><path d="M8 4.5c0 .9.9 1.1.9 2M11.5 4c0 .9.9 1.1.9 2"/></svg>`;
 
 /* ---------- stato ---------- */
@@ -635,6 +635,7 @@ function renderOggi(f) {
             ? t("center_in", { dur: fmtDur(s.center - Date.now()) })
             : t("window_over", { dur: fmtDur(Date.now() - s.center) })} · ${t("awake_for", { dur: fmtDur(Date.now() - f.lastWake) })}</div>
         <button class="link" onclick="NINNA.toggleWhy()">${showWhy ? t("why_close") : t("why_open")}</button>
+        ${isNight && Date.now() >= f.bedtime.at - 45 * 60000 ? `<div class="routine-tip">${t("bed_routine_tip")}</div>` : ""}
         ${showWhy ? `<div class="why">${reasonText(f.next)}<br>${t("why_window", { lo: f.profile.ww[0], hi: f.profile.ww[1] })}
           ${f.window.observedEma
             ? t("why_observed", { name: esc(b.name), ema: f.window.observedEma, conf: Math.round(f.window.confidence * 100), min: f.window.minutes })

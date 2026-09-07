@@ -668,3 +668,7 @@ button { font-family: inherit; }
    la singola riga invece dell'intera card */
 .alert-row.dose-soon, .alert-row.dose-ready { color: var(--rose); }
 .alert-row.dose-ready { border-top-color: rgba(var(--rose-rgb),.25); }
+
+/* consiglio della routine serale, visibile solo dentro i 45 minuti:
+   e' un suggerimento presente, non un allarme, quindi menta e non rosa */
+.routine-tip { color: var(--mint); font-weight: 500; font-size: 13px; margin-top: 6px; line-height: 1.4; }
