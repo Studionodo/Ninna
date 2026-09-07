@@ -408,7 +408,10 @@ button { font-family: inherit; }
 
 /* riga Salute: due piastrelle, stessa lingua visiva della griglia */
 .salutelabel { margin-top: 4px; }
-.grid3.salute { grid-template-columns: repeat(2, 1fr); }
+/* .grid3.salute a due colonne rimossa: era stata scritta quando "+ Salute"
+   aveva solo due piastrelle (Vitamine, Farmaco). Con la terza (Farmacia di
+   turno) la griglia standard a tre colonne le allinea in una riga sola,
+   simmetrica come il resto dell'app. */
 
 /* nuovo set di icone SVG: linea sottile, currentColor, coerenti ovunque */
 .ico { display: inline-block; vertical-align: -0.15em; flex-shrink: 0; }
@@ -647,10 +650,21 @@ button { font-family: inherit; }
 /* promemoria dose: tre stati con lo stesso rosa gia' usato per gli avvisi
    (.amber esistente e' proprio --rose, non un colore nuovo). L'animazione
    riusa la stessa curva dell'anello della pressione del sonno. */
-.dosecard { display: block; width: 100%; text-align: left; cursor: pointer;
-  font-family: inherit; color: inherit; }
-.dose-soon .hero-sub { color: var(--rose); }
-.dose-ready { border: 1px solid rgba(var(--rose-rgb),.5) !important; background: var(--rose-tint-bg) !important; }
-.dose-ready .hero-sub { color: var(--rose); }
 .dose-pulse { animation: dose-pulse 1.8s ease-in-out infinite; }
 @keyframes dose-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .6; } }
+
+/* blocco avvisi unico: le righe si accumulano dentro una sola card invece
+   di generare una card ciascuna. Il divisore fra righe e' interno, cosi'
+   il blocco resta un oggetto solo anche con quattro avvisi attivi. */
+.alerts { padding: 4px 16px; }
+.alert-row { display: flex; align-items: flex-start; gap: 9px; width: 100%;
+  padding: 11px 0; font-size: 14.5px; font-weight: 600; color: var(--text); line-height: 1.45;
+  background: none; border: none; border-top: 1px solid var(--stroke);
+  text-align: left; font-family: inherit; }
+.alert-row:first-child { border-top: none; }
+.alert-row.tap { cursor: pointer; }
+.alert-ico { display: flex; flex-shrink: 0; margin-top: 1px; }
+/* gli stati della dose restano quelli gia' definiti, ma ora colorano
+   la singola riga invece dell'intera card */
+.alert-row.dose-soon, .alert-row.dose-ready { color: var(--rose); }
+.alert-row.dose-ready { border-top-color: rgba(var(--rose-rgb),.25); }

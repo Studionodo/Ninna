@@ -3,6 +3,132 @@
 Versionamento semantico (MAJOR.MINOR.PATCH). Ogni release da qui in avanti
 viene registrata qui, in ordine cronologico, più recente in cima.
 
+## v2.15.1 · 28/08/2026
+Nuova icona per "Farmacia di turno". La precedente era un quadrato
+arrotondato con dentro un "+": rompeva lo stile in due modi, perche' era
+l'unica delle nove icone della griglia ad avere una cornice attorno, e
+perche' un "+" generico si legge come "aggiungi" piu' che come "farmacia".
+
+Ora e' una piccola facciata con la croce sopra, disegnata dentro le stesse
+convenzioni delle altre (tratto 1.6, estremi arrotondati, nessun
+riempimento, nessun contenitore). Proporzioni ritoccate dopo un confronto
+visivo diretto accanto a Vitamine e Farmaco: croce piu' aperta e tetto piu'
+alto, per reggere lo stesso peso visivo delle sorelle.
+
+La memoria del comune cercato, verificata di nuovo in questa occasione,
+funziona gia' come previsto dalla v2.14.0: resta salvata e ricompare nel
+campo alla riapertura, pronta da usare o da modificare.
+
+## v2.15.0 · 28/08/2026
+Non abbiamo reso fisse le tre card di "+ Salute" (Vitamine, Farmaco,
+Farmacia di turno) come discusso: avrebbe ripetuto lo stesso errore gia'
+corretto nella ristrutturazione di qualche versione fa, dando a un'azione
+rarissima (la farmacia di turno) lo stesso peso di una frequentissima
+(Allattamento). Misurato anche il costo concreto: 86 pixel in piu' su ogni
+apertura di Oggi, la schermata piu' visitata.
+
+Il vero problema, chiarito dopo, era un altro: "+ Salute" si richiudeva da
+sola **a ogni ricarica dell'app** e persino **dopo ogni singola
+registrazione** nella stessa sessione — durante un ciclo di dosi
+ravvicinate, un attrito reale, non immaginario.
+
+Corretto entrambi:
+- La scelta di tenerla aperta o chiusa ora si ricorda, sopravvive alla
+  chiusura e riapertura dell'app.
+- Non si richiude piu' da sola dopo aver registrato qualcosa.
+
+Resta chiusa di default per chi non l'ha mai aperta. Chi la apre una volta,
+la ritrova aperta la prossima volta — un compromesso pensato apposta per non
+imporre a tutti quello che serve solo a chi ne ha davvero bisogno in quel
+momento.
+
+## v2.14.2 · 28/08/2026
+Due difetti nei promemoria di dose, entrambi confermati con uno screenshot.
+- **L'orario della prossima dose non era in grassetto quanto quello della
+  nanna serale**, nella stessa card. La riga della nanna avvolge l'orario in
+  un tag apposta, in aggiunta al peso 600 gia' sulla riga intera; quella
+  della dose usava l'orario come testo semplice, con solo il peso di base.
+  Corretto in entrambi i punti in cui la dose viene mostrata: la riga in
+  Oggi e la schermata dedicata che si apre al tocco.
+- **L'icona era sempre quella del farmaco, anche per un integratore.** La
+  Vitamina D del tuo screenshot mostrava la capsula invece della goccia
+  usata ovunque altrove per le vitamine. Causa: l'icona era scritta a mano
+  invece di leggere il tipo vero della registrazione. Corretto in tre punti:
+  la riga in Oggi, la schermata dedicata, e la stessa svista trovata anche
+  nel file di anteprima .jsx.
+
+## v2.14.1 · 28/08/2026
+Corretta l'asimmetria nella sezione "+ Salute" introdotta dalla farmacia di
+turno. La griglia era stata forzata a due colonne quando conteneva solo
+Vitamine e Farmaco; con la terza piastrella, quella stessa regola lasciava
+"Farmacia di turno" da sola su una riga nuova, con spazio vuoto a fianco.
+Rimossa la forzatura: la griglia standard a tre colonne, la stessa gia' in
+uso per le sei piastrelle sopra, allinea le tre voci in un'unica riga.
+
+## v2.14.0 · 28/08/2026
+Aggiunta la funzione "Farmacia di turno" discussa qualche versione fa, che
+era rimasta solo decisa e mai scritta. Terza piastrella in "+ Salute",
+accanto a Vitamine e Farmaco.
+
+Nessun sito fisso e nessun aggregatore: un tocco chiede il comune, e apre
+una ricerca mirata ("farmacia di turno oggi {comune}") in una scheda nuova,
+lasciando che sia il motore di ricerca a scegliere la fonte piu' aggiornata
+per quella zona in quel momento — la stessa conclusione a cui eravamo
+arrivati confrontando PharmAround, Google Maps e gli altri aggregatori: nessuno
+e' affidabile ovunque, quindi non ne scegliamo uno fisso per conto dell'utente.
+
+Il comune resta ricordato per la volta successiva. Nessuna connessione
+verso l'esterno finche' non si preme "Cerca": verificato registrando ogni
+richiesta di rete durante l'intera interazione, non solo leggendo il codice.
+
+## v2.13.2 · 28/08/2026
+Il testo dentro "Da tenere d'occhio" (nanna serale, promemoria di dose)
+usava lo stesso grigio secondario dell'anello della pressione del sonno —
+corretto la' dove sta sotto un numero enorme, spento qui dove invece e' lui
+il contenuto principale della card. Portato al colore di testo pieno e a
+peso 600, dopo un confronto diretto su schermo reale.
+
+## v2.13.1 · 28/08/2026
+Corretta una sovrapposizione visibile solo nella primissima "Inizia nanna" in
+assoluto: quel tocco fa partire sia il toast di conferma sia la finestra che
+suggerisce la modalita' notte, e i due comparivano nello stesso istante — il
+toast, con la sua posizione fissa in basso, finiva sopra il testo della
+finestra, tagliandolo a meta'.
+
+Corretto evitando che il toast compaia in quel caso specifico: la finestra
+stessa conferma gia' che la nanna e' iniziata, il toast sarebbe stato
+ridondante oltre che sovrapposto. In ogni altro caso — nanne successive,
+pisolini — il toast normale resta invariato. Verificato tutti e tre i casi
+su Chrome reale.
+
+## v2.13.0 · 28/08/2026
+Prima ristrutturazione del layout di Oggi da quando l'app e' nata. Non una
+funzione nuova: un riordino, dopo che dodici blocchi impilati avevano
+raggiunto quasi una schermata e mezza di scorrimento.
+
+**Zone esplicite.** La schermata e' ora divisa in tre aree con un'etichetta
+discreta ciascuna (lo stesso stile maiuscoletto gia' usato nella Guida per
+le categorie): "Da tenere d'occhio", "Registra", "Oggi". Prima tutto aveva
+lo stesso peso visivo e la stessa forma - la previsione principale e un
+promemoria di farmaco erano entrambi un rettangolo arrotondato, distinguibili
+solo dal colore.
+
+**Un solo blocco per gli avvisi.** La previsione della nanna serale e i
+promemoria di dose non generano piu' una card ciascuno: confluiscono in
+un'unica card che cresce in righe, non in numero di elementi. Con tre
+farmaci in ripetizione si arrivava a quattro card identiche impilate prima
+ancora dei tasti di registrazione; ora restano quattro righe dentro un solo
+blocco. Se non c'e' nulla da segnalare, la zona sparisce insieme alla sua
+etichetta.
+
+Rimosso anche il titolo "Oggi" dentro la card del diario, che duplicava
+l'etichetta di zona appena sopra, e le regole CSS della vecchia card di dose,
+diventate codice morto.
+
+Nota onesta sul risultato: con un solo avviso attivo la schermata e' circa 80
+pixel piu' alta di prima, perche' le etichette costano spazio. Il guadagno si
+vede quando gli avvisi si accumulano - ed e' li' che il problema esisteva.
+
 ## v2.12.0 · 28/08/2026
 Il promemoria di dose diventa a tre stati, tutti con lo stesso rosa gia'
 usato in Ninna per gli avvisi (".amber" era gia' --rose: nessun colore
