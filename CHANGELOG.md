@@ -3,6 +3,21 @@
 Versionamento semantico (MAJOR.MINOR.PATCH). Ogni release da qui in avanti
 viene registrata qui, in ordine cronologico, più recente in cima.
 
+## v2.14.2 · 28/08/2026
+Due difetti nei promemoria di dose, entrambi confermati con uno screenshot.
+- **L'orario della prossima dose non era in grassetto quanto quello della
+  nanna serale**, nella stessa card. La riga della nanna avvolge l'orario in
+  un tag apposta, in aggiunta al peso 600 gia' sulla riga intera; quella
+  della dose usava l'orario come testo semplice, con solo il peso di base.
+  Corretto in entrambi i punti in cui la dose viene mostrata: la riga in
+  Oggi e la schermata dedicata che si apre al tocco.
+- **L'icona era sempre quella del farmaco, anche per un integratore.** La
+  Vitamina D del tuo screenshot mostrava la capsula invece della goccia
+  usata ovunque altrove per le vitamine. Causa: l'icona era scritta a mano
+  invece di leggere il tipo vero della registrazione. Corretto in tre punti:
+  la riga in Oggi, la schermata dedicata, e la stessa svista trovata anche
+  nel file di anteprima .jsx.
+
 ## v2.14.1 · 28/08/2026
 Corretta l'asimmetria nella sezione "+ Salute" introdotta dalla farmacia di
 turno. La griglia era stata forzata a due colonne quando conteneva solo

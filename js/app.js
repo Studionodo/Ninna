@@ -52,7 +52,7 @@ const PLAY_ICON = '<svg viewBox="0 0 24 24" width="14" height="14"><path d="M7 5
 const VOL_ICON = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/></svg>';
 const CLOCK_ICON = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 1.8"/></svg>';
 const PAUSE_ICON = '<svg viewBox="0 0 24 24" width="14" height="14"><rect x="6" y="5" width="4" height="14" rx="1.5" fill="currentColor"/><rect x="14" y="5" width="4" height="14" rx="1.5" fill="currentColor"/></svg>';
-const APP_VERSION = "2.14.1";
+const APP_VERSION = "2.14.2";
 const CUP = `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4.5 9h11v5.5a4 4 0 0 1-4 4h-3a4 4 0 0 1-4-4V9z"/><path d="M15.5 10h1.6a2.4 2.4 0 0 1 0 4.8h-1.6"/><path d="M8 4.5c0 .9.9 1.1.9 2M11.5 4c0 .9.9 1.1.9 2"/></svg>`;
 
 /* ---------- stato ---------- */
@@ -679,9 +679,9 @@ function renderOggi(f) {
         const ready = d.due <= Date.now();
         const acked = ackedDoses[d.name] === d.due;
         const cls = ready ? (acked ? "dose-ready" : "dose-ready dose-pulse") : soon ? "dose-soon" : "";
-        const label = ready ? t("dose_ready", { name: esc(d.name) }) : t("dose_next", { name: esc(d.name), time: fmtHM(d.due) });
+        const label = ready ? t("dose_ready", { name: esc(d.name) }) : t("dose_next", { name: esc(d.name), time: `<b class="lit">${fmtHM(d.due)}</b>` });
         rows.push(`<button class="alert-row tap ${cls}" onclick="NINNA.openDoseReminder(${esc(JSON.stringify(d.name))})">
-          <span class="alert-ico">${TYPE_ICONS.med}</span><span>${label}</span>
+          <span class="alert-ico">${TYPE_ICONS[d.type]}</span><span>${label}</span>
         </button>`);
       }
       if (!rows.length) return "";
@@ -1099,11 +1099,11 @@ function renderDoseReminder(name) {
   const ready = d.due <= Date.now();
   $modal.innerHTML = `<div class="modal-wrap" onclick="NINNA.closeSettings()">
     <div class="modal" onclick="event.stopPropagation()">
-      <div class="card-title">${TYPE_ICONS.med} ${esc(name)}</div>
+      <div class="card-title">${TYPE_ICONS[d.type]} ${esc(name)}</div>
       <div class="dim small" style="margin-bottom:14px">${t("dose_last_at", { time: fmtHM(d.lastAt) })}</div>
       <div class="hero-sub" style="margin-bottom:18px">${ready
         ? t("dose_ready", { name: esc(name) })
-        : t("dose_next", { name: esc(name), time: fmtHM(d.due) })}</div>
+        : t("dose_next", { name: esc(name), time: `<b class="lit">${fmtHM(d.due)}</b>` })}</div>
       <button class="secondary block" onclick="NINNA.logDoseAgain(${esc(JSON.stringify(name))}, true)">${t("dose_log_repeat", { h: d.repeatH })}</button>
       <button class="link block" onclick="NINNA.logDoseAgain(${esc(JSON.stringify(name))}, false)">${t("dose_log_stop")}</button>
       <button class="link block" onclick="NINNA.closeSettings()">${t("close")}</button>
