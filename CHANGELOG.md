@@ -3,6 +3,77 @@
 Versionamento semantico (MAJOR.MINOR.PATCH). Ogni release da qui in avanti
 viene registrata qui, in ordine cronologico, più recente in cima.
 
+## v2.17.2 · 28/08/2026
+Audit completo dell'app: motore di previsione, livello dati, percorso d'uso
+end-to-end, casi limite ostili, contrasti e aree tattili. Due problemi reali
+trovati e corretti; il resto e' risultato solido.
+
+**Si poteva registrare nel futuro.** Nella schermata di modifica, spostando
+una voce a una data futura, il salvataggio la accettava: l'attributo `max`
+sul campo data e' solo un suggerimento e i browser non lo impongono. Un
+biberon datato "fra sette giorni" avrebbe falsato statistiche e previsioni.
+Ora il controllo e' rifatto al salvataggio, sia sulla data sia sull'orario.
+
+**Tre aree tattili troppo piccole per un'app che si usa di notte.** Il tasto
+"Notte" era alto 31 pixel, le impostazioni 38, i link "+ Salute" e "+ Aggiungi
+sonno passato" 23. Portati tutti a 44, senza cambiarne l'aspetto: cresce solo
+l'imbottitura invisibile. Non ho toccato la matita del diario (26px) perche'
+vive dentro una riga cliccabile molto piu' grande, ne' le schede in basso
+(88x36), gia' ampie in larghezza.
+
+Verificato e risultato senza problemi: robustezza del motore su dieci casi
+limite (neonato di 0 giorni, bambino di 3 anni, date impossibili, mille
+eventi, sonni a cavallo di mezzanotte), filtraggio degli import malformati,
+protezione del CSV da punti e virgola e virgolette, iniezione HTML nei campi
+liberi (nome del bambino e note), doppio tocco rapido, eliminazione di tutte
+le voci, nomi lunghissimi, eventi di un anno fa, contrasti in entrambi i temi
+(tutti sopra il minimo AA), assenza di scorrimento orizzontale.
+
+## v2.17.1 · 28/08/2026
+Corretto un difetto reale nel diario: toccare la matita per modificare una
+voce poteva eliminarla invece. Causa: il pulsante elimina ha una zona di
+tocco allargata a 44 pixel per comodita', ma centrata su una "X" larga
+pochi pixel - la sua area invisibile arrivava a toccare quella della
+matita accanto, che non aveva alcuno spazio proprio (era solo un'icona
+decorativa, l'intera riga gestiva il tocco).
+
+Corretto in tre punti, negli stessi identici termini in entrambi i file:
+- La zona invisibile della X ora ha un margine positivo a sinistra, invece
+  di espandersi simmetricamente verso la matita.
+- La matita ha ora un proprio spazio minimo, distinto da quello della X.
+- La sua opacita' a riposo sale da 0,5 a 0,68, per essere piu' facile da
+  individuare anche prima di toccarla.
+
+Verificato misurando le due zone sul motore reale: 16 pixel di distanza fra
+i bordi, zero sovrapposizione, e un tocco simulato esattamente al centro
+della matita apre la modifica senza sfiorare l'eliminazione.
+
+## v2.17.0 · 28/08/2026
+Due limiti della schermata di modifica, corretti insieme perche' nascevano
+dalla stessa richiesta.
+
+- **La data**: prima si poteva correggere solo l'orario di una registrazione,
+  mai il giorno. Ora un campo data si aggiunge a fianco, per tutti i tipi di
+  evento — utile per chi registra a mezzanotte passata pensando sia ancora
+  "ieri", o si accorge il giorno dopo di una dose dimenticata.
+- **La nota**: prima esisteva solo per farmaci e vitamine. Ora e' disponibile
+  ovunque — biberon, pappa, pannolino e gli altri — con un suggerimento
+  diverso per ciascuno (ml e tipo di latte, cosa ha mangiato, marca del
+  pannolino). Resta facoltativa: chi vuole solo registrare tocca un tasto e
+  basta, la nota si aggiunge dopo, aprendo la voce dal diario.
+
+Le note extra compaiono ora anche nel riepilogo per il pediatra, in una
+sezione a parte elencata per data — a differenza di farmaci e vitamine, il
+cui nome si ripete e viene raggruppato, qui il testo cambia quasi sempre da
+una registrazione all'altra. Il CSV le includeva gia' per ogni tipo: nessuna
+modifica necessaria li'.
+
+Durante la verifica e' emerso un difetto reale nella prima stesura: il campo
+nota compariva anche per pisolini e nanna, che non lo prevedono — mancava un
+controllo presente correttamente nel file di anteprima .jsx ma non nella
+PWA. Trovato con un test mirato sul pisolino, non da una lettura del codice,
+e corretto prima della consegna.
+
 ## v2.16.0 · 28/08/2026
 La notifica della routine serale dice "45 minuti alla nanna: luci basse,
 stessa sequenza di sempre", ma toccandola si arrivava a una schermata dove

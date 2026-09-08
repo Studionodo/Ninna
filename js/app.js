@@ -52,7 +52,7 @@ const PLAY_ICON = '<svg viewBox="0 0 24 24" width="14" height="14"><path d="M7 5
 const VOL_ICON = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/></svg>';
 const CLOCK_ICON = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 1.8"/></svg>';
 const PAUSE_ICON = '<svg viewBox="0 0 24 24" width="14" height="14"><rect x="6" y="5" width="4" height="14" rx="1.5" fill="currentColor"/><rect x="14" y="5" width="4" height="14" rx="1.5" fill="currentColor"/></svg>';
-const APP_VERSION = "2.16.0";
+const APP_VERSION = "2.17.2";
 const CUP = `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4.5 9h11v5.5a4 4 0 0 1-4 4h-3a4 4 0 0 1-4-4V9z"/><path d="M15.5 10h1.6a2.4 2.4 0 0 1 0 4.8h-1.6"/><path d="M8 4.5c0 .9.9 1.1.9 2M11.5 4c0 .9.9 1.1.9 2"/></svg>`;
 
 /* ---------- stato ---------- */
@@ -254,17 +254,22 @@ window.NINNA = {
     const e = store.events.find((x) => x.id === id);
     if (!e) return;
     const hm = (ts) => { const d = new Date(ts); return String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0"); };
+    const ymd = (ts) => { const d = new Date(ts); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); };
     const dur = e.start != null;
+    const isHealth = HEALTH.includes(e.type);
     $modal.innerHTML = `<div class="modal-wrap" onclick="NINNA.closeSettings()">
       <div class="modal" onclick="event.stopPropagation()">
         <div class="card-title">${t("edit_title")}</div>
         <div class="dim small">${TYPE_ICONS[e.type]} ${typeLabel(e.type)}</div>
+        <label class="field"><span>${t("edit_date")}</span><input type="date" id="e-date" value="${ymd(dur ? e.start : e.at)}" max="${localTodayISO()}"></label>
         ${dur ? `<div class="row2">
             <label class="field"><span>${t("manual_start")}</span><input type="time" id="e-start" value="${hm(e.start)}"></label>
             ${e.end ? `<label class="field"><span>${t("manual_end")}</span><input type="time" id="e-end" value="${hm(e.end)}"></label>` : ""}
           </div>` : `<label class="field"><span>${t("edit_time")}</span><input type="time" id="e-at" value="${hm(e.at)}"></label>`}
-        ${HEALTH.includes(e.type) ? `<label class="field"><span>${t("health_which")}</span>
-          <input id="e-note" value="${esc(e.note || "")}" placeholder="${t("health_ph_" + e.type)}" autocomplete="off"></label>` : ""}
+        ${dur ? "" : isHealth ? `<label class="field"><span>${t("health_which")}</span>
+          <input id="e-note" value="${esc(e.note || "")}" placeholder="${t("health_ph_" + e.type)}" autocomplete="off"></label>`
+          : `<label class="field"><span>${t("note_label")}</span>
+          <input id="e-note" value="${esc(e.note || "")}" placeholder="${t("note_ph_" + e.type)}" autocomplete="off"></label>`}
         <button class="secondary block" onclick="NINNA.saveEdit('${e.id}')">${t("save")}</button>
         <button class="link block" onclick="NINNA.closeSettings()">${t("close")}</button>
       </div>
@@ -273,9 +278,22 @@ window.NINNA = {
   saveEdit(id) {
     const e = store.events.find((x) => x.id === id);
     if (!e) return;
+    const dateEl = document.getElementById("e-date");
+    const dateStr = dateEl && dateEl.value ? dateEl.value : null;
+    // l'attributo max sul campo data e' solo un suggerimento: i browser non
+    // lo impongono, quindi il controllo va rifatto qui. Una registrazione nel
+    // futuro falserebbe statistiche e previsioni.
+    if (dateStr) {
+      const chosen = new Date(dateStr + "T00:00:00");
+      const todayEnd = new Date(); todayEnd.setHours(23, 59, 59, 999);
+      if (chosen.getTime() > todayEnd.getTime()) return toast(t("future_date"));
+    }
     const anchor = (ts, hmStr) => {
       const [h, m] = hmStr.split(":").map(Number);
-      const d = new Date(ts); d.setHours(h, m, 0, 0); return d.getTime();
+      // se la data e' stata cambiata, l'orario si applica al NUOVO giorno,
+      // non a quello originale della registrazione
+      const d = dateStr ? new Date(dateStr + "T00:00:00") : new Date(ts);
+      d.setHours(h, m, 0, 0); return d.getTime();
     };
     if (e.start != null) {
       const sv = document.getElementById("e-start");
@@ -288,11 +306,14 @@ window.NINNA = {
         ne = anchor(e.start, ev.value);
         if (ne <= ns) ne += 86400000;   // fine oltre mezzanotte, stessa regola dell'inserimento manuale
       }
+      if (ns > Date.now()) return toast(t("future_date"));
       e.start = ns; e.end = ne;
     } else {
       const av = document.getElementById("e-at");
       if (!av || !av.value) return toast(t("invalid_times"));
-      e.at = anchor(e.at, av.value);
+      const nt = anchor(e.at, av.value);
+      if (nt > Date.now()) return toast(t("future_date"));
+      e.at = nt;
     }
     const nv = document.getElementById("e-note");
     if (nv) { const n = nv.value.trim(); if (n) e.note = n; else delete e.note; }
@@ -729,8 +750,8 @@ function renderOggi(f) {
         <span class="logtime">${e.at
           ? fmtHM(e.at)
           : fmtHM(e.start) + (e.end ? "–" + fmtHM(e.end) + " · " + fmtDur(e.end - e.start) : " · " + t("in_progress"))}</span>
-        <span class="edithint">${EDIT_ICON}</span>
-        <button class="del" onclick="event.stopPropagation(); NINNA.removeEvent('${e.id}')">✕</button>
+        <button class="edithint" onclick="event.stopPropagation(); NINNA.openEdit('${e.id}')" aria-label="${t("edit_title")}">${EDIT_ICON}</button>
+        <button class="del" onclick="event.stopPropagation(); NINNA.removeEvent('${e.id}')" aria-label="${t("delete")}">✕</button>
       </div>`).join("")}
     </div>
     ${hasNotif() && Notification.permission === "default"
@@ -1010,6 +1031,17 @@ function reportContentHTML(days = 14) {
     </table>
     ${vit + med > 0 ? `<div class="report-meta" style="margin-top:12px"><b>${t("report_health")}</b><br>
       ${vitL ? `${typeLabel("vitamins")}: ${vitL}<br>` : ""}${medL ? `${typeLabel("med")}: ${medL}` : ""}</div>` : ""}
+    ${(() => {
+      // note libere di poppate/pappa/pannolino/ecc: elencate per data, non
+      // raggruppate per nome come farmaci e vitamine, perche' qui il testo
+      // cambia quasi sempre da una registrazione all'altra
+      const notes = store.events
+        .filter((ev) => INSTANT.includes(ev.type) && ev.note && ev.at >= cutoff)
+        .sort((a, b2) => a.at - b2.at);
+      if (!notes.length) return "";
+      return `<div class="report-meta" style="margin-top:12px"><b>${t("report_notes")}</b><br>
+        ${notes.map((ev) => `${new Date(ev.at).toLocaleDateString(LOCALE(), { day: "2-digit", month: "2-digit" })} ${fmtHM(ev.at)} · ${typeLabel(ev.type)}: ${esc(ev.note)}`).join("<br>")}</div>`;
+    })()}
     ${store.growth.length ? `<div class="report-meta" style="margin-top:12px"><b>${t("report_growth")}</b>${b.sex ? ` · ${b.sex === "m" ? t("growth_male") : t("growth_female")}` : ""}<br>
       ${[...store.growth].sort((a, b2) => a.date.localeCompare(b2.date)).map((g) => `${new Date(g.date + "T00:00:00").toLocaleDateString(LOCALE())}: ${growthSummary(g)}`).join("<br>")}</div>` : ""}
     <p class="about-p" style="margin-top:16px">${t("report_note")}<br>${t("stat_variability")}</p>`;

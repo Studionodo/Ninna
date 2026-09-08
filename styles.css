@@ -211,9 +211,10 @@
 .danger { background: transparent; color: var(--rose); border: 1px solid rgba(var(--rose-rgb),.5);
   border-radius: 999px; padding: 11px 20px; font-weight: 600; font-size: 14px; cursor: pointer; margin-top: 10px; }
 .ghost { background: var(--glass); border: 1px solid var(--stroke); color: var(--text);
-  border-radius: 12px; width: 38px; height: 38px; font-size: 18px; cursor: pointer;
+  border-radius: 12px; width: 44px; height: 44px; font-size: 18px; cursor: pointer;
   -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
 .link { background: none; border: none; color: var(--mint); font-size: 13px; cursor: pointer; padding: 4px 0; }
+.link.block { padding: 11px 0; }
 .block { display: block; width: 100%; margin: 6px 0 12px; text-align: center; }
 
 .logrow { display: flex; align-items: center; gap: 10px; padding: 9px 0;
@@ -222,8 +223,12 @@
 .logicon { width: 24px; text-align: center; }
 .loglabel { flex: 1; }
 .logtime { color: var(--sub); font-size: 13px; }
+/* zona di tocco della X allargata per comodita', ma con un margine positivo
+   a sinistra apposta: senza, la sua area invisibile arrivava a toccare
+   quella della matita accanto, e un tocco pensato per modificare poteva
+   far scattare l'eliminazione */
 .del { background: none; border: none; color: var(--sub); cursor: pointer; font-size: 14px;
-  min-width: 44px; min-height: 44px; margin: -12px -12px -12px 0; }
+  min-width: 38px; min-height: 44px; margin: -12px -12px -12px 6px; }
 
 /* velo di dissolvenza: il contenuto sfuma prima di raggiungere la tab bar,
    invece di intravedersi netto attraverso il vetro trasparente */
@@ -418,8 +423,9 @@ button { font-family: inherit; }
 .ico-edit { color: var(--sub); }
 
 /* segnale che la riga del diario si puo' modificare: matita discreta prima della X */
-.edithint { display: inline-flex; opacity: .5; font-size: 13px; }
-.logrow.tap:active .edithint { opacity: .9; }
+.edithint { display: inline-flex; align-items: center; justify-content: center;
+  min-width: 26px; min-height: 26px; opacity: .68; font-size: 15px; }
+.logrow.tap:active .edithint { opacity: 1; }
 
 /* selettore a tre vie (chiaro/scuro/automatico): stesso linguaggio del
    pill lingua, adattato a tre opzioni invece di due */
@@ -448,7 +454,7 @@ button { font-family: inherit; }
 .topbar-actions { display: flex; align-items: center; gap: 8px; }
 .nightbtn { display: flex; align-items: center; gap: 5px; background: rgba(var(--mint-rgb),.12);
   border: 1px solid rgba(var(--mint-rgb),.4); color: var(--mint); border-radius: 999px;
-  padding: 7px 12px; font-size: 12.5px; font-family: inherit; cursor: pointer; }
+  padding: 12px 14px; font-size: 12.5px; font-family: inherit; cursor: pointer; min-height: 44px; }
 .nightbtn .ico { font-size: 14px; }
 
 /* schermo notte: nero vero indipendentemente dal tema chiaro/scuro/automatico
