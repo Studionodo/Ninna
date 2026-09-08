@@ -3,6 +3,21 @@
 Versionamento semantico (MAJOR.MINOR.PATCH). Ogni release da qui in avanti
 viene registrata qui, in ordine cronologico, più recente in cima.
 
+## v2.18.0 · 28/08/2026
+La schermata di modifica di farmaci e vitamine guadagna un quarto campo:
+"Ripeti fra", precompilato con l'intervallo attuale. Prima si poteva
+correggere solo data, orario e nome della dose gia' registrata; per
+cambiare l'intervallo di ripetizione (da "ogni 6 ore" a "ogni 8", per
+esempio, dopo un'indicazione del pediatra) non c'era altra strada che
+ricreare la voce da capo in "+ Salute". Ora basta aprire la voce esistente
+dal diario e cambiare quel numero, oppure impostarlo su "Non ripetere" per
+interrompere il promemoria senza registrare una nuova dose.
+
+Il campo compare solo per farmaci e vitamine, non per gli altri tipi di
+registrazione, dove non ha senso. Verificato che il promemoria in Oggi si
+ricalcoli davvero sul nuovo intervallo, e che interromperlo da qui lo faccia
+sparire senza lasciare residui.
+
 ## v2.17.2 · 28/08/2026
 Audit completo dell'app: motore di previsione, livello dati, percorso d'uso
 end-to-end, casi limite ostili, contrasti e aree tattili. Due problemi reali
