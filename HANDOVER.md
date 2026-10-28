@@ -150,3 +150,12 @@ referenziate dopo un refactor (`.card-title.art`, `.footer`, `buildReportHTML`
 dopo la riscrittura del report). Quando si sostituisce un meccanismo, vale la
 pena un `grep` del nome della funzione/classe vecchia su tutto il repository
 prima di considerare il lavoro finito.
+
+
+## Lezioni recenti (v2.18-2.19)
+- Prima di costruire una funzione, cercarla nel codice col suo nome: la
+  sezione documenti esisteva gia' ed e' stata duplicata (v2.18.1).
+- Misurare il contenitore intero, non solo i singoli elementi: cinque
+  etichette "che entrano" non garantiscono che la barra entri nello schermo.
+- `render()` esce presto in modalita' notte: tutto cio' che vive fuori da
+  `#app` (mini player, pillola del timer) va aggiornato anche in quel ramo.

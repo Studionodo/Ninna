@@ -3,6 +3,109 @@
 Versionamento semantico (MAJOR.MINOR.PATCH). Ogni release da qui in avanti
 viene registrata qui, in ordine cronologico, più recente in cima.
 
+## v2.19.0 · 21/09/2026
+**Timer**, come quinta scheda in basso: zona del pollice, usabile con una mano.
+- Due tocchi per partire: la scheda, poi una durata (5, 10, 15, 20, 30 minuti,
+  oppure "Altro"). Nessun tasto "Avvia" in mezzo. Il grande anello al centro
+  riparte con l'ultima durata usata.
+- Avviso a scelta, memorizzato una volta sola: suono, vibrazione o entrambi.
+  La vibrazione compare solo dove il browser la supporta davvero (su iPhone
+  no): altrimenti resta il solo suono, dichiarato. Il suono e' un rintocco
+  morbido sintetizzato, non una sveglia: suona accanto a un neonato.
+- Anello che si svuota con un leggero "respiro", stesso linguaggio visivo
+  dell'anello della pressione; allo scadere diventa rosa e pulsa piano.
+- Mentre corre, una pillola col tempo resta visibile nelle altre schede e in
+  modalita' notte (smorzata); in notte il tocco a tempo scaduto spegne
+  l'avviso senza far uscire dal buio.
+- Tutto calcolato dall'orario di fine: se il telefono sospende la pagina, al
+  ritorno il tempo e' giusto e, se e' scaduto, l'avviso parte subito. Lo
+  schermo resta acceso solo mentre il timer corre. Limite dichiarato: dopo una
+  chiusura completa dell'app il suono non puo' ripartire da solo (i browser
+  bloccano l'audio finche' non si tocca lo schermo), il timer appare comunque
+  come scaduto.
+
+Barra delle schede rifatta per ospitarne cinque: imbottitura laterale ridotta
+e larghezza proporzionale all'etichetta. Verificata a 320, 360 e 412 px, in
+italiano e inglese: nessuna etichetta tagliata, barra dentro lo schermo.
+
+**Testi**: "centro tra 1h 06m" diventa "ideale verso le 17:40"; "sveglio da
+0 min" diventa "appena sveglio".
+
+**Sotto le 8 settimane**: niente piu' avviso "sonno diurno scarso, meglio
+anticipare la nanna" (regola valida per bambini piu' grandi, a un mese solo
+ansiogena); la nanna serale e' presentata come indicativa; il consiglio della
+routine diventa flessibile ("se ha fame, prima la poppata: bastano 5-10
+minuti"). Sopra le 8 settimane nulla cambia, verificato su due profili.
+
+Trovati e corretti in collaudo, prima della consegna: la barra a cinque
+schede usciva dallo schermo a 360 px (la prima misura controllava le singole
+etichette, non la barra intera); in modalita' notte la pillola del timer
+restava visibile dopo averlo fermato, perche' il disegno della notte usciva
+prima di aggiornarla.
+
+## v2.18.2 · 28/08/2026
+Audit totale dopo la pulizia del codice duplicato. Tre residui del mio errore
+precedente, piu' un difetto vero trovato per strada.
+
+- **Voce duplicata in Impostazioni**: erano rimaste due voci per i documenti,
+  quella originale e la mia. Rimossa la mia.
+- **Ventuno chiavi di traduzione orfane**, definite dal mio codice rimosso e
+  mai piu' usate: eliminate (con quattro di esse ripristinate subito, perche'
+  servivano invece all'implementazione originale — errore individuato e
+  corretto nello stesso passaggio).
+- **`import_err` mancante**: il messaggio d'errore mostrato quando una
+  scansione non riesce a essere letta non era mai stato definito. In caso di
+  errore l'utente avrebbe visto la scritta grezza "import_err" invece di una
+  frase comprensibile. Aggiunto in entrambe le lingue.
+
+Verificato senza problemi: motore di previsione su dieci casi limite, livello
+dati su file malformati e protezione CSV, quindici passaggi d'uso end-to-end,
+undici casi ostili (iniezione HTML, doppio tocco, date future, nomi
+lunghissimi, eliminazioni di massa), contrasti in entrambi i temi, assenza di
+scorrimento orizzontale.
+
+Sezione documenti sotto stress: PIN di 2 cifre e con lettere correttamente
+respinti, immagine 4000x3000 ridimensionata entro i limiti, file di testo
+respinto senza crash, cancellazione singola che non tocca l'altra scansione,
+e localStorage che resta a 130 byte anche con due documenti salvati (le
+scansioni vivono in IndexedDB, fuori dal backup del diario). Compressione
+misurata su un documento realistico: 914 KB ridotti a 109 KB, 8,3 volte.
+
+## v2.18.1 · 28/08/2026
+Nessuna funzione nuova: correzione di un errore mio.
+
+Mi era stata chiesta una sezione per le scansioni dei documenti del bambino
+e ho iniziato a costruirla senza prima cercare nel codice se esistesse gia'.
+Esisteva: completa di PIN, IndexedDB, compressione, visore, cancellazione e
+conteggio dello spazio occupato, scritta in una sessione precedente. Il
+risultato e' stato un duplicato parziale che confliggeva con l'originale e
+impediva all'app di caricarsi.
+
+Rimosso tutto il codice duplicato (115 righe fra stato, azioni e schermate) e
+verificato che l'implementazione originale funzioni: creazione e verifica del
+codice, rifiuto del codice sbagliato, compressione (29 KB ridotti a 9 KB in
+prova), salvataggio in IndexedDB, persistenza dopo il riavvio dell'app, e
+localStorage che resta leggero come deve.
+
+Lezione, per il futuro: prima di aggiungere una funzione, cercarla nel codice
+con il suo nome. L'audit iniziale aveva controllato l'architettura di storage
+ma non aveva mai cercato la parola "documenti".
+
+## v2.18.0 · 28/08/2026
+La schermata di modifica di farmaci e vitamine guadagna un quarto campo:
+"Ripeti fra", precompilato con l'intervallo attuale. Prima si poteva
+correggere solo data, orario e nome della dose gia' registrata; per
+cambiare l'intervallo di ripetizione (da "ogni 6 ore" a "ogni 8", per
+esempio, dopo un'indicazione del pediatra) non c'era altra strada che
+ricreare la voce da capo in "+ Salute". Ora basta aprire la voce esistente
+dal diario e cambiare quel numero, oppure impostarlo su "Non ripetere" per
+interrompere il promemoria senza registrare una nuova dose.
+
+Il campo compare solo per farmaci e vitamine, non per gli altri tipi di
+registrazione, dove non ha senso. Verificato che il promemoria in Oggi si
+ricalcoli davvero sul nuovo intervallo, e che interromperlo da qui lo faccia
+sparire senza lasciare residui.
+
 ## v2.17.2 · 28/08/2026
 Audit completo dell'app: motore di previsione, livello dati, percorso d'uso
 end-to-end, casi limite ostili, contrasti e aree tattili. Due problemi reali

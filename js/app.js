@@ -6,6 +6,7 @@ import { forecast, dailyStats, profileFor, ageWeeks } from "./engine.js";
 import { SoundEngine, SOUNDS } from "./sounds.js";
 import { I18N } from "./i18n.js";
 import { loadStore, saveStore, exportCSV, exportJSON, importJSON } from "./content-store.js";
+import { saveDoc, loadDoc, deleteDoc, deleteAllDocs, compressImage } from "./docs-store.js";
 
 const TYPE_ICONS = {
   nap: "<svg viewBox=\"0 0 24 24\" width=\"1em\" height=\"1em\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"ico\"><path d=\"M6.5 17.2h10.2a3 3 0 0 0 .3-6 4.6 4.6 0 0 0-8.7-1.5A3.4 3.4 0 0 0 6.5 17.2z\"/></svg>",
@@ -21,6 +22,8 @@ const TYPE_ICONS = {
 };
 const EDIT_ICON = "<svg viewBox=\"0 0 24 24\" width=\"1em\" height=\"1em\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"ico ico-edit\"><path d=\"M4 20l.9-3.6L15.5 6a1.7 1.7 0 0 1 2.4 0l.1.1a1.7 1.7 0 0 1 0 2.4L7.6 19.1 4 20z\"/><path d=\"M13.8 7.7l2.5 2.5\"/></svg>";
 const PHARMACY_ICON = "<svg viewBox=\"0 0 24 24\" width=\"1em\" height=\"1em\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"ico\"><path d=\"M4.9 11.2V19.6h14.2v-8.4\"/><path d=\"M3.3 11.4 12 4.6l8.7 6.8\"/><path d=\"M12 12.4v4.6M9.7 14.7h4.6\"/></svg>";
+const CAMERA_ICON = "<svg viewBox=\"0 0 24 24\" width=\"22\" height=\"22\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3.5 8.6h3.2l1.5-2.2h7.6l1.5 2.2h3.2v10H3.5z\"/><circle cx=\"12\" cy=\"13.4\" r=\"3.4\"/></svg>";
+const LOCK_ICON = "<svg viewBox=\"0 0 24 24\" width=\"30\" height=\"30\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"4.6\" y=\"10.4\" width=\"14.8\" height=\"10.2\" rx=\"3\"/><path d=\"M8.2 10.4V7.6a3.8 3.8 0 0 1 7.6 0v2.8\"/></svg>";
 const INSTANT = ["breast", "bottle", "solid", "diaper", "nightwake", "pump"];
 const HEALTH = ["vitamins", "med"];
 
@@ -52,7 +55,7 @@ const PLAY_ICON = '<svg viewBox="0 0 24 24" width="14" height="14"><path d="M7 5
 const VOL_ICON = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/></svg>';
 const CLOCK_ICON = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 1.8"/></svg>';
 const PAUSE_ICON = '<svg viewBox="0 0 24 24" width="14" height="14"><rect x="6" y="5" width="4" height="14" rx="1.5" fill="currentColor"/><rect x="14" y="5" width="4" height="14" rx="1.5" fill="currentColor"/></svg>';
-const APP_VERSION = "2.17.2";
+const APP_VERSION = "2.19.0";
 const CUP = `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4.5 9h11v5.5a4 4 0 0 1-4 4h-3a4 4 0 0 1-4-4V9z"/><path d="M15.5 10h1.6a2.4 2.4 0 0 1 0 4.8h-1.6"/><path d="M8 4.5c0 .9.9 1.1.9 2M11.5 4c0 .9.9 1.1.9 2"/></svg>`;
 
 /* ---------- stato ---------- */
@@ -63,8 +66,29 @@ let showAbout = false;
 let miniCollapsed = false;
 let showReport = false;
 let showGrowth = false, showGrowthForm = false;
+/* Documenti: il PIN vive solo in memoria, non viene mai salvato. Sbloccata
+   la sezione una volta, resta aperta finche' l'app e' aperta; chiudendola
+   e riaprendola torna a chiedere. Non e' una cassaforte crittografica, e
+   la Guida lo dice apertamente: e' una barriera contro lo sguardo di chi
+   prende in mano il telefono, non contro chi sa dove cercare. */
+let showDocs = false, docsUnlocked = false, docsCache = {};
+const DOC_TYPES = ["vaccini", "tessera"];
 let profileFrom = "settings";
-let ackedDoses = {};  // { nome: orario_dovuto_gia_visto } — un nuovo orario dovuto (nuova dose registrata) fa ripartire da capo il lampeggio
+let ackedDoses = {};
+/* ---------- timer ----------
+   Tutto calcolato dall'orario di fine, mai contando i secondi: se il telefono
+   sospende la pagina, al ritorno il tempo mostrato e' comunque giusto e, se
+   e' gia' scaduto, l'avviso parte subito. Lo schermo resta acceso solo
+   mentre il timer corre (minuti, non ore). */
+const TIMER_PRESETS = [5, 10, 15, 20, 30];
+const TM_R = 104, TM_C = 2 * Math.PI * TM_R;
+let timerRun = store.prefs.timerRun || null;       // { end, total } in ms
+let timerDone = false, timerTickH = null, timerEndH = null, timerWake = null, timerCtx = null;
+let showTimerCustom = false;
+const canVibrate = typeof navigator.vibrate === "function";
+const $tpill = document.createElement("div");
+$tpill.id = "timerpill-root";
+document.body.appendChild($tpill);  // { nome: orario_dovuto_gia_visto } — un nuovo orario dovuto (nuova dose registrata) fa ripartire da capo il lampeggio
 let nightMode = false;
 let nightSoundListOpen = false;
 let nightLastSound = null;
@@ -96,6 +120,8 @@ const typeLabel = (type) => t("type_" + type);
 
 /* ---------- utilita' ---------- */
 const uid = () => Math.random().toString(36).slice(2, 10);
+// "sveglio da 0 min" sembrava un dato rotto: sotto il minuto, una parola
+const awakeLabel = (ms) => (ms < 60000 ? t("just_woke") : t("awake_for", { dur: fmtDur(ms) }));
 const fmtHM = (ts) => new Date(ts).toLocaleTimeString(LOCALE(), { hour: "2-digit", minute: "2-digit" });
 // Math.max(0, ...): un orologio che si sposta o un evento datato di poco nel
 // futuro producevano durate negative a schermo ("sveglio da -7 min").
@@ -270,6 +296,11 @@ window.NINNA = {
           <input id="e-note" value="${esc(e.note || "")}" placeholder="${t("health_ph_" + e.type)}" autocomplete="off"></label>`
           : `<label class="field"><span>${t("note_label")}</span>
           <input id="e-note" value="${esc(e.note || "")}" placeholder="${t("note_ph_" + e.type)}" autocomplete="off"></label>`}
+        ${!dur && isHealth ? `<label class="field"><span>${t("health_repeat")}</span>
+          <select id="e-repeat">
+            <option value="0"${!e.repeatH ? " selected" : ""}>${t("health_repeat_none")}</option>
+            ${[4, 6, 8, 12, 24].map((h) => `<option value="${h}"${e.repeatH === h ? " selected" : ""}>${t("health_repeat_in", { h })}</option>`).join("")}
+          </select></label>` : ""}
         <button class="secondary block" onclick="NINNA.saveEdit('${e.id}')">${t("save")}</button>
         <button class="link block" onclick="NINNA.closeSettings()">${t("close")}</button>
       </div>
@@ -317,6 +348,8 @@ window.NINNA = {
     }
     const nv = document.getElementById("e-note");
     if (nv) { const n = nv.value.trim(); if (n) e.note = n; else delete e.note; }
+    const rv = document.getElementById("e-repeat");
+    if (rv) { const h = parseInt(rv.value, 10) || 0; if (h) e.repeatH = h; else delete e.repeatH; }
     persist(); this.closeSettings(); toast(t("edit_done")); render();
   },
   toggleWhy() { showWhy = !showWhy; render(); },
@@ -366,6 +399,34 @@ window.NINNA = {
   },
   toggleArticle(id) { const el = document.getElementById("art-" + id); if (el) el.hidden = !el.hidden; },
   openSettings() { renderSettings(); },
+  openTimer() {
+    // in modalita' notte la pillola non porta fuori dal buio: se il tempo e'
+    // scaduto, il tocco spegne l'avviso; altrimenti mostra solo il tempo
+    if (nightMode) { if (timerDone) this.ackTimer(); return; }
+    this.setView("timer");
+  },
+  startTimer(min) {
+    const m = parseInt(min, 10);
+    if (!(m >= 1 && m <= 240)) return toast(t("timer_invalid"));
+    timerUnlockAudio();                    // il gesto dell'utente sblocca l'audio per dopo
+    store.prefs.timerLast = m;
+    timerRun = { end: Date.now() + m * 60000, total: m * 60000 };
+    timerDone = false; showTimerCustom = false;
+    store.prefs.timerRun = timerRun; persist();
+    timerWakeOn(); timerSchedule(); render();
+  },
+  startCustomTimer() { const el = document.getElementById("tm-custom"); this.startTimer(el ? el.value : 0); },
+  toggleTimerCustom() { showTimerCustom = !showTimerCustom; render(); const el = document.getElementById("tm-custom"); if (el) el.focus(); },
+  stopTimer() {
+    clearTimeout(timerEndH); clearInterval(timerTickH); timerTickH = null;
+    timerRun = null; timerDone = false;
+    delete store.prefs.timerRun; persist();
+    timerWakeOff(); render();
+    updateTimerPill();   // in notte render() esce prima di aggiornare la pillola
+  },
+  ackTimer() { this.stopTimer(); },
+  againTimer() { const m = timerRun ? Math.round(timerRun.total / 60000) : (store.prefs.timerLast || 10); this.startTimer(m); },
+  setTimerAlert(m) { store.prefs.timerAlert = m; persist(); render(); },
   openProfile(from) { profileFrom = from || "settings"; renderProfileEdit(); },
   /* Non un sito fisso: una ricerca mirata. Nessun aggregatore e' affidabile
      ovunque (nemmeno Google, verificato, nei paesi piccoli), quindi lasciamo
@@ -394,6 +455,52 @@ window.NINNA = {
     const q = encodeURIComponent(`farmacia di turno oggi ${town}`);
     window.open(`https://www.google.com/search?q=${q}`, "_blank", "noopener");
     this.closeSettings();
+  },
+  openDocs() { showDocs = true; loadDocsCache().then(() => renderDocs()); },
+  closeDocs() { showDocs = false; docsUnlocked = false; $modal.innerHTML = ""; },
+  submitDocsPin() {
+    const el = document.getElementById("doc-pin");
+    const v = (el ? el.value : "").trim();
+    if (!/^\d{4}$/.test(v)) return toast(t("docs_pin_short"));
+    if (!store.prefs.docsPin) { store.prefs.docsPin = v; persist(); }
+    else if (store.prefs.docsPin !== v) { el.value = ""; el.focus(); return toast(t("docs_pin_wrong")); }
+    docsUnlocked = true;
+    loadDocsCache().then(() => renderDocs());
+  },
+  changeDocsPin() {
+    const v = prompt(t("docs_pin_new"));
+    if (v === null) return;
+    if (!/^\d{4}$/.test(v.trim())) return toast(t("docs_pin_short"));
+    store.prefs.docsPin = v.trim(); persist(); toast(t("edit_done"));
+  },
+  pickDoc(type) {
+    const inp = document.createElement("input");
+    inp.type = "file"; inp.accept = "image/*"; inp.capture = "environment";
+    inp.onchange = async () => {
+      const f = inp.files && inp.files[0];
+      if (!f) return;
+      try {
+        const dataUrl = await compressImage(f);
+        await saveDoc(type, dataUrl);
+        await loadDocsCache();
+        renderDocs(); toast(t("docs_saved"));
+      } catch (e) { toast(t("import_err")); }
+    };
+    inp.click();
+  },
+  viewDoc(type) {
+    const d = docsCache[type];
+    if (!d) return;
+    $modal.innerHTML = `<div class="about-overlay docview">
+      <button class="ghost about-back" onclick="NINNA.openDocs()">←</button>
+      <img class="docfull" src="${d.dataUrl}" alt="${t("doc_" + type)}">
+    </div>`;
+  },
+  async removeDoc(type) {
+    if (!confirm(t("docs_confirm_del"))) return;
+    await deleteDoc(type);
+    await loadDocsCache();
+    renderDocs(); toast(t("docs_deleted"));
   },
   openDoseReminder(name) {
     const d = doseReminders().find((x) => x.name === name);
@@ -653,10 +760,10 @@ function renderOggi(f) {
         <div class="hero-sub">${isNight
           ? t("routine_at", { time: fmtHM(f.bedtime.at - 45 * 60000) })
           : s.center > Date.now()
-            ? t("center_in", { dur: fmtDur(s.center - Date.now()) })
-            : t("window_over", { dur: fmtDur(Date.now() - s.center) })} · ${t("awake_for", { dur: fmtDur(Date.now() - f.lastWake) })}</div>
+            ? t("center_in", { time: fmtHM(s.center) })
+            : t("window_over", { dur: fmtDur(Date.now() - s.center) })} · ${awakeLabel(Date.now() - f.lastWake)}</div>
         <button class="link" onclick="NINNA.toggleWhy()">${showWhy ? t("why_close") : t("why_open")}</button>
-        ${isNight && Date.now() >= f.bedtime.at - 45 * 60000 ? `<div class="routine-tip">${t("bed_routine_tip")}</div>` : ""}
+        ${isNight && Date.now() >= f.bedtime.at - 45 * 60000 ? `<div class="routine-tip">${t(f.profile.maxWeeks <= 8 ? "bed_routine_tip_soft" : "bed_routine_tip")}</div>` : ""}
         ${showWhy ? `<div class="why">${reasonText(f.next)}<br>${t("why_window", { lo: f.profile.ww[0], hi: f.profile.ww[1] })}
           ${f.window.observedEma
             ? t("why_observed", { name: esc(b.name), ema: f.window.observedEma, conf: Math.round(f.window.confidence * 100), min: f.window.minutes })
@@ -698,7 +805,7 @@ function renderOggi(f) {
       if (!active && !logOnly && f.lastWake && f.next.kind === "nap") {
         rows.push(`<div class="alert-row">
           <span class="alert-ico">${TYPE_ICONS.night}</span>
-          <span>${t("bed_card")} <b class="lit">${fmtHM(f.bedtime.at)}</b>${f.bedtime.earlier ? `<br><span class="amber">${t("bed_earlier")}</span>` : ""}</span>
+          <span>${t(f.profile.maxWeeks <= 8 ? "bed_card_soft" : "bed_card")} <b class="lit">${fmtHM(f.bedtime.at)}</b>${f.bedtime.earlier ? `<br><span class="amber">${t("bed_earlier")}</span>` : ""}</span>
         </div>`);
       }
       for (const d of doseReminders()) {
@@ -869,6 +976,133 @@ function renderSuoni() {
     </div>`;
 }
 
+function fmtMS(ms) {
+  const sec = Math.max(0, Math.ceil(ms / 1000));
+  return String(Math.floor(sec / 60)).padStart(2, "0") + ":" + String(sec % 60).padStart(2, "0");
+}
+function timerAlertMode() {
+  const m = store.prefs.timerAlert || (canVibrate ? "vibe" : "sound");
+  return canVibrate ? m : "sound";
+}
+function timerUnlockAudio() {
+  try {
+    if (!timerCtx) timerCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (timerCtx.state === "suspended") timerCtx.resume();
+  } catch (e) {}
+}
+/* rintocco morbido, sintetizzato come gli altri suoni: suona accanto a un
+   neonato che magari dorme, quindi niente sveglia, tre tocchi e basta */
+function timerChime() {
+  try {
+    timerUnlockAudio();
+    const ctx = timerCtx;
+    [0, 1.7, 3.4].forEach((off) => {
+      [[659.25, 0.16], [987.77, 0.07]].forEach(([freq, peak]) => {
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.type = "sine"; o.frequency.value = freq;
+        const t0 = ctx.currentTime + off;
+        g.gain.setValueAtTime(0.0001, t0);
+        g.gain.exponentialRampToValueAtTime(peak, t0 + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, t0 + 1.55);
+        o.connect(g); g.connect(ctx.destination);
+        o.start(t0); o.stop(t0 + 1.6);
+      });
+    });
+  } catch (e) {}
+}
+async function timerWakeOn() {
+  try {
+    if ("wakeLock" in navigator && !timerWake) {
+      timerWake = await navigator.wakeLock.request("screen");
+      timerWake.addEventListener("release", () => { timerWake = null; });
+    }
+  } catch (e) {}
+}
+function timerWakeOff() { try { if (timerWake) timerWake.release(); } catch (e) {} timerWake = null; }
+function timerFire() {
+  if (!timerRun || timerDone) return;
+  clearTimeout(timerEndH); clearInterval(timerTickH); timerTickH = null;
+  timerDone = true;
+  const m = timerAlertMode();
+  if (m !== "vibe") timerChime();
+  if (m !== "sound" && canVibrate) navigator.vibrate([400, 200, 400, 200, 700]);
+  timerWakeOff();
+  if (view === "timer" && !nightMode) render(); else updateTimerPill();
+}
+function timerSchedule() {
+  clearTimeout(timerEndH); clearInterval(timerTickH); timerTickH = null;
+  if (!timerRun || timerDone) return;
+  const left = timerRun.end - Date.now();
+  if (left <= 0) return timerFire();
+  timerEndH = setTimeout(timerFire, left);
+  timerTickH = setInterval(timerTick, 1000);
+  timerTick();
+}
+function timerTick() {
+  if (!timerRun || timerDone) return;
+  const left = timerRun.end - Date.now();
+  if (left <= 0) return timerFire();
+  const d = document.getElementById("tm-digits");
+  if (d) d.textContent = fmtMS(left);
+  const ring = document.getElementById("tm-prog");
+  if (ring) ring.style.strokeDashoffset = (TM_C * (1 - left / timerRun.total)).toFixed(2);
+  updateTimerPill();
+}
+function updateTimerPill() {
+  if (!timerRun || (view === "timer" && !nightMode)) { $tpill.innerHTML = ""; return; }
+  const left = timerRun.end - Date.now();
+  $tpill.innerHTML = `<button class="tpill${timerDone ? " done" : ""}${nightMode ? " night" : ""}" onclick="NINNA.openTimer()" aria-label="${t("tab_timer")}">
+    ${CLOCK_ICON}<span>${timerDone ? t("timer_done") : fmtMS(left)}</span></button>`;
+}
+function tmRing(offset, cls, inner) {
+  return `<div class="tm-ring-inner ${cls}">
+    <svg class="tm-ring" viewBox="0 0 240 240" aria-hidden="true">
+      <circle cx="120" cy="120" r="${TM_R}" class="tm-track"/>
+      <circle id="tm-prog" cx="120" cy="120" r="${TM_R}" class="tm-prog"
+        style="stroke-dasharray:${TM_C.toFixed(2)};stroke-dashoffset:${offset.toFixed(2)}"/>
+    </svg>
+    <div class="tm-center">${inner}</div>
+  </div>`;
+}
+function renderTimer() {
+  if (timerRun) {
+    const left = timerDone ? 0 : timerRun.end - Date.now();
+    const off = timerDone ? 0 : TM_C * (1 - left / timerRun.total);
+    const mins = Math.round(timerRun.total / 60000);
+    return `<div class="timer-screen">
+      <div class="tm-ring-wrap">${tmRing(off, timerDone ? "done" : "running",
+        `<div id="tm-digits" class="tm-digits">${fmtMS(left)}</div>
+         <div class="tm-sub">${timerDone ? t("timer_done") : t("timer_of", { m: mins })}</div>`)}</div>
+      ${timerDone
+        ? `<button class="primary block" onclick="NINNA.ackTimer()">${t("timer_ok")}</button>
+           <button class="link block" onclick="NINNA.againTimer()">${t("timer_again")}</button>`
+        : `<button class="secondary block" onclick="NINNA.stopTimer()">${t("timer_stop")}</button>
+           ${"wakeLock" in navigator ? `<div class="dim small tm-note">${t("timer_screen_on")}</div>` : ""}`}
+    </div>`;
+  }
+  const last = store.prefs.timerLast || 10;
+  const mode = timerAlertMode();
+  const alertOpts = [["sound", t("timer_sound")], ["vibe", t("timer_vibe")], ["both", t("timer_both")]];
+  return `<div class="timer-screen">
+    <button class="tm-ring-wrap tap" onclick="NINNA.startTimer(${last})" aria-label="${t("timer_start")} ${last} min">
+      ${tmRing(0, "idle", `<div class="tm-digits">${fmtMS(last * 60000)}</div><div class="tm-sub">${t("timer_tap")}</div>`)}
+    </button>
+    <div class="tm-presets">
+      ${TIMER_PRESETS.map((m) => `<button class="tm-chip${m === last ? " on" : ""}" onclick="NINNA.startTimer(${m})">${m}<small> min</small></button>`).join("")}
+      <button class="tm-chip${showTimerCustom ? " on" : ""}" onclick="NINNA.toggleTimerCustom()">${t("timer_other")}</button>
+    </div>
+    ${showTimerCustom ? `<div class="tm-custom">
+      <input id="tm-custom" type="number" inputmode="numeric" min="1" max="240" placeholder="${t("timer_min_ph")}"
+        onkeydown="if(event.key==='Enter')NINNA.startCustomTimer()">
+      <button class="secondary" onclick="NINNA.startCustomTimer()">${t("timer_start")}</button>
+    </div>` : ""}
+    <div class="catlabel tm-label">${t("timer_alert")}</div>
+    ${canVibrate
+      ? `<div class="langpill tm-alert">${alertOpts.map(([k, l]) => `<button class="langopt${mode === k ? " on" : ""}" onclick="NINNA.setTimerAlert('${k}')">${l}</button>`).join("")}</div>`
+      : `<div class="dim small tm-note">${t("timer_sound_only")}</div>`}
+  </div>`;
+}
+
 function renderGuida() {
   const { cats, articles } = I18N[lang];
   return cats.map((c) => `
@@ -930,7 +1164,7 @@ function renderNightMode(f) {
     status = `${typeLabel(active.type)} · ${t("hero_sleeping")}`;
     big = `<button class="night-btn" onclick="NINNA.endSleep('${active.id}')">${t("btn_awake")}</button>`;
   } else {
-    status = f.lastWake ? t("awake_for", { dur: fmtDur(Date.now() - f.lastWake) }) : "";
+    status = f.lastWake ? awakeLabel(Date.now() - f.lastWake) : "";
     const kind = f.next ? f.next.kind : "night";
     const label = kind === "night" ? t("btn_night") : t("btn_nap");
     big = `<button class="night-btn" onclick="NINNA.startSleep('${kind}')">${label}</button>`;
@@ -1057,6 +1291,73 @@ function growthSummary(g) {
   if (g.head) parts.push(`${t("growth_head_short")} ${g.head} cm`);
   return parts.join(" · ");
 }
+/* ---------- documenti del bambino ----------
+   Sezione a schermo intero, volutamente ariosa: due sole voci, molta aria
+   attorno. Non e' un archivio da sfogliare, e' un cassetto che si apre di
+   rado e deve essere leggibile in fretta, magari in uno studio medico. */
+function renderDocs() {
+  if (!docsUnlocked) return renderDocsLock();
+  const size = docsSize();
+  $modal.innerHTML = `<div class="about-overlay">
+    <button class="ghost about-back" onclick="NINNA.closeDocs()">←</button>
+    <div class="about-scroll">
+      <div class="about-title" style="font-size:26px">${t("docs_open")}</div>
+      <p class="about-p" style="margin-bottom:26px">${t("docs_intro")}</p>
+      ${DOC_TYPES.map((ty) => {
+        const d = docsCache[ty];
+        return `<div class="doccard">
+          <div class="doccard-head">
+            <span class="doccard-name">${t("doc_" + ty)}</span>
+            <span class="doccard-state">${d ? t("docs_added", { date: new Date(d.addedAt).toLocaleDateString(LOCALE()) }) : t("docs_empty")}</span>
+          </div>
+          ${d ? `<button class="docthumb" onclick="NINNA.viewDoc('${ty}')" aria-label="${t("doc_" + ty)}">
+              <img src="${d.dataUrl}" alt="">
+            </button>` : `<button class="docempty" onclick="NINNA.pickDoc('${ty}')">
+              ${CAMERA_ICON}<span>${t("docs_scan")}</span>
+            </button>`}
+          ${d ? `<div class="docactions">
+            <button class="link" onclick="NINNA.pickDoc('${ty}')">${t("docs_replace")}</button>
+            <button class="link danger" onclick="NINNA.removeDoc('${ty}')">${t("docs_delete_one")}</button>
+          </div>` : ""}
+        </div>`;
+      }).join("")}
+      <div class="hairline"></div>
+      <div class="dim small" style="margin-bottom:6px">${t("docs_space", { size })}</div>
+      <p class="about-p" style="font-size:12.5px;opacity:.75">${t("docs_note")}</p>
+      <button class="link block" onclick="NINNA.changeDocsPin()">${t("docs_pin_change")}</button>
+    </div>
+  </div>`;
+}
+
+function renderDocsLock() {
+  const first = !store.prefs.docsPin;
+  $modal.innerHTML = `<div class="about-overlay">
+    <button class="ghost about-back" onclick="NINNA.closeDocs()">←</button>
+    <div class="about-scroll docs-lock">
+      <div class="lockmark">${LOCK_ICON}</div>
+      <div class="about-title" style="font-size:24px">${t(first ? "docs_pin_set" : "docs_pin_ask")}</div>
+      <p class="about-p" style="max-width:23em">${t("docs_pin_hint")}</p>
+      <input class="pinput" id="doc-pin" type="password" inputmode="numeric" pattern="[0-9]*"
+        maxlength="4" autocomplete="off" placeholder="····">
+      <button class="secondary block" style="max-width:260px" onclick="NINNA.submitDocsPin()">${t(first ? "save" : "docs_unlock")}</button>
+    </div>
+  </div>`;
+  const el = document.getElementById("doc-pin");
+  if (el) { el.focus(); el.addEventListener("keydown", (ev) => { if (ev.key === "Enter") NINNA.submitDocsPin(); }); }
+}
+
+async function loadDocsCache() {
+  docsCache = {};
+  for (const ty of DOC_TYPES) {
+    try { docsCache[ty] = await loadDoc(ty); } catch (e) { docsCache[ty] = null; }
+  }
+}
+
+function docsSize() {
+  const bytes = DOC_TYPES.reduce((n, ty) => n + (docsCache[ty] ? docsCache[ty].dataUrl.length * 0.75 : 0), 0);
+  return bytes < 1024 * 1024 ? Math.max(1, Math.round(bytes / 1024)) + " KB" : (bytes / 1048576).toFixed(1) + " MB";
+}
+
 function renderGrowth() {
   const list = [...store.growth].sort((a, b) => b.date.localeCompare(a.date));
   const trend = [...store.growth].filter((g) => g.weight).sort((a, b) => a.date.localeCompare(b.date)).slice(-12);
@@ -1174,6 +1475,11 @@ function renderSettings() {
       <div class="card-title">${t("settings")}</div>
       <div class="dim small" style="opacity:.6">Ninna v${APP_VERSION}</div>
       <button class="dim small profile-edit" onclick="NINNA.openProfile()">${t("profile_line", { name: esc(b.name), date: new Date(b.birth + "T00:00:00").toLocaleDateString(LOCALE()), w: Math.floor(ageWeeks(b.birth)) })} ${EDIT_ICON}</button>
+      <button class="docs-entry" onclick="NINNA.openDocs()">
+        <span class="docs-entry-ico">${LOCK_ICON}</span>
+        <span class="docs-entry-txt">${t("docs_open")}</span>
+        <span class="docs-entry-arrow">→</span>
+      </button>
       <div class="langrow inmodal">
         <span class="langlabel">${t("appearance").toUpperCase()}</span>
         <div class="langpill theme3">
@@ -1217,6 +1523,7 @@ function render() {
   if (nightMode) {
     $app.innerHTML = renderNightMode(f);
     $tabbar.innerHTML = "";
+    updateTimerPill();
     return;
   }
   scheduleNotifications([
@@ -1233,6 +1540,7 @@ function render() {
   if (view === "stat") body = renderStat(f);
   if (view === "suoni") body = renderSuoni();
   if (view === "guida") body = renderGuida();
+  if (view === "timer") body = renderTimer();
 
   $app.innerHTML = `
     <header class="topbar">
@@ -1250,13 +1558,14 @@ function render() {
     ${view === "guida" ? footerHTML("full") : ""}`;
 
   const tabs = logOnly
-    ? [["oggi", t("tab_oggi")], ["suoni", t("tab_suoni")], ["guida", t("tab_guida")]]
-    : [["oggi", t("tab_oggi")], ["stat", t("tab_stat")], ["suoni", t("tab_suoni")], ["guida", t("tab_guida")]];
+    ? [["oggi", t("tab_oggi")], ["suoni", t("tab_suoni")], ["timer", t("tab_timer")], ["guida", t("tab_guida")]]
+    : [["oggi", t("tab_oggi")], ["stat", t("tab_stat")], ["suoni", t("tab_suoni")], ["timer", t("tab_timer")], ["guida", t("tab_guida")]];
   $tabbar.innerHTML = tabs
     .map(([id, label]) => `<button class="tab ${view === id ? "active" : ""}" onclick="NINNA.setView('${id}')">${label}</button>`)
     .join("");
 
   updateMiniPlayer();
+  updateTimerPill();
 }
 
 /* ---------- scorciatoie da long-press sull'icona ---------- */
@@ -1272,6 +1581,20 @@ function handleShortcut() {
   if (kind) NINNA.startSleep(kind);
 }
 
+/* ripresa del timer dopo una chiusura dell'app: se e' scaduto da poco lo
+   mostriamo come scaduto (il suono qui non puo' partire: i browser bloccano
+   l'audio finche' l'utente non tocca lo schermo); se e' vecchio, lo scartiamo */
+if (timerRun) {
+  if (timerRun.end > Date.now()) timerSchedule();
+  else if (Date.now() - timerRun.end < 30 * 60000) timerDone = true;
+  else { timerRun = null; delete store.prefs.timerRun; persist(); }
+}
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState !== "visible" || !timerRun || timerDone) return;
+  if (timerRun.end <= Date.now()) return timerFire();   // scaduto mentre eri altrove: avviso subito
+  timerWakeOn();                                        // il blocco schermo si perde quando la pagina va in background
+  timerSchedule();
+});
 applyTheme();
 handleShortcut();
 render();

@@ -140,7 +140,11 @@ export function bedtimePrediction(profile, lastNapEndMs, daySleepMinutes, interv
   const late = hmToMs(now, lateHM);
   const win = effectiveWindow(profile, intervals, "last").minutes;
   let candidate = lastNapEndMs ? lastNapEndMs + win * 60000 : (early + late) / 2;
-  const dayDeficit = daySleepMinutes < profile.day[0] * 60 * 0.75;
+  // sotto le 8 settimane il ritmo giorno/notte e' ancora immaturo: la regola
+  // "poco sonno di giorno -> anticipa la sera" vale per bambini piu' grandi e
+  // a questa eta' produceva solo un avviso ansiogeno e poco fondato
+  const newborn = profile.maxWeeks <= 8;
+  const dayDeficit = !newborn && daySleepMinutes < profile.day[0] * 60 * 0.75;
   if (dayDeficit) candidate = Math.min(candidate, early);
   candidate = Math.max(early, Math.min(late, candidate));
   return {
