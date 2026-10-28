@@ -3,6 +3,62 @@
 Versionamento semantico (MAJOR.MINOR.PATCH). Ogni release da qui in avanti
 viene registrata qui, in ordine cronologico, più recente in cima.
 
+## v2.20.0 · 28/10/2026
+**Riscrittura completa dell'interfaccia.** Il codice dell'interfaccia (`app.js`,
+`styles.css`, `index.html`) e' stato riscritto da zero invece di aggiungere
+un'altra patch: diciannove versioni di aggiunte avevano lasciato stili
+duplicati, regole morte e stati sparsi. Il motore delle previsioni, i suoni e
+gli archivi dati non sono stati toccati (verificato file per file), e i dati
+gia' salvati sui telefoni si caricano senza conversioni.
+
+Nuova struttura:
+- **Barra in basso piu' grande**, con icona ed etichetta per ogni scheda.
+- **Quinta scheda col nome del bambino** (al posto di Guida): salute
+  (vitamine, farmaci, farmacia di turno, ultime somministrazioni), crescita
+  con le ultime misure in evidenza, documenti, riepilogo per il pediatra,
+  guida al sonno. Prima erano sparsi fra un link sbiadito in Oggi, il fondo
+  di Statistiche e le Impostazioni.
+- **Riquadro "in corso" unico** al posto delle due pillole flottanti: timer
+  con anello di avanzamento e suono con tasto stop, pieno e bordato, appena
+  sopra la barra. Resta visibile anche sulle pagine aperte.
+- **Niente piu' sovrapposizioni**: l'altezza della barra in basso viene
+  misurata e riservata in fondo a ogni schermata. Verificato con timer e suono
+  attivi su 5 schede e 7 pagine, a 320, 360 e 412 px, tema chiaro e scuro:
+  zero sovrapposizioni su 72 controlli, nessuno scorrimento laterale.
+- **Impostazioni rifatte** a gruppi (Bambino, Aspetto, Preferenze, I tuoi
+  dati, Informazioni, Zona sensibile), una riga per voce con icona e
+  spiegazione; interruttore vero per la modalita' solo diario; "Cancella
+  tutto" separato in fondo, con conferma.
+- **Ogni pagina ha indietro e chiudi** nella stessa intestazione. Il tasto
+  indietro di Android ora chiude la pagina o il foglio aperto invece di
+  uscire dall'app.
+- **Fogli dal basso** con titolo e X per tutte le scelte brevi (registrazioni,
+  modifiche, farmacia, conferme), al posto dei dialoghi di sistema.
+- Le voci del diario si modificano o eliminano toccandole, con "Annulla" per
+  qualche secondo dopo l'eliminazione. Anche le misure di crescita ora si
+  correggono.
+- Testata di Oggi alleggerita: "Cos'e' Ninna" passa nelle Impostazioni.
+
+Difetti preesistenti trovati durante l'inventario e corretti:
+- **L'app non partiva senza rete dalla v2.18**: il service worker non metteva
+  in cache `docs-store.js`, che `app.js` importa. Ora ogni modulo e' in cache
+  (verificato offline).
+- **"Cancella tutto" non eliminava i documenti scansionati**: dopo il reset
+  chiunque poteva impostare un nuovo codice e vederli. Ora vengono eliminati.
+- **Il backup JSON conteneva il codice dei documenti in chiaro**. Ora resta
+  sul telefono, e un ripristino non sovrascrive quello locale.
+- **Spegnimento automatico dei suoni perso al cambio di suono**: il menu
+  mostrava ancora il tempo scelto, ma il timer era stato azzerato.
+- La scritta "pressione del sonno" usciva dall'anello: ora su due righe.
+- I campi di peso e altezza non accettavano la virgola decimale.
+- "1 mesi" diventa "1 mese".
+
+Trovati in collaudo, prima della consegna: la classe della modalita' notte
+(`.night`) colpiva anche i blocchi "nanna" della barra della giornata,
+rendendoli a tutto schermo; rinominata. Rientrando nell'app con un foglio
+aperto si perdeva il testo appena scritto; ora sotto un foglio si aggiornano
+solo i tempi.
+
 ## v2.19.0 · 21/09/2026
 **Timer**, come quinta scheda in basso: zona del pollice, usabile con una mano.
 - Due tocchi per partire: la scheda, poi una durata (5, 10, 15, 20, 30 minuti,

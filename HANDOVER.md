@@ -9,6 +9,43 @@ farle "vere" richiederebbe un server) ha un documento a sé, `NOTIFICHE.md`,
 perché è una domanda che torna spesso e merita una risposta completa invece
 di un paragrafo qui in mezzo ad altro.
 
+## Architettura dell'interfaccia (dalla v2.20)
+
+Riscritta da zero nella v2.20. Mappa dei file:
+
+| File | Cosa contiene |
+|---|---|
+| `js/app.js` | regia: navigazione a livelli, azioni (`window.NINNA`), ridisegno, notifiche, avvio |
+| `js/state.js` | l'unico oggetto di stato `S`, traduzioni `t()`, formattazioni, regole di dominio (dosi) |
+| `js/ui.js` | mattoni ripetuti: intestazione pagina, foglio, gruppi di righe, interruttore, segmenti |
+| `js/icons.js` | tutte le icone SVG, nessun SVG sparso altrove |
+| `js/timer.js` | logica del timer, senza disegno |
+| `js/views-tabs.js` | le cinque schede e il primo avvio |
+| `js/views-pages.js` | pagine a tutto schermo (impostazioni, profilo, crescita, documenti, riepilogo, guida, info); contiene `APP_VERSION` |
+| `js/views-sheets.js` | fogli dal basso |
+| `js/views-night.js` | modalita' notte |
+| `engine.js`, `sounds.js`, `content-store.js`, `docs-store.js` | invariati dalla v2.19 |
+
+**Navigazione a livelli.** Sopra le schede si impilano pagine, fogli e
+modalita' notte (`S.layers`). Ogni apertura aggiunge una voce alla cronologia
+(`history.pushState({d})`), cosi' il tasto indietro di Android chiude il
+livello in cima. Le chiusure dall'app tolgono subito il livello e poi
+riallineano la cronologia; il `popstate` che ne deriva e' atteso e ignorato.
+Un'apertura chiesta mentre il riallineamento e' in corso aspetta in coda.
+**Non aprire o chiudere livelli toccando `S.layers` a mano**: passare sempre
+da `push`, `replaceTop`, `goBack`.
+
+**Barra in basso misurata.** `#bottom` (riquadro "in corso" + schede) e' un
+solo contenitore fisso; `measureBottom()` ne scrive l'altezza reale in
+`--bottom-h`, che ogni schermata riserva in fondo. Mai piu' margini indovinati.
+
+**Ridisegni.** Il timer aggiorna ogni secondo solo i numeri (per id), mai la
+schermata. L'aggiornamento periodico e il rientro nell'app non ridisegnano un
+foglio aperto, che perderebbe il testo digitato.
+
+**Ogni modulo nuovo va aggiunto a `SHELL` in `sw.js`**, altrimenti l'app non
+parte offline (e' successo con `docs-store.js` dalla v2.18 alla v2.19).
+
 ## Audio: uscita diretta, e perché non si torna indietro
 
 `SoundEngine._setupOutput()` collega il grafo Web Audio direttamente a
@@ -54,6 +91,7 @@ eccome: il difetto compariva solo con lo schermo piu' corto. Provare almeno
 
 Script pronti in `/home/claude/testenv/`: `e2e.mjs` (30 passaggi d'uso),
 `bughunt.mjs` (casi limite), `shots.mjs` (screenshot delle schermate chiave).
+Dalla v2.20: `e2e220.mjs`, `overlap.mjs`, `extra.mjs` (offline e testo conservato), `shots2.mjs`.
 
 ## Nota storica: prima non c'era
 
@@ -80,7 +118,7 @@ frammenti) dentro un DOM simulato. Due limiti emersi, da tenere a mente:
 ## Cache-first e numerazione di versione
 
 Il service worker (`sw.js`) usa cache-first con `CACHE` agganciato a
-`APP_VERSION` in `app.js`. **I due vanno sempre bumpati insieme**: se cambi
+`APP_VERSION` in `js/views-pages.js`. **I due vanno sempre bumpati insieme**: se cambi
 `APP_VERSION` senza cambiare `CACHE` (o viceversa), gli utenti restano bloccati
 sulla versione vecchia perché la cache non si invalida. Conseguenza pratica:
 dopo un deploy, la versione nuova appare alla *seconda* apertura dell'app, non
@@ -157,5 +195,15 @@ prima di considerare il lavoro finito.
   sezione documenti esisteva gia' ed e' stata duplicata (v2.18.1).
 - Misurare il contenitore intero, non solo i singoli elementi: cinque
   etichette "che entrano" non garantiscono che la barra entri nello schermo.
-- `render()` esce presto in modalita' notte: tutto cio' che vive fuori da
-  `#app` (mini player, pillola del timer) va aggiornato anche in quel ramo.
+- (v2.19) `render()` usciva presto in modalita' notte; superato dalla
+  struttura a livelli della v2.20.
+
+## Lezioni della riscrittura (v2.20)
+- Nomi di classe generici collidono: `.night` della modalita' notte colpiva
+  anche `.tl-sleep.night` della barra della giornata. Per i contenitori a
+  tutto schermo usare nomi univoci (`.nightmode`).
+- `input type="number"` rifiuta la virgola su molte tastiere italiane: per
+  numeri decimali usare `type="text" inputmode="decimal"` e convertire.
+- Il collaudo e2e (`/home/claude/testenv/e2e220.mjs`, 143 controlli) e la
+  misura delle sovrapposizioni (`overlap.mjs`) vanno rilanciati a ogni
+  consegna.

@@ -10,34 +10,34 @@
   <link rel="icon" href="icons/icon-192.png" />
   <link rel="apple-touch-icon" href="icons/icon-192.png" />
   <link rel="stylesheet" href="styles.css" />
-</head>
-<body>
   <script>
-    /* imposta la lingua del documento prima del primo render, per i lettori di schermo */
+    /* lingua e tema applicati prima del primo disegno: niente lampo del tema sbagliato */
     try {
-      var p = JSON.parse(localStorage.getItem("ninna_v1") || "{}");
-      if (p && p.prefs && p.prefs.lang) document.documentElement.lang = p.prefs.lang;
+      var p = (JSON.parse(localStorage.getItem("ninna_v1") || "{}") || {}).prefs || {};
+      if (p.lang) document.documentElement.lang = p.lang;
+      if (p.theme === "light" || p.theme === "dark") document.documentElement.classList.add("theme-" + p.theme);
     } catch (e) {}
   </script>
+</head>
+<body>
   <noscript>
-    <div style="max-width:460px;margin:20vh auto;padding:0 24px;text-align:center;color:#EAF2EE;font-family:system-ui,sans-serif">
+    <div style="max-width:460px;margin:20vh auto;padding:0 24px;text-align:center;font-family:system-ui,sans-serif">
       <p style="font-size:20px;margin-bottom:10px">Ninna</p>
-      <p style="color:#A6B7B0;line-height:1.6">Per funzionare, Ninna ha bisogno di JavaScript attivo nel browser.<br>
+      <p style="line-height:1.6">Per funzionare, Ninna ha bisogno di JavaScript attivo nel browser.<br>
       <span style="font-size:13px">Ninna needs JavaScript enabled in your browser.</span></p>
     </div>
   </noscript>
-  <div class="frame">
-    <div id="app"></div>
+  <main id="app" class="app"></main>
+  <div id="bottom" class="bottom" hidden>
+    <div id="dock"></div>
+    <nav id="tabbar" aria-label="Ninna"></nav>
   </div>
-  <div class="scrim" aria-hidden="true"></div>
-  <nav class="tabbar" id="tabbar"></nav>
-  <div id="toast" class="toast" hidden></div>
-  <div id="modal-root"></div>
-  <div id="miniplayer-root"></div>
+  <div id="layers"></div>
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
   <script type="module" src="js/app.js"></script>
   <script>
     if ("serviceWorker" in navigator) {
-      window.addEventListener("load", () => navigator.serviceWorker.register("sw.js"));
+      window.addEventListener("load", function () { navigator.serviceWorker.register("sw.js"); });
     }
   </script>
 </body>
